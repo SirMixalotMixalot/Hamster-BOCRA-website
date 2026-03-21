@@ -4,6 +4,7 @@ import AIChatbot from "@/components/AIChatbot";
 import BottomBar from "@/components/BottomBar";
 import SignInModal from "@/components/SignInModal";
 import ContactModal from "@/components/ContactModal";
+import ComplaintModal from "@/components/ComplaintModal";
 
 const Index = () => {
   return (
@@ -16,6 +17,7 @@ const Index = () => {
       <AIChatbot />
       <SignInModal />
       <ContactModal />
+      <ComplaintModal />
     </div>
   );
 };

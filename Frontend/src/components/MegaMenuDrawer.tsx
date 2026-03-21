@@ -55,7 +55,11 @@ const MegaMenuDrawer = ({ isOpen, onClose, activeItem }: MegaMenuDrawerProps) =>
                         e.preventDefault();
                         onClose();
                         if (item.action) {
-                          window.dispatchEvent(new CustomEvent(item.action));
+                          if (item.action.startsWith("navigate:")) {
+                            window.location.href = item.action.replace("navigate:", "");
+                          } else {
+                            window.dispatchEvent(new CustomEvent(item.action));
+                          }
                         }
                       }}
                     >

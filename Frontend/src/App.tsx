@@ -21,6 +21,7 @@ import Licences from "./pages/admin/Licences.tsx";
 import Complaints from "./pages/admin/Complaints.tsx";
 import Reports from "./pages/admin/Reports.tsx";
 import AdminSettings from "./pages/admin/Settings.tsx";
+import Careers from "./pages/Careers.tsx";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/careers" element={<Careers />} />
 
           {/* Customer Portal */}
           <Route path="/customer" element={<CustomerLayout />}>

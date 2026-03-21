@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { FileText, MessageSquare, Shield, BarChart3, BookOpen, ArrowRight, ChevronDown, ClipboardList, Radio, Newspaper, Calendar, ArrowUpRight, Wifi, Tv, Package, Globe2, HelpCircle, ExternalLink, X } from "lucide-react";
+import { MessageSquare, Shield, BarChart3, BookOpen, ArrowRight, ChevronDown, ClipboardList, Radio, Newspaper, Calendar, ArrowUpRight, Wifi, Tv, Package, Globe2, HelpCircle, ExternalLink, X, Scale } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
 
 const serviceColumns = [
   {
     title: "Consumer Services",
     items: [
-      { icon: MessageSquare, label: "File a Complaint", description: "Submit a formal complaint against a provider" },
+      { icon: MessageSquare, label: "File a Complaint", description: "Submit a formal complaint against a provider", action: "toggle-complaint-modal" },
       { icon: HelpCircle, label: "Consumer Education", description: "Know your rights and protections" },
       { icon: BarChart3, label: "Telecom Statistics", description: "Market data and sector indicators" },
       { icon: ExternalLink, label: "Tools & Portals", description: "Access external BOCRA systems" },
@@ -105,36 +105,33 @@ const HeroSection = () => {
 
         {/* Action buttons */}
         <div className="mt-10 flex flex-col sm:flex-row items-center gap-4 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-          {/* Licence Application Card — opens customer sign in */}
+          {/* File a Complaint */}
           <button
-            onClick={() => window.dispatchEvent(new CustomEvent("toggle-signin-modal", { detail: { step: "customer-choice" } }))}
+            onClick={() => window.dispatchEvent(new CustomEvent("toggle-complaint-modal"))}
             className="group flex items-center gap-4 px-6 py-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-[1.02]"
           >
             <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-              <FileText className="h-6 w-6 text-white" />
+              <MessageSquare className="h-6 w-6 text-white" />
             </div>
             <div className="text-left">
-              <div className="text-base font-semibold text-primary-foreground">Licence Application</div>
-              <div className="text-xs text-primary-foreground/60">Sign in to apply or renew</div>
+              <div className="text-base font-semibold text-primary-foreground">File a Complaint</div>
+              <div className="text-xs text-primary-foreground/60">Report a service provider issue</div>
             </div>
             <ArrowRight className="h-5 w-5 text-primary-foreground/50 group-hover:text-bocra-gold group-hover:translate-x-1 transition-all duration-300 ml-2" />
           </button>
 
-          {/* Explore Services */}
+          {/* Consumer Rights */}
           <button
-            onClick={() => { setExploreOpen(!exploreOpen); setNewsOpen(false); }}
-            className={`flex items-center gap-3 px-6 py-4 rounded-xl backdrop-blur-md border transition-all duration-300 ${
-              exploreOpen ? "bg-white/20 border-white/30" : "bg-white/10 border-white/20 hover:bg-white/20"
-            }`}
+            className="group flex items-center gap-4 px-6 py-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-[1.02]"
           >
             <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-              <ClipboardList className="h-6 w-6 text-white" />
+              <Scale className="h-6 w-6 text-white" />
             </div>
             <div className="text-left">
-              <div className="text-base font-semibold text-primary-foreground">Explore Services</div>
-              <div className="text-xs text-primary-foreground/60">Browse all BOCRA services</div>
+              <div className="text-base font-semibold text-primary-foreground">Consumer Rights</div>
+              <div className="text-xs text-primary-foreground/60">Know your protections</div>
             </div>
-            <ChevronDown className={`h-5 w-5 text-primary-foreground/50 transition-transform duration-300 ml-2 ${exploreOpen ? "rotate-180" : ""}`} />
+            <ArrowRight className="h-5 w-5 text-primary-foreground/50 group-hover:text-bocra-gold group-hover:translate-x-1 transition-all duration-300 ml-2" />
           </button>
 
           {/* News */}
@@ -178,6 +175,17 @@ const HeroSection = () => {
                       <a
                         key={item.label}
                         href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if ("action" in item && item.action) {
+                            setExploreOpen(false);
+                            if (item.action.startsWith("navigate:")) {
+                              window.location.href = item.action.replace("navigate:", "");
+                            } else {
+                              window.dispatchEvent(new CustomEvent(item.action));
+                            }
+                          }
+                        }}
                         className="flex items-start gap-3 px-3 py-3 rounded-lg hover:bg-primary/5 transition-colors group"
                       >
                         <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary/15 transition-colors">

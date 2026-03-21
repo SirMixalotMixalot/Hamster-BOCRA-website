@@ -14,7 +14,7 @@ const navItems = [
           { icon: Scale, label: "Our Mandate", description: "Learn about our regulatory responsibilities" },
           { icon: Users, label: "Leadership", description: "Meet our Board and Executive team" },
           { icon: Award, label: "Strategic Plan", description: "Our vision for Botswana's digital future" },
-          { icon: Briefcase, label: "Careers", description: "Join our team of professionals" },
+          { icon: Briefcase, label: "Careers", description: "Join our team of professionals", action: "navigate:/careers" },
         ],
       },
       {
@@ -34,8 +34,7 @@ const navItems = [
       {
         title: "For Citizens",
         items: [
-          { icon: MessageSquare, label: "File a Complaint", description: "Report service issues or disputes" },
-          { icon: Radio, label: "Number Portability", description: "Keep your number when switching providers" },
+          { icon: MessageSquare, label: "File a Complaint", description: "Report service issues or disputes", action: "toggle-complaint-modal" },
           { icon: Shield, label: "Consumer Rights", description: "Know your rights as a consumer" },
           { icon: BarChart3, label: "Service Quality", description: "Quality of service standards" },
         ],
@@ -43,8 +42,8 @@ const navItems = [
       {
         title: "For Businesses",
         items: [
-          { icon: FileCheck, label: "Licensing", description: "Apply for telecommunications licenses" },
-          { icon: ClipboardList, label: "Type Approval", description: "Get equipment approved for use" },
+          { icon: FileCheck, label: "Licensing", description: "Apply for telecommunications licenses", action: "toggle-signin-modal" },
+          { icon: ClipboardList, label: "Type Approval", description: "Get equipment approved for use", action: "toggle-signin-modal" },
           { icon: Wifi, label: "Spectrum Management", description: "Frequency allocation and management" },
           { icon: ExternalLink, label: "Interconnection", description: "Network interconnection guidelines" },
         ],
@@ -67,11 +66,11 @@ const navItems = [
       {
         title: "Actions",
         items: [
-          { icon: FileCheck, label: "Apply for License", description: "Start a new license application" },
-          { icon: ClipboardList, label: "Renew License", description: "Renew an existing license" },
-          { icon: Shield, label: "Verify License", description: "Check license status and validity" },
-          { icon: Scale, label: "Fee Schedule", description: "View licensing fees" },
-          { icon: BarChart3, label: "Track Application", description: "Check your application status" },
+          { icon: FileCheck, label: "Apply for License", description: "Start a new license application", action: "toggle-signin-modal" },
+          { icon: ClipboardList, label: "Renew License", description: "Renew an existing license", action: "toggle-signin-modal" },
+          { icon: Shield, label: "Verify License", description: "Check license status and validity", action: "toggle-signin-modal" },
+          { icon: Scale, label: "Fee Schedule", description: "View licensing fees", action: "toggle-signin-modal" },
+          { icon: BarChart3, label: "Track Application", description: "Check your application status", action: "toggle-signin-modal" },
         ],
       },
     ],
@@ -213,7 +212,23 @@ const Header = () => {
                     <div className="pl-4 space-y-1 animate-fade-in">
                       {item.sections.map((section) =>
                         section.items.map((subItem) => (
-                          <a key={subItem.label} href="#" className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-white/60 hover:text-white hover:bg-white/10">
+                          <a
+                            key={subItem.label}
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if ("action" in subItem && subItem.action) {
+                                setMobileOpen(false);
+                                setActiveMenu(null);
+                                if (subItem.action.startsWith("navigate:")) {
+                                  window.location.href = subItem.action.replace("navigate:", "");
+                                } else {
+                                  window.dispatchEvent(new CustomEvent(subItem.action));
+                                }
+                              }
+                            }}
+                            className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-white/60 hover:text-white hover:bg-white/10"
+                          >
                             <subItem.icon className="h-4 w-4" />
                             {subItem.label}
                           </a>
