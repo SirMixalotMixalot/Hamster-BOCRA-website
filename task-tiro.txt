@@ -1,0 +1,518 @@
+TASK BRIEF — Tiro (AI Chatbot Knowledge Base)
+================================================
+
+PROJECT: BOCRA Website — Hackathon
+ROLE: Build the AI chatbot's brain — the questions, answers, and search logic
+DIFFICULTY: Beginner-friendly. Step-by-step instructions below.
+
+
+WHAT YOU ARE BUILDING
+----------------------
+The BOCRA website has an AI chatbot (the little chat bubble in the top-right corner).
+Right now it uses hardcoded keyword matching — if someone types "licence" it gives a
+fixed answer. Your job is to make it smarter by:
+
+1. Creating a knowledge base (a big file of questions and answers about BOCRA)
+2. Building a simple Python API that searches that knowledge base
+3. Returning helpful answers with links to the right page
+
+You are NOT building a ChatGPT. You are building a smart FAQ search engine.
+Think of it like Google, but only for BOCRA questions.
+
+
+YOUR WORKSPACE — SEPARATE FROM THE MAIN PROJECT
+-------------------------------------------------
+You will work in your own folder so you don't accidentally break anything.
+On Day 3, KG and BK will take your code and plug it into the main backend.
+
+Step 1: Open a terminal and run these commands ONE AT A TIME:
+
+    cd C: //make a project folder
+    mkdir chatbot
+    cd chatbot
+    python -m venv venv
+    venv\Scripts\activate
+    pip install fastapi uvicorn
+
+Step 2: Create these files inside the chatbot/ folder:
+
+    chatbot/
+      knowledge_base.json      <-- all the Q&A data you write
+      main.py                  <-- the API server
+      search.py                <-- the search logic
+
+
+FILE 1: knowledge_base.json
+=============================
+This is the most important file. It's where ALL the chatbot's knowledge lives.
+It's a JSON file — basically a list of entries, each with an ID, question, answer,
+keywords, and category.
+
+Open a new file called knowledge_base.json and paste this starter template:
+
+---------- START OF FILE ----------
+[
+  {
+    "id": 1,
+    "category": "licensing",
+    "question": "How do I apply for a telecommunications licence?",
+    "answer": "To apply for a telecommunications licence, sign in to your BOCRA account, go to 'My Applications', click 'New Application', and select 'Telecommunications' as the licence type. You will need to upload supporting documents and pay the application fee.",
+    "keywords": ["licence", "license", "apply", "application", "telecommunications", "telecom"],
+    "link": "/customer/applications/new"
+  },
+  {
+    "id": 2,
+    "category": "licensing",
+    "question": "What types of licences does BOCRA issue?",
+    "answer": "BOCRA issues four types of licences: **Telecommunications** (mobile and fixed-line networks), **Broadcasting** (radio and television), **Postal Services** (courier and postal), and **Internet/ISP** (internet service providers and .bw domain).",
+    "keywords": ["licence", "license", "types", "categories", "broadcasting", "postal", "internet", "ISP"],
+    "link": "/customer/applications/new"
+  },
+  {
+    "id": 3,
+    "category": "licensing",
+    "question": "How do I renew my licence?",
+    "answer": "To renew an existing licence, sign in to your account, go to 'My Applications', and click 'Renew Licence' on the licence you want to renew. Make sure to start the renewal process before your current licence expires.",
+    "keywords": ["renew", "renewal", "expire", "expiry", "extend"],
+    "link": "/customer/applications"
+  },
+  {
+    "id": 4,
+    "category": "licensing",
+    "question": "How do I verify a licence?",
+    "answer": "You can verify any BOCRA licence by going to the 'Verify Licence' page and entering the licence number. The system will show you the licence holder's name, licence type, issue date, expiry date, and current status.",
+    "keywords": ["verify", "verification", "check", "valid", "status", "licence number"],
+    "link": "/customer/verify"
+  },
+  {
+    "id": 5,
+    "category": "licensing",
+    "question": "How much does a licence cost?",
+    "answer": "Licence fees vary by type and category. You can view the full fee schedule on the Licensing page. Payment can be made online using credit card, debit card, or PayPal through our secure payment system.",
+    "keywords": ["cost", "fee", "price", "payment", "pay", "how much", "charge"],
+    "link": "/customer/payments"
+  },
+  {
+    "id": 6,
+    "category": "complaints",
+    "question": "How do I file a complaint?",
+    "answer": "To file a complaint against a service provider, sign in to your account and go to the 'Support' section. Click 'New Complaint', select the category (service quality, billing, coverage, or other), describe your issue, and attach any evidence. You'll receive a reference number to track your complaint.",
+    "keywords": ["complaint", "complain", "report", "issue", "problem", "file"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 7,
+    "category": "complaints",
+    "question": "How do I track my complaint?",
+    "answer": "You can track your complaint status by signing in to your account and going to the 'Support' section. Your complaints are listed with their current status: Open, Investigating, Resolved, or Closed. Click on any complaint to see the full timeline and any responses from BOCRA.",
+    "keywords": ["track", "status", "complaint", "progress", "update", "where", "check"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 8,
+    "category": "complaints",
+    "question": "What can I complain about?",
+    "answer": "You can submit complaints about: **Service Quality** (poor network, dropped calls, slow internet), **Billing** (incorrect charges, unauthorized deductions), **Coverage** (no signal in your area), or **Other** issues with your telecommunications, broadcasting, postal, or internet service provider.",
+    "keywords": ["what", "complain", "complaint", "type", "category", "about", "issue"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 9,
+    "category": "about",
+    "question": "What is BOCRA?",
+    "answer": "BOCRA (Botswana Communications Regulatory Authority) is the government body that regulates telecommunications, broadcasting, internet, and postal services in Botswana. Our mission is to ensure accessible, affordable, and quality communications services for all Batswana.",
+    "keywords": ["what", "BOCRA", "about", "who", "authority", "regulator", "regulate"],
+    "link": "/"
+  },
+  {
+    "id": 10,
+    "category": "about",
+    "question": "What does BOCRA regulate?",
+    "answer": "BOCRA regulates four sectors: **Telecommunications** (mobile and fixed-line phone services), **Broadcasting** (radio and TV stations), **Postal Services** (mail and courier companies), and **Internet & ICT** (internet service providers and the .bw domain).",
+    "keywords": ["regulate", "sector", "telecom", "broadcasting", "postal", "internet", "ICT", "what"],
+    "link": "/"
+  },
+  {
+    "id": 11,
+    "category": "about",
+    "question": "Where is BOCRA located?",
+    "answer": "BOCRA's head office is located in Gaborone, Botswana. You can reach us by phone at +267 395 7755 or by email at info@bocra.org.bw. Our office hours are Monday to Friday, 7:30 AM to 4:30 PM.",
+    "keywords": ["where", "location", "address", "office", "contact", "phone", "email", "visit", "find"],
+    "link": "/"
+  },
+  {
+    "id": 12,
+    "category": "about",
+    "question": "How do I contact BOCRA?",
+    "answer": "You can contact BOCRA in several ways: **Phone:** +267 395 7755, **Email:** info@bocra.org.bw, or use the **AI Assistant** (that's me!) for quick answers. For formal matters, you can also submit a support ticket through your account.",
+    "keywords": ["contact", "reach", "phone", "email", "call", "talk", "help", "support"],
+    "link": "/"
+  },
+  {
+    "id": 13,
+    "category": "type_approval",
+    "question": "What is type approval?",
+    "answer": "Type approval is the process of certifying that telecommunications equipment meets BOCRA's technical standards before it can be sold or used in Botswana. This includes phones, routers, broadcasting equipment, and other communications devices.",
+    "keywords": ["type approval", "approval", "equipment", "certify", "certification", "device", "phone", "router"],
+    "link": "/customer/applications/new"
+  },
+  {
+    "id": 14,
+    "category": "type_approval",
+    "question": "How do I get equipment approved?",
+    "answer": "To get equipment type-approved: sign in to your BOCRA account, start a new application, select 'Type Approval', upload the equipment specifications and test certificates, and submit for review. BOCRA will evaluate and respond within the standard processing period.",
+    "keywords": ["equipment", "approve", "approved", "type approval", "submit", "how", "get"],
+    "link": "/customer/applications/new"
+  },
+  {
+    "id": 15,
+    "category": "spectrum",
+    "question": "What is spectrum management?",
+    "answer": "Spectrum management is how BOCRA allocates and manages radio frequencies in Botswana. Radio spectrum is a limited resource used by mobile networks, TV/radio broadcasters, satellite communications, and more. BOCRA ensures fair allocation and prevents interference between users.",
+    "keywords": ["spectrum", "frequency", "radio", "allocate", "allocation", "management", "signal"],
+    "link": "/"
+  },
+  {
+    "id": 16,
+    "category": "account",
+    "question": "How do I create an account?",
+    "answer": "Click 'Sign In' on the top menu, then choose 'Customer'. Click 'Create Account' and fill in your details. You can also sign up quickly using your Google account. After registration, complete your profile with your ID number and personal details.",
+    "keywords": ["account", "create", "register", "sign up", "signup", "new account", "join"],
+    "link": "/"
+  },
+  {
+    "id": 17,
+    "category": "account",
+    "question": "I forgot my password",
+    "answer": "On the Sign In page, click 'Forgot password?' and enter your email address. You'll receive a password reset link in your inbox. Check your spam folder if you don't see it within a few minutes.",
+    "keywords": ["forgot", "password", "reset", "can't login", "locked", "access"],
+    "link": "/"
+  },
+  {
+    "id": 18,
+    "category": "account",
+    "question": "How do I update my profile?",
+    "answer": "Sign in to your account and go to 'Profile'. You can update your personal details including name, phone number, address, and profile photo. Your ID number and date of birth cannot be changed after verification — contact BOCRA support if there's an error.",
+    "keywords": ["update", "profile", "edit", "change", "details", "information", "name", "phone"],
+    "link": "/customer/profile"
+  },
+  {
+    "id": 19,
+    "category": "payments",
+    "question": "What payment methods are accepted?",
+    "answer": "BOCRA accepts payments via **credit card**, **debit card**, and **PayPal** through our secure online payment system powered by Stripe. All transactions are encrypted and you'll receive a receipt by email after payment.",
+    "keywords": ["payment", "pay", "method", "credit", "debit", "card", "paypal", "stripe", "how to pay"],
+    "link": "/customer/payments"
+  },
+  {
+    "id": 20,
+    "category": "payments",
+    "question": "Can I get a receipt for my payment?",
+    "answer": "Yes, a receipt is automatically emailed to you after every successful payment. You can also view and download all your receipts from the 'Payments' section in your account.",
+    "keywords": ["receipt", "proof", "payment", "download", "invoice"],
+    "link": "/customer/payments"
+  },
+  {
+    "id": 21,
+    "category": "regulations",
+    "question": "Where can I find BOCRA regulations?",
+    "answer": "All BOCRA regulations, acts, policies, and guidelines are available in the 'Documents & Resources' section. You can browse by category or use the search bar to find specific documents.",
+    "keywords": ["regulation", "law", "act", "policy", "guideline", "legislation", "document", "find", "where"],
+    "link": "/customer/documents"
+  },
+  {
+    "id": 22,
+    "category": "regulations",
+    "question": "What is a public consultation?",
+    "answer": "A public consultation is when BOCRA publishes draft regulations or policies and invites the public and stakeholders to submit comments before the final version is adopted. Active consultations are listed in the 'Documents & Resources' section.",
+    "keywords": ["consultation", "public", "comment", "draft", "stakeholder", "opinion", "feedback"],
+    "link": "/customer/documents"
+  },
+  {
+    "id": 23,
+    "category": "statistics",
+    "question": "Where can I find telecom statistics?",
+    "answer": "Telecom statistics including mobile subscriptions, broadband penetration, market share, and sector indicators are available in the 'Statistics' section of your dashboard. Data is updated quarterly by BOCRA.",
+    "keywords": ["statistics", "stats", "data", "numbers", "telecom", "market", "subscribers", "penetration"],
+    "link": "/customer/documents"
+  },
+  {
+    "id": 24,
+    "category": "consumer_rights",
+    "question": "What are my rights as a consumer?",
+    "answer": "As a communications consumer in Botswana, you have the right to: **Quality service** that meets BOCRA standards, **Fair billing** with transparent pricing, **Number portability** (keep your number when switching providers), **File complaints** against providers, and **Access information** about service quality and coverage.",
+    "keywords": ["rights", "consumer", "protection", "fair", "entitled", "what can I"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 25,
+    "category": "consumer_rights",
+    "question": "What is number portability?",
+    "answer": "Number portability allows you to keep your phone number when switching from one mobile provider to another. Contact your new provider to initiate the porting process. BOCRA ensures providers comply with portability regulations.",
+    "keywords": ["number", "portability", "port", "keep", "switch", "transfer", "provider", "change"],
+    "link": "/"
+  }
+]
+---------- END OF FILE ----------
+
+YOUR JOB: Read through these 25 entries. Then ADD MORE. Think about what a real person 
+visiting BOCRA's website would ask. Aim for at least 50 entries total.
+
+Categories to cover:
+  - licensing (applying, renewing, fees, requirements, processing times)
+  - complaints (how to file, tracking, what counts, response times)
+  - type_approval (equipment certification process)
+  - spectrum (frequency management, allocation)
+  - about (what BOCRA is, location, hours, contact)
+  - account (signup, login, profile, password)
+  - payments (methods, receipts, refunds)
+  - regulations (finding documents, consultations, policies)
+  - statistics (telecom data, reports)
+  - consumer_rights (rights, portability, protections)
+  - broadcasting (radio, TV licensing)
+  - postal (postal and courier services)
+  - domain (registering .bw domains)
+
+Tips for writing good entries:
+  - Write the question the way a normal person would ask it ("how do I..." not "procedure for...")
+  - Keep answers short — 2-3 sentences max
+  - Use **bold** for important terms (the chatbot renders bold text)
+  - Include relevant keywords (think: what words would someone type?)
+  - The link should point to the most relevant page
+  - Think about FRUSTRATED people — someone whose licence is taking too long, whose internet
+    is down, who got overcharged. What would they type?
+
+
+FILE 2: search.py
+==================
+This file takes a user's message and finds the best matching entries.
+Create a new file called search.py and paste this EXACTLY:
+
+---------- START OF FILE ----------
+import json
+import os
+
+# Load the knowledge base once when the server starts
+def load_knowledge_base():
+    file_path = os.path.join(os.path.dirname(__file__), "knowledge_base.json")
+    with open(file_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+KNOWLEDGE_BASE = load_knowledge_base()
+
+
+def search(message: str, top_n: int = 3):
+    """
+    Search the knowledge base for entries matching the user's message.
+    Returns the top N matching entries sorted by relevance score.
+    
+    How scoring works:
+    - Each keyword that appears in the message adds 1 point
+    - If the message appears in the question text, add 3 bonus points
+    - Higher score = better match
+    """
+    message_lower = message.lower()
+    results = []
+
+    for entry in KNOWLEDGE_BASE:
+        score = 0
+
+        # Check keywords
+        for keyword in entry["keywords"]:
+            if keyword.lower() in message_lower:
+                score += 1
+
+        # Bonus if message words appear in the question
+        for word in message_lower.split():
+            if len(word) > 2 and word in entry["question"].lower():
+                score += 0.5
+
+        if score > 0:
+            results.append({"entry": entry, "score": score})
+
+    # Sort by score (highest first) and return top N
+    results.sort(key=lambda x: x["score"], reverse=True)
+    return [r["entry"] for r in results[:top_n]]
+
+
+def get_response(message: str) -> dict:
+    """
+    Main function: takes a user message, returns a chatbot response.
+    """
+    matches = search(message)
+
+    if not matches:
+        return {
+            "reply": "I'm not sure about that, but I can help you get in touch with the right people. You can **call us** at +267 395 7755 or **email** info@bocra.org.bw. You can also submit a support ticket through your account.",
+            "sources": []
+        }
+
+    if len(matches) == 1:
+        entry = matches[0]
+        return {
+            "reply": entry["answer"],
+            "sources": [{"title": entry["question"], "link": entry["link"]}]
+        }
+
+    # Multiple matches — combine the top answers
+    reply_parts = []
+    sources = []
+    for i, entry in enumerate(matches):
+        reply_parts.append(f"**{entry['question']}**\n{entry['answer']}")
+        sources.append({"title": entry["question"], "link": entry["link"]})
+
+    reply = "Here's what I found:\n\n" + "\n\n".join(reply_parts)
+    return {"reply": reply, "sources": sources}
+---------- END OF FILE ----------
+
+DO NOT CHANGE THIS FILE unless you understand what you're changing.
+Just make sure you paste it exactly.
+
+
+FILE 3: main.py
+=================
+This is the server that receives chat messages and returns answers.
+Create a new file called main.py and paste this EXACTLY:
+
+---------- START OF FILE ----------
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from search import get_response
+
+app = FastAPI(title="BOCRA Chatbot API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8080", "http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+class ChatRequest(BaseModel):
+    message: str
+
+
+class ChatSource(BaseModel):
+    title: str
+    link: str
+
+
+class ChatResponse(BaseModel):
+    reply: str
+    sources: list[ChatSource]
+
+
+@app.post("/api/ai/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest):
+    result = get_response(request.message)
+    return result
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+---------- END OF FILE ----------
+
+DO NOT CHANGE THIS FILE. Just paste it exactly.
+
+
+HOW TO RUN YOUR CHATBOT
+=========================
+After creating all 3 files, do this in your terminal:
+
+Step 1: Make sure you're in the right folder and venv is active:
+
+    cd C:\Users\gabsk\OneDrive\Documents\Hamster-BOCRA-website\chatbot
+    venv\Scripts\activate
+
+Step 2: Start the server:
+
+    uvicorn main:app --reload --port 8001
+
+Step 3: You should see output like:
+    INFO:     Uvicorn running on http://127.0.0.1:8001
+
+Step 4: TEST IT. Open a NEW terminal and run:
+
+    curl -X POST http://localhost:8001/api/ai/chat -H "Content-Type: application/json" -d "{\"message\": \"how do I apply for a licence\"}"
+
+    If curl isn't available, open your browser and go to:
+    http://localhost:8001/docs
+
+    This opens a test page. Click on POST /api/ai/chat, click "Try it out",
+    type {"message": "how do I apply for a licence"} and click Execute.
+
+Step 5: You should get back a JSON response with the answer and a source link.
+    If it works — congrats, the chatbot is running!
+
+
+HOW TO TEST YOUR KNOWLEDGE BASE
+=================================
+Every time you add new entries to knowledge_base.json, the server auto-reloads
+(because of --reload flag). Test common questions:
+
+    "how do I apply for a licence"          → should match licensing entries
+    "I want to file a complaint"            → should match complaint entries
+    "where is BOCRA"                        → should match location entry
+    "what is type approval"                 → should match type approval
+    "I forgot my password"                  → should match account entry
+    "how much does it cost"                 → should match fee/payment entries
+    "my internet is slow"                   → should match complaint + consumer rights
+    "number portability"                    → should match number portability
+    "tell me about 5G"                      → might not match — add an entry for it!
+    "asdfghjkl"                             → should return the fallback "contact us" message
+
+If a question gives a BAD answer, either:
+  1. Add better keywords to the matching entry
+  2. Create a new entry that matches better
+  3. Ask KG or BK for help
+
+
+YOUR DAILY PLAN
+================
+DAY 1:
+  - Set up the 3 files (knowledge_base.json, search.py, main.py)
+  - Get the server running
+  - Test the 25 starter entries
+  - Start adding more entries — aim for 40+ by end of day
+
+DAY 2:
+  - Research BOCRA's actual services on their current website (bocra.org.bw)
+  - Add entries for EVERY service listed there
+  - Add entries for common frustrations (slow internet, dropped calls, billing issues)
+  - Test with weird phrasings — misspellings, slang, short queries
+  - Improve keywords where the search gives wrong results
+  - Aim for 60+ entries by end of day
+
+DAY 3 (INTEGRATION DAY):
+  - KG and BK will take your knowledge_base.json and search.py
+  - They will plug it into the main backend
+  - You'll help test the chatbot on the actual website
+  - Fix any entries that don't work well in the real UI
+
+
+RESEARCH SOURCES
+=================
+To write accurate answers, browse these:
+  - BOCRA's current website: https://www.bocra.org.bw
+  - Look at their "Services" and "Licensing" pages
+  - Check their "Consumer" section for common complaints
+  - Read their FAQ if they have one
+  - Look at the landing page mega-menu in our app (it lists all services)
+
+When in doubt about a specific procedure, write a general answer and add
+a note like "Contact BOCRA for specific requirements" — we can refine later.
+
+
+RULES
+======
+1. DO NOT touch any files outside the chatbot/ folder
+2. DO NOT install packages other than fastapi and uvicorn
+3. Save your work often (Ctrl+S)
+4. If something breaks, ask BK or KG — do not spend more than 15 minutes stuck
+5. Focus on QUALITY of answers, not just quantity
+6. Every answer should be helpful to a real person
+7. Think like a customer, not a developer

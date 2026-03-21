@@ -1,0 +1,214 @@
+TASK BRIEF — Phemo (Frontend Developer)
+==========================================
+
+PROJECT: BOCRA Website — Hackathon
+ROLE: Frontend continuation — Customer Portal & Admin Panel
+STACK: React + TypeScript, Vite, Tailwind CSS, shadcn/ui primitives
+
+
+BEFORE YOU START
+----------------
+1. Pull latest from the repo and cd into Frontend/
+2. Run: npm install && npm run dev
+3. Open localhost:8080 and review the landing page
+4. Read through ALL components in src/components/ to understand patterns
+5. Check for any redundancies or unused code (there shouldn't be any, but verify)
+
+
+ARCHITECTURE RULES (must follow)
+---------------------------------
+- No-scroll, single-viewport layouts. Content lives in modals/overlays/panels, not long pages.
+- Component communication via custom window events (see how toggle-signin-modal works).
+- Tailwind only for styling. Use the existing design system in index.css (BOCRA brand colors, fonts, utilities).
+- Keep components small and focused. One file per component.
+- All new shadcn/ui components you add: install via npx shadcn@latest add <component>
+- No unused imports, no dead code. Clean as you go.
+- The existing glassmorphic/backdrop-blur aesthetic should carry through all new pages.
+
+
+TASK 1: CUSTOMER PORTAL (after sign-in)
+-----------------------------------------
+Build the authenticated customer dashboard. This is what a citizen or licence applicant sees after logging in.
+
+Pages/views to build (use React Router for routing):
+
+A) DASHBOARD HOME
+   - Welcome banner with user name
+   - Quick stats cards: active licences, pending applications, notifications
+   - Recent activity feed (latest application updates, messages)
+   - Quick action buttons: New Application, Check Status, Contact Admin
+
+B) PROFILE PAGE
+   - Personal details: full name, ID number (Omang), gender, date of birth, phone, email
+   - Editable fields with save functionality
+   - Profile photo upload
+   - Address information
+   - Account settings (change password, notification preferences)
+
+C) LICENCE APPLICATIONS
+   - "New Application" flow (multi-step form):
+     Step 1: Select licence type (Telecommunications, Broadcasting, Postal, Internet/ISP)
+     Step 2: Upload required documents (PDF upload with drag-and-drop)
+     Step 3: Review submission details
+     Step 4: Payment via Stripe (credit card, debit card, PayPal)
+     Step 5: Confirmation with reference number
+   - "My Applications" list view:
+     Each row shows: reference number, licence type, date submitted, status badge
+     Status types: Draft, Submitted, Under Review, Approved, Rejected, Requires Action
+   - Application detail view: full timeline of status changes, documents, admin comments
+   - "Renew Licence" flow for existing licences
+
+D) LICENCE VERIFICATION
+   - Input a licence number to verify status and validity
+   - Display: licence holder name, type, issue date, expiry, current status
+   - Print/download verification certificate
+
+E) PAYMENTS
+   - Stripe integration (use @stripe/react-stripe-js and @stripe/stripe-js)
+   - Payment methods: credit card, debit card, PayPal
+   - Payment history table: date, amount, reference, status, receipt download
+   - Outstanding balances view
+
+F) DOCUMENTS & RESOURCES
+   - List of downloadable documents (regulations, forms, guidelines)
+   - Filter by category
+   - User's uploaded documents with status
+
+G) NEWS & STATISTICS
+   - Latest BOCRA news feed (same data pattern as landing page news)
+   - Telecom statistics dashboard (simple charts — use recharts, already familiar to project)
+   - Public notices and consultation documents
+
+H) CONTACT / SUPPORT
+   - Send email to admin (form: subject, category dropdown, message, attach file)
+   - Message history / ticket tracking
+   - Link to AI chatbot (reuse existing AIChatbot component)
+
+
+TASK 2: ADMIN PANEL (after admin sign-in)
+-------------------------------------------
+Build the admin dashboard. This is what BOCRA staff sees after logging in.
+
+Pages/views to build:
+
+A) ADMIN DASHBOARD
+   - Overview stats: total applications (pending/approved/rejected), active licences, revenue
+   - Charts: applications over time, revenue by licence type, sector breakdown
+   - Recent activity feed
+   - Alerts/notifications (new applications, expiring licences)
+
+B) APPLICATION MANAGEMENT
+   - Table of all applications with filters: status, type, date range, search
+   - Bulk actions: approve, reject, request more info
+   - Individual application view:
+     - Applicant details
+     - Submitted documents (view/download)
+     - Status timeline
+     - Admin notes/comments (internal)
+     - Action buttons: Approve, Reject, Request Additional Info, Assign to Staff
+   - Status change triggers email notification to applicant
+
+C) CUSTOMER MANAGEMENT
+   - List all registered users with search and filter
+   - View customer profile, their applications, payment history
+   - Suspend/activate accounts
+   - Send direct message to customer
+
+D) CONTENT MANAGEMENT
+   - Manage news articles: create, edit, publish, archive
+   - Manage public notices and consultation documents
+   - Upload/manage downloadable documents and forms
+   - Update statistics data
+
+E) REPORTS & ANALYTICS
+   - Generate reports: applications by period, revenue, sector stats
+   - Export to CSV/PDF
+   - Dashboard with configurable date ranges
+
+F) SETTINGS
+   - Admin profile management
+   - Staff accounts (add/remove admins)
+   - System settings (payment config, notification templates)
+
+
+ROUTING STRUCTURE
+-----------------
+Add these routes in App.tsx:
+
+/                         → Landing page (existing)
+/customer/dashboard       → Customer dashboard
+/customer/profile         → Profile page
+/customer/applications    → My applications list
+/customer/applications/new → New application flow
+/customer/applications/:id → Application detail
+/customer/verify          → Licence verification
+/customer/payments        → Payment history
+/customer/documents       → Documents & resources
+/customer/support         → Contact admin / tickets
+/admin/dashboard          → Admin dashboard
+/admin/applications       → Application management
+/admin/applications/:id   → Review application
+/admin/customers          → Customer list
+/admin/customers/:id      → Customer detail
+/admin/content            → Content management
+/admin/reports            → Reports
+/admin/settings           → Admin settings
+
+
+FILE STRUCTURE
+--------------
+Create these folders under src/:
+
+src/
+  layouts/
+    CustomerLayout.tsx      (sidebar + header wrapper for customer pages)
+    AdminLayout.tsx         (sidebar + header wrapper for admin pages)
+  pages/
+    customer/
+      Dashboard.tsx
+      Profile.tsx
+      Applications.tsx
+      NewApplication.tsx
+      ApplicationDetail.tsx
+      VerifyLicence.tsx
+      Payments.tsx
+      Documents.tsx
+      Support.tsx
+    admin/
+      Dashboard.tsx
+      Applications.tsx
+      ReviewApplication.tsx
+      Customers.tsx
+      CustomerDetail.tsx
+      Content.tsx
+      Reports.tsx
+      Settings.tsx
+
+
+PRIORITY ORDER
+--------------
+1. Customer Dashboard + Profile (get the layout right first)
+2. New Application flow with Stripe payment
+3. My Applications list + detail view
+4. Admin Dashboard
+5. Admin Application Management
+6. Everything else
+
+Install these packages when you get to payment:
+  npm install @stripe/react-stripe-js @stripe/stripe-js
+
+Install recharts when you get to charts:
+  npm install recharts
+
+
+NOTES
+-----
+- Every decision you make, write a brief comment in the code explaining WHY.
+- Keep the no-scroll viewport-fit design. Use sidebars and panels, not long scrolling pages.
+- Reuse the existing AI chatbot — it should be available on all authenticated pages.
+- The landing page SignInModal already dispatches events with step info. After auth, 
+  redirect to /customer/dashboard or /admin/dashboard based on role.
+- Backend API is being built in parallel (FastAPI + Supabase). For now, use mock data 
+  and local state. We will wire up API calls later.
+- All forms should validate inputs before submission.
+- Use the existing BOCRA color palette and typography. Do not introduce new fonts or colors.

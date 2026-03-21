@@ -1,0 +1,490 @@
+TASK BRIEF — BK (Backend, Infrastructure & Compliance)
+========================================================
+
+PROJECT: BOCRA Website — Hackathon
+ROLE: Deployment, Supabase setup, backend API, security, compliance
+STACK: FastAPI (Python), Supabase (Postgres + Auth + Storage), Vercel (Frontend), AI pipeline
+
+
+STEP 0: REVIEW THE FRONTEND
+-----------------------------
+Before touching backend, open the frontend (cd Frontend && npm run dev) and click through 
+every single element on the landing page:
+
+Check these specifically:
+- Header: all 4 mega-menu dropdowns open and close correctly
+- Header: Search icon opens search bar
+- Header: "Apply for License" button opens SignInModal at customer-choice step
+- Header: "Sign In" button opens SignInModal at role-selection step
+- Header: "AI Assistant" button opens chatbot
+- Header: Mobile hamburger menu works and all items inside function
+- Hero: "Licence Application" card opens SignInModal
+- Hero: "Explore Services" opens the services overlay, X closes it
+- Hero: "News" opens the news overlay, X closes it
+- Mega Menu: "Contact BOCRA" item in Resources > News & Media opens ContactModal
+- Mega Menu: "Need Help? Contact Us" footer button opens ContactModal
+- Contact Modal: Call link triggers phone dialer
+- Contact Modal: Email link triggers mail client
+- Contact Modal: AI Assistant closes modal and opens chatbot
+- Chatbot: Type messages, get responses, minimize, close all work
+- Bottom Bar: Phone and email links are clickable
+- Bottom Bar: Social media icons present (currently href="#")
+- SignInModal: Admin flow → admin login form
+- SignInModal: Customer flow → login and register forms, back buttons work
+
+Report any broken links or missing connections in a short list. Fix if trivial.
+
+
+STEP 1: VERCEL DEPLOYMENT
+---------------------------
+Set up continuous deployment so every push to main goes live.
+
+1. Create a Vercel project linked to the GitHub repo
+2. Set the root directory to "Frontend"
+3. Build command: npm run build
+4. Output directory: dist
+5. Set environment variables if needed (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY)
+6. Verify the deployment works — landing page loads correctly
+7. Set up preview deployments for pull requests
+8. Share the live URL with the team
+
+
+STEP 2: SUPABASE PROJECT SETUP
+--------------------------------
+
+A) Authentication
+-----------------
+Enable these auth providers in Supabase dashboard:
+- Email/password (default)
+- Google OAuth (for customer registration)
+
+Configure:
+- Email confirmation ON (auto-generated acknowledgement — compliance D)
+- Password minimum 8 chars, require mixed case + number
+- JWT expiry: 1 hour
+- Refresh token rotation: ON
+
+Create auth roles:
+- customer (default on signup)
+- admin (manually assigned)
+
+B) Database Tables
+------------------
+Create these tables. Column names are exact — types in brackets.
+Label placeholders A-D for form fields Ayanda will define later.
+
+-- PROFILES (extends Supabase auth.users)
+profiles
+  id                  [uuid, PK, references auth.users]
+  role                [text, default 'customer']   -- 'customer' | 'admin'
+  full_name           [text]
+  id_number           [text]                       -- Omang / passport
+  gender              [text]
+  date_of_birth       [date]
+  phone               [text]
+  address             [text]
+  profile_photo_url   [text]
+  consent_given       [boolean, default false]     -- compliance C: user consent
+  created_at          [timestamptz, default now()]
+  updated_at          [timestamptz, default now()]
+
+-- LICENCE APPLICATIONS
+applications
+  id                  [uuid, PK, default gen_random_uuid()]
+  applicant_id        [uuid, references profiles.id]
+  reference_number    [text, unique]               -- auto-generated e.g. BOCRA-2026-0001
+  licence_type        [text]                       -- telecom | broadcasting | postal | internet
+  status              [text, default 'draft']      -- draft | submitted | under_review | approved | rejected | requires_action
+  form_data_a         [jsonb]                      -- placeholder A: basic info fields
+  form_data_b         [jsonb]                      -- placeholder B: technical details
+  form_data_c         [jsonb]                      -- placeholder C: financial details
+  form_data_d         [jsonb]                      -- placeholder D: additional requirements
+  admin_notes         [text]                       -- internal notes (compliance B: reasons for decision)
+  decision_reason     [text]                       -- MANDATORY on approve/reject (compliance B)
+  decided_by          [uuid, references profiles.id]
+  decided_at          [timestamptz]
+  submitted_at        [timestamptz]
+  created_at          [timestamptz, default now()]
+  updated_at          [timestamptz, default now()]
+
+-- APPLICATION STATUS HISTORY (compliance B: timestamped logs)
+application_status_log
+  id                  [uuid, PK, default gen_random_uuid()]
+  application_id      [uuid, references applications.id]
+  old_status          [text]
+  new_status          [text]
+  changed_by          [uuid, references profiles.id]
+  reason              [text]
+  created_at          [timestamptz, default now()]
+
+-- DOCUMENTS (compliance D: secure digital storage)
+documents
+  id                  [uuid, PK, default gen_random_uuid()]
+  application_id      [uuid, references applications.id, nullable]
+  uploaded_by         [uuid, references profiles.id]
+  file_name           [text]
+  file_path           [text]                       -- Supabase storage path
+  file_type           [text]                       -- pdf, jpg, etc.
+  file_size           [bigint]
+  category            [text]                       -- application_doc | id_doc | certificate | other
+  created_at          [timestamptz, default now()]
+
+-- COMPLAINTS (compliance A & F: consumer complaint portal)
+complaints
+  id                  [uuid, PK, default gen_random_uuid()]
+  complainant_id      [uuid, references profiles.id]
+  reference_number    [text, unique]
+  subject             [text]
+  category            [text]                       -- service_quality | billing | coverage | other
+  description         [text]
+  status              [text, default 'open']       -- open | investigating | resolved | closed
+  admin_response      [text]
+  evidence_file_ids   [uuid array]                 -- references documents.id
+  resolved_by         [uuid, references profiles.id]
+  resolved_at         [timestamptz]
+  created_at          [timestamptz, default now()]
+  updated_at          [timestamptz, default now()]
+
+-- COMPLAINT STATUS LOG
+complaint_status_log
+  id                  [uuid, PK, default gen_random_uuid()]
+  complaint_id        [uuid, references complaints.id]
+  old_status          [text]
+  new_status          [text]
+  changed_by          [uuid, references profiles.id]
+  note                [text]
+  created_at          [timestamptz, default now()]
+
+-- PAYMENTS
+payments
+  id                  [uuid, PK, default gen_random_uuid()]
+  application_id      [uuid, references applications.id]
+  payer_id            [uuid, references profiles.id]
+  stripe_payment_id   [text]
+  amount              [numeric]
+  currency            [text, default 'BWP']
+  status              [text]                       -- pending | succeeded | failed | refunded
+  receipt_url         [text]
+  created_at          [timestamptz, default now()]
+
+-- NEWS ARTICLES (for admin content management)
+news
+  id                  [uuid, PK, default gen_random_uuid()]
+  title               [text]
+  description         [text]
+  content             [text]
+  tag                 [text]                       -- press_release | public_notice | announcement | tender
+  published           [boolean, default false]
+  author_id           [uuid, references profiles.id]
+  published_at        [timestamptz]
+  created_at          [timestamptz, default now()]
+  updated_at          [timestamptz, default now()]
+
+-- TELECOM STATISTICS
+telecom_stats
+  id                  [uuid, PK, default gen_random_uuid()]
+  metric_name         [text]                       -- mobile_subscriptions | broadband_penetration | etc.
+  value               [numeric]
+  unit                [text]                       -- count | percent | mbps
+  period              [text]                       -- 2026-Q1, 2025, etc.
+  sector              [text]                       -- telecom | broadcasting | postal | internet
+  source              [text]
+  created_at          [timestamptz, default now()]
+
+-- REGULATORY DECISIONS (compliance B: public access)
+regulatory_decisions
+  id                  [uuid, PK, default gen_random_uuid()]
+  title               [text]
+  summary             [text]
+  decision_type       [text]                       -- approval | rejection | policy | consultation
+  document_url        [text]
+  is_public           [boolean, default true]
+  decided_at          [timestamptz]
+  created_at          [timestamptz, default now()]
+
+-- SUPPORT TICKETS (customer-to-admin messages)
+support_tickets
+  id                  [uuid, PK, default gen_random_uuid()]
+  customer_id         [uuid, references profiles.id]
+  subject             [text]
+  category            [text]
+  message             [text]
+  attachment_ids      [uuid array]
+  status              [text, default 'open']       -- open | replied | closed
+  admin_reply         [text]
+  replied_by          [uuid, references profiles.id]
+  created_at          [timestamptz, default now()]
+  updated_at          [timestamptz, default now()]
+
+-- AUDIT LOG (compliance B & E: who did what when)
+audit_log
+  id                  [uuid, PK, default gen_random_uuid()]
+  user_id             [uuid, references profiles.id]
+  action              [text]                       -- login | logout | create | update | delete | approve | reject
+  resource_type       [text]                       -- application | complaint | user | news | etc.
+  resource_id         [uuid]
+  ip_address          [text]
+  details             [jsonb]
+  created_at          [timestamptz, default now()]
+
+
+C) Storage Buckets
+------------------
+Create these Supabase storage buckets:
+
+- application-documents   (private, 10MB limit, PDF/JPG/PNG only)
+- profile-photos          (private, 5MB limit, JPG/PNG only)
+- evidence-uploads        (private, 10MB limit, PDF/JPG/PNG/MP4)
+- public-documents        (public, 20MB limit, PDF only — regulations, forms, reports)
+
+Set RLS policies:
+- Users can only read/write their own files in private buckets
+- Admins can read all files
+- Public bucket is readable by everyone
+
+
+D) Row Level Security (RLS) Policies
+-------------------------------------
+Enable RLS on ALL tables. Key policies:
+
+profiles:
+  - Users can read and update their own profile
+  - Admins can read all profiles
+
+applications:
+  - Users can CRUD their own applications
+  - Admins can read all, update status/notes/decision fields
+
+documents:
+  - Users can upload and view their own documents
+  - Admins can view all documents
+
+complaints:
+  - Users can create and view their own complaints
+  - Admins can read all, update status and response
+
+payments:
+  - Users can view their own payments
+  - Admins can view all payments
+
+news, telecom_stats, regulatory_decisions:
+  - Anyone can read published/public records
+  - Only admins can create/update/delete
+
+audit_log:
+  - Only admins can read
+  - System inserts only (no user writes)
+
+
+STEP 3: BACKEND API (FastAPI)
+------------------------------
+The backend skeleton is already in backend/. Work inside that.
+
+cd backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+
+Build these API route modules in backend/app/api/:
+
+auth.py
+  POST /api/auth/signup          — register new customer
+  POST /api/auth/login           — login, return JWT
+  POST /api/auth/logout          — invalidate session
+  GET  /api/auth/me              — get current user profile
+  * All auth goes through Supabase Auth — FastAPI just proxies/validates
+
+applications.py
+  GET    /api/applications              — list user's applications (admin: all)
+  POST   /api/applications              — create new application
+  GET    /api/applications/:id          — get application detail
+  PATCH  /api/applications/:id          — update application (user: draft only, admin: status)
+  POST   /api/applications/:id/submit   — submit (changes status, timestamps)
+  POST   /api/applications/:id/decide   — admin approve/reject (REQUIRES decision_reason)
+  GET    /api/applications/:id/history  — status change log
+
+complaints.py
+  GET    /api/complaints                — list complaints
+  POST   /api/complaints                — submit new complaint
+  GET    /api/complaints/:id            — detail
+  PATCH  /api/complaints/:id            — admin update status/response
+
+documents.py
+  POST   /api/documents/upload          — upload file to Supabase storage
+  GET    /api/documents/:id             — get download URL
+  DELETE /api/documents/:id             — delete (owner only)
+
+payments.py
+  POST   /api/payments/create-intent    — create Stripe payment intent
+  POST   /api/payments/webhook          — Stripe webhook handler
+  GET    /api/payments                  — payment history
+
+news.py
+  GET    /api/news                      — public news feed
+  POST   /api/news                      — admin create
+  PATCH  /api/news/:id                  — admin update
+  DELETE /api/news/:id                  — admin delete
+
+stats.py
+  GET    /api/stats                     — public telecom stats
+  POST   /api/stats                     — admin add stat
+  PATCH  /api/stats/:id                 — admin update
+
+search.py
+  GET    /api/search?q=...              — full-text search across news, decisions, documents
+  * Use Supabase full-text search (tsvector) on title/description fields
+
+decisions.py
+  GET    /api/decisions                 — public regulatory decisions
+  POST   /api/decisions                 — admin create
+
+support.py
+  GET    /api/support/tickets           — user's tickets (admin: all)
+  POST   /api/support/tickets           — create ticket
+  PATCH  /api/support/tickets/:id       — admin reply
+
+
+STEP 4: SECURITY (Compliance C, D, E)
+---------------------------------------
+These are NON-NEGOTIABLE. Implement from day one.
+
+Authentication & Access:
+  - Supabase Auth handles JWT tokens — validate on every backend request
+  - Role-based middleware: check profile.role before admin endpoints
+  - Rate limiting on auth endpoints (5 attempts per minute)
+  - CORS locked to Vercel domain + localhost
+
+Data Protection:
+  - Supabase encrypts data at rest (Postgres) and in transit (TLS)
+  - Never return sensitive fields (id_number, password hash) in list endpoints
+  - Input validation on ALL endpoints using Pydantic models
+  - Sanitize file uploads: validate MIME type, scan file extension
+  - Data minimisation: forms only collect what's necessary (compliance C)
+
+Audit Trail:
+  - Log EVERY state change to audit_log table
+  - Include: user_id, action, resource, IP address, timestamp
+  - Audit log is append-only — no update or delete allowed
+
+Admin Security:
+  - Tiered admin permissions if time allows (compliance E)
+  - Suspicious login detection: flag if same account logs in from new IP
+  - Consider 2FA for admin accounts (Supabase supports TOTP) — stretch goal
+
+Backups:
+  - Supabase handles daily automatic backups on paid plans
+  - Document the backup strategy in the README
+
+
+STEP 5: AI CHATBOT DATA PIPELINE  (TIRO's PROJECT. KG and BK will help)
+----------------------------------
+The frontend has a keyword-matching chatbot (src/components/AIChatbot.tsx).
+Upgrade it to fetch real data:
+
+Backend endpoint:
+  POST /api/ai/chat
+  Body: { message: string, conversation_id?: string }
+  Response: { reply: string, sources?: string[] }
+
+Implementation (in backend/app/ai/):
+  1. Build a knowledge base from Supabase content:
+     - News articles (title + description)
+     - Regulatory decisions (title + summary)
+     - FAQ entries (if we add a faq table)
+     - Service descriptions (hardcoded from the landing page nav data)
+  2. On user message:
+     - Search knowledge base using Supabase full-text search
+     - Return top 3 matches formatted as a helpful response
+     - Include source links so user can click through
+  3. Fallback: if no match, return a default "contact us" response with
+     phone/email from the BottomBar component
+
+This is NOT an LLM integration — it's a smart search/retrieval system.
+If time allows and team wants to add OpenAI/Gemini, that's a bonus.
+
+Update the frontend AIChatbot.tsx to:
+  - POST to /api/ai/chat instead of the local keyword matching
+  - Display source links in responses
+  - Keep the existing UI exactly as-is
+
+
+STEP 6: SEARCH FUNCTIONALITY
+------------------------------
+The header has a search bar (already built, just needs backend).
+
+Frontend: when user types in search bar and presses Enter:
+  - Call GET /api/search?q=<query>
+  - Display results in a dropdown or overlay under the search bar
+  - Results grouped by type: News, Decisions, Documents, Services
+  - Each result links to its detail page or opens relevant overlay
+
+Backend: /api/search endpoint
+  - Query across: news, regulatory_decisions, public documents
+  - Use Postgres full-text search (ts_vector + ts_query)
+  - Return top 10 results with title, snippet, type, and URL
+
+
+COMPLIANCE CHECKLIST — WHAT TO HIT THIS WEEK
+----------------------------------------------
+From the legal requirements doc, here's what's feasible in hackathon timeframe:
+
+MUST HAVE (build these):
+[A] ✓ Online licensing application portal (application flow + Supabase)
+[A] ✓ Secure document upload system (storage buckets + RLS)
+[A] ✓ Consumer complaints submission portal (complaints table + API)
+[B] ✓ Application & complaint status tracking (status_log tables)
+[B] ✓ Mandatory decision reasons (decision_reason field, required on approve/reject)
+[B] ✓ Timestamped logs (audit_log + status_log tables)
+[C] ✓ Role-based access controls (profiles.role + RLS policies)
+[C] ✓ User consent before data submission (consent_given field + frontend popup)
+[C] ✓ Data minimisation (only necessary form fields)
+[C] ✓ Encryption (Supabase TLS + at-rest encryption)
+[C] ✓ Secure login authentication (Supabase Auth + JWT)
+[D] ✓ Electronic submission forms (all application/complaint forms)
+[D] ✓ Auto-generated acknowledgement receipts (email on submit)
+[D] ✓ Timestamped electronic records (created_at on everything)
+[D] ✓ Secure digital document storage (Supabase storage, private buckets)
+[E] ✓ Tiered admin permission levels (role-based middleware)
+[F] ✓ Simple complaint submission (step-by-step form)
+[F] ✓ Complaint status tracker (complaint_status_log)
+[F] ✓ Mobile-friendly design (already responsive)
+[F] ✓ Plain-language explanations (UI copy)
+
+STRETCH GOALS (if time allows):
+[A] Evidence upload & case tracking for complaints
+[B] Request Review / Appeal buttons for contested decisions
+[B] Public access to regulatory decisions searchable database
+[C] Auto-archiving & data retention settings
+[E] Two-factor authentication for admin (Supabase TOTP)
+[E] Intrusion detection & suspicious login alerts
+[F] SMS/email notifications on case progress
+[F] Multilingual interface (Setswana translation)
+[F] FAQ section explaining consumer rights
+
+
+PRIORITY ORDER
+---------------
+1. Vercel deployment (get the live URL ASAP so team can see changes)
+2. Supabase project + auth setup + profiles table
+3. All database tables + RLS policies
+4. Storage buckets
+5. Auth API endpoints
+6. Applications API + status logging
+7. Search endpoint
+8. AI chatbot endpoint
+9. Complaints, payments, news, stats APIs
+10. Audit logging middleware
+11. Stretch goals
+
+
+NOTES
+------
+- Document EVERYTHING. Every table, every endpoint, every security decision.
+- Write the Supabase migrations in supabase/migrations/ as .sql files.
+- Seed data goes in supabase/seed/ — add sample news, stats, a test user.
+- Update backend/README.md as you go.
+- Coordinate with Phemo on API response shapes — he needs to know what the
+  frontend will receive.
+- The .env.example already has SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY.
+  Add STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET when you get to payments.
+- Never commit .env files. Only .env.example.
