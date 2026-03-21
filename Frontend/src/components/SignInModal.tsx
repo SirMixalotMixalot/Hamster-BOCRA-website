@@ -123,7 +123,13 @@ const SignInModal = () => {
               </DialogDescription>
             </DialogHeader>
             <form
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={(e) => {
+                e.preventDefault();
+                // TODO: wire to Supabase Auth with password validation
+                setOpen(false);
+                setStep("role");
+                window.location.href = "/admin/dashboard";
+              }}
               className="space-y-4 mt-2"
             >
               <div className="space-y-2">
@@ -150,7 +156,7 @@ const SignInModal = () => {
                   Forgot password?
                 </a>
               </div>
-              <Button className="w-full bg-bocra-navy hover:bg-bocra-navy/90">
+              <Button type="submit" className="w-full bg-bocra-navy hover:bg-bocra-navy/90">
                 Sign In
               </Button>
             </form>
@@ -211,7 +217,13 @@ const SignInModal = () => {
               </DialogDescription>
             </DialogHeader>
             <form
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={(e) => {
+                e.preventDefault();
+                // TODO: wire to Supabase Auth with password validation
+                setOpen(false);
+                setStep("role");
+                window.location.href = "/customer/dashboard";
+              }}
               className="space-y-4 mt-2"
             >
               <div className="space-y-2">
@@ -238,7 +250,7 @@ const SignInModal = () => {
                   Forgot password?
                 </a>
               </div>
-              <Button className="w-full">Sign In</Button>
+              <Button type="submit" className="w-full">Sign In</Button>
               <p className="text-center text-xs text-muted-foreground">
                 Don't have an account?{" "}
                 <button
@@ -300,7 +312,13 @@ const SignInModal = () => {
 
               {/* Registration form */}
               <form
-                onSubmit={(e) => e.preventDefault()}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  // TODO: wire to Supabase Auth registration
+                  setOpen(false);
+                  setStep("role");
+                  window.location.href = "/customer/dashboard";
+                }}
                 className="space-y-3"
               >
                 <div className="space-y-2">
@@ -335,7 +353,7 @@ const SignInModal = () => {
                     placeholder="Confirm your password"
                   />
                 </div>
-                <Button className="w-full">Create Account</Button>
+                <Button type="submit" className="w-full">Create Account</Button>
               </form>
 
               <p className="text-center text-xs text-muted-foreground">
