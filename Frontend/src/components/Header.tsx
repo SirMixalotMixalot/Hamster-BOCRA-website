@@ -149,7 +149,7 @@ const Header = () => {
               <Search className="h-5 w-5 text-white/70" />
             </button>
             <button
-              onClick={() => window.dispatchEvent(new CustomEvent("toggle-signin-modal", { detail: { step: "customer-choice" } }))}
+              onClick={() => window.dispatchEvent(new CustomEvent("toggle-signin-modal", { detail: { step: "sign-in" } }))}
               className="hidden md:inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-white/10 border border-white/20 text-sm font-medium text-white hover:bg-white/20 transition-colors"
             >
               Apply for License
@@ -253,7 +253,7 @@ const Header = () => {
                 <button
                   onClick={() => {
                     setMobileOpen(false);
-                    window.dispatchEvent(new CustomEvent("toggle-signin-modal", { detail: { step: "customer-choice" } }));
+                    window.dispatchEvent(new CustomEvent("toggle-signin-modal", { detail: { step: "sign-in" } }));
                   }}
                   className="block w-full text-center px-4 py-2.5 bg-bocra-gold text-bocra-navy rounded-md text-sm font-semibold"
                 >
