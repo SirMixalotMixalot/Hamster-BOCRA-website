@@ -45,14 +45,17 @@ const SignInModal = () => {
     setStep("sign-in");
   };
 
+  const inputClasses = "bg-white/10 border-white/20 text-white placeholder:text-gray-400";
+  const socialBtnClasses = "w-full gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white";
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-gray-900/70 backdrop-blur-xl border border-white/10 shadow-2xl [&>button]:text-white">
         {/* Back button only for admin-login */}
         {step === "admin-login" && (
           <button
             onClick={goBack}
-            className="absolute left-4 top-4 rounded-sm opacity-70 hover:opacity-100 transition-opacity"
+            className="absolute left-4 top-4 rounded-sm text-white opacity-70 hover:opacity-100 transition-opacity"
           >
             <ArrowLeft className="h-4 w-4" />
             <span className="sr-only">Back</span>
@@ -63,8 +66,8 @@ const SignInModal = () => {
         {step === "sign-in" && (
           <>
             <DialogHeader className="text-center sm:text-center">
-              <DialogTitle className="text-xl">Sign In</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-xl text-white">Sign In</DialogTitle>
+              <DialogDescription className="text-gray-300">
                 Log in to your BOCRA account
               </DialogDescription>
             </DialogHeader>
@@ -79,25 +82,27 @@ const SignInModal = () => {
               className="space-y-4 mt-2"
             >
               <div className="space-y-2">
-                <Label htmlFor="signin-email">Email</Label>
+                <Label htmlFor="signin-email" className="text-gray-200">Email</Label>
                 <Input
                   id="signin-email"
                   type="email"
                   placeholder="you@example.com"
+                  className={inputClasses}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="signin-password">Password</Label>
+                <Label htmlFor="signin-password" className="text-gray-200">Password</Label>
                 <Input
                   id="signin-password"
                   type="password"
                   placeholder="Enter your password"
+                  className={inputClasses}
                 />
               </div>
               <div className="flex items-center justify-end">
                 <a
                   href="#"
-                  className="text-xs text-primary hover:underline"
+                  className="text-xs text-blue-400 hover:underline"
                 >
                   Forgot password?
                 </a>
@@ -107,8 +112,8 @@ const SignInModal = () => {
 
             {/* Divider */}
             <div className="relative">
-              <Separator />
-              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-3 text-xs text-muted-foreground">
+              <Separator className="bg-white/20" />
+              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/70 px-3 text-xs text-gray-400">
                 or
               </span>
             </div>
@@ -117,7 +122,7 @@ const SignInModal = () => {
             <div className="space-y-3">
               <Button
                 variant="outline"
-                className="w-full gap-2"
+                className={socialBtnClasses}
                 onClick={(e) => e.preventDefault()}
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24">
@@ -142,7 +147,7 @@ const SignInModal = () => {
               </Button>
               <Button
                 variant="outline"
-                className="w-full gap-2"
+                className={socialBtnClasses}
                 onClick={(e) => e.preventDefault()}
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -154,21 +159,21 @@ const SignInModal = () => {
 
             {/* Footer links */}
             <div className="space-y-2 text-center">
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-gray-400">
                 Don't have an account?{" "}
                 <button
                   type="button"
                   onClick={() => setStep("sign-up")}
-                  className="text-primary hover:underline font-medium"
+                  className="text-blue-400 hover:underline font-medium"
                 >
                   Sign up
                 </button>
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-gray-400">
                 <button
                   type="button"
                   onClick={() => setStep("admin-login")}
-                  className="text-primary hover:underline font-medium"
+                  className="text-blue-400 hover:underline font-medium"
                 >
                   Admin portal
                 </button>
@@ -181,8 +186,8 @@ const SignInModal = () => {
         {step === "sign-up" && (
           <>
             <DialogHeader className="text-center sm:text-center">
-              <DialogTitle className="text-xl">Create Account</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-xl text-white">Create Account</DialogTitle>
+              <DialogDescription className="text-gray-300">
                 Register for a BOCRA account
               </DialogDescription>
             </DialogHeader>
@@ -197,27 +202,30 @@ const SignInModal = () => {
               className="space-y-4 mt-2"
             >
               <div className="space-y-2">
-                <Label htmlFor="reg-email">Email</Label>
+                <Label htmlFor="reg-email" className="text-gray-200">Email</Label>
                 <Input
                   id="reg-email"
                   type="email"
                   placeholder="you@example.com"
+                  className={inputClasses}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="reg-password">Password</Label>
+                <Label htmlFor="reg-password" className="text-gray-200">Password</Label>
                 <Input
                   id="reg-password"
                   type="password"
                   placeholder="Create a password"
+                  className={inputClasses}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="reg-confirm">Confirm Password</Label>
+                <Label htmlFor="reg-confirm" className="text-gray-200">Confirm Password</Label>
                 <Input
                   id="reg-confirm"
                   type="password"
                   placeholder="Confirm your password"
+                  className={inputClasses}
                 />
               </div>
               <Button type="submit" className="w-full">Create Account</Button>
@@ -225,8 +233,8 @@ const SignInModal = () => {
 
             {/* Divider */}
             <div className="relative">
-              <Separator />
-              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-3 text-xs text-muted-foreground">
+              <Separator className="bg-white/20" />
+              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/70 px-3 text-xs text-gray-400">
                 or
               </span>
             </div>
@@ -235,7 +243,7 @@ const SignInModal = () => {
             <div className="space-y-3">
               <Button
                 variant="outline"
-                className="w-full gap-2"
+                className={socialBtnClasses}
                 onClick={(e) => e.preventDefault()}
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24">
@@ -260,7 +268,7 @@ const SignInModal = () => {
               </Button>
               <Button
                 variant="outline"
-                className="w-full gap-2"
+                className={socialBtnClasses}
                 onClick={(e) => e.preventDefault()}
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -270,12 +278,12 @@ const SignInModal = () => {
               </Button>
             </div>
 
-            <p className="text-center text-xs text-muted-foreground">
+            <p className="text-center text-xs text-gray-400">
               Already have an account?{" "}
               <button
                 type="button"
                 onClick={() => setStep("sign-in")}
-                className="text-primary hover:underline font-medium"
+                className="text-blue-400 hover:underline font-medium"
               >
                 Sign in
               </button>
@@ -287,8 +295,8 @@ const SignInModal = () => {
         {step === "admin-login" && (
           <>
             <DialogHeader className="text-center sm:text-center pt-2">
-              <DialogTitle className="text-xl">Admin Sign In</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-xl text-white">Admin Sign In</DialogTitle>
+              <DialogDescription className="text-gray-300">
                 Access the BOCRA staff portal
               </DialogDescription>
             </DialogHeader>
@@ -303,25 +311,27 @@ const SignInModal = () => {
               className="space-y-4 mt-2"
             >
               <div className="space-y-2">
-                <Label htmlFor="admin-email">Email</Label>
+                <Label htmlFor="admin-email" className="text-gray-200">Email</Label>
                 <Input
                   id="admin-email"
                   type="email"
                   placeholder="admin@bocra.org.bw"
+                  className={inputClasses}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="admin-password">Password</Label>
+                <Label htmlFor="admin-password" className="text-gray-200">Password</Label>
                 <Input
                   id="admin-password"
                   type="password"
                   placeholder="Enter your password"
+                  className={inputClasses}
                 />
               </div>
               <div className="flex items-center justify-end">
                 <a
                   href="#"
-                  className="text-xs text-primary hover:underline"
+                  className="text-xs text-blue-400 hover:underline"
                 >
                   Forgot password?
                 </a>
