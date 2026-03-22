@@ -1,13 +1,18 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { CreditCard, Plus, Download, CheckCircle2, Clock, XCircle, Wallet, Smartphone, X, Loader2 } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
-import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import {
+  Elements,
+  CardNumberElement,
+  CardExpiryElement,
+  CardCvcElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "");
 
 type PaymentStatus = "All" | "Completed" | "Pending" | "Failed";
-
-type MethodType = "card" | "paypal" | "apple-pay" | null;
 
 type SavedMethod = {
   id: string;
@@ -54,62 +59,66 @@ const statusIcons: Record<string, { icon: typeof CheckCircle2; color: string; bg
 const cardClasses = "bg-white/40 backdrop-blur-sm rounded-2xl border border-white/60 shadow-lg";
 const inputClasses = "w-full px-5 py-2.5 rounded-full border border-white/80 bg-white/50 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary";
 
+const stripeElementStyle = {
+  base: {
+    fontSize: "14px",
+    color: "#1a1a2e",
+    "::placeholder": { color: "#9ca3af" },
+    fontFamily: "inherit",
+  },
+  invalid: { color: "#ef4444" },
+};
+
 const methodIcons: Record<string, typeof CreditCard> = {
   card: CreditCard,
   paypal: Wallet,
   "apple-pay": Smartphone,
 };
 
-const CARD_ELEMENT_OPTIONS = {
-  style: {
-    base: {
-      fontSize: "14px",
-      color: "#1a1a2e",
-      "::placeholder": { color: "#9ca3af" },
-      fontFamily: "inherit",
-    },
-    invalid: { color: "#ef4444" },
-  },
-};
-
-// Stripe Card Form (must be inside <Elements>)
-const StripeCardForm = ({
-  onSuccess,
+// Stripe Card Form with split elements
+const AddPaymentForm = ({
+  onCardSuccess,
+  onPaypal,
+  onApplePay,
   onCancel,
-  onBack,
+  saving,
 }: {
-  onSuccess: (brand: string, last4: string, expMonth: number, expYear: number) => void;
+  onCardSuccess: (brand: string, last4: string, expMonth: number, expYear: number) => void;
+  onPaypal: () => void;
+  onApplePay: () => void;
   onCancel: () => void;
-  onBack: () => void;
+  saving: boolean;
 }) => {
   const stripe = useStripe();
   const elements = useElements();
-  const [saving, setSaving] = useState(false);
+  const [cardSaving, setCardSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cardName, setCardName] = useState("");
 
   const handleSubmit = async () => {
     if (!stripe || !elements) return;
 
-    setSaving(true);
+    setCardSaving(true);
     setError(null);
 
-    const cardElement = elements.getElement(CardElement);
-    if (!cardElement) return;
+    const cardNumber = elements.getElement(CardNumberElement);
+    if (!cardNumber) return;
 
     const { error: stripeError, paymentMethod } = await stripe.createPaymentMethod({
       type: "card",
-      card: cardElement,
+      card: cardNumber,
+      billing_details: { name: cardName },
     });
 
     if (stripeError) {
       setError(stripeError.message || "An error occurred");
-      setSaving(false);
+      setCardSaving(false);
       return;
     }
 
-    if (paymentMethod) {
-      const { brand, last4, exp_month, exp_year } = paymentMethod.card!;
-      onSuccess(
+    if (paymentMethod?.card) {
+      const { brand, last4, exp_month, exp_year } = paymentMethod.card;
+      onCardSuccess(
         brand ? brand.charAt(0).toUpperCase() + brand.slice(1) : "Card",
         last4 || "0000",
         exp_month,
@@ -117,18 +126,28 @@ const StripeCardForm = ({
       );
     }
 
-    setSaving(false);
+    setCardSaving(false);
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <button onClick={onBack} className="text-sm text-primary hover:underline">
-            Back
-          </button>
-          <span className="text-muted-foreground">•</span>
-          <p className="text-sm font-medium text-foreground">Card Details</p>
+        <div className="flex items-center gap-3">
+          <p className="text-sm font-medium text-foreground">Add Payment Method</p>
+          {/* Card brand logos */}
+          <div className="flex items-center gap-1.5">
+            <svg className="h-6 w-auto" viewBox="0 0 48 32" fill="none">
+              <rect width="48" height="32" rx="4" fill="#1A1F71" />
+              <path d="M19.5 21h-3.2l2-12.4h3.2L19.5 21zm13.2-12.1c-.6-.3-1.6-.5-2.8-.5-3.1 0-5.3 1.6-5.3 4 0 1.7 1.6 2.7 2.8 3.3 1.2.6 1.6 1 1.6 1.5 0 .8-1 1.2-1.9 1.2-1.3 0-1.9-.2-3-.6l-.4-.2-.4 2.6c.7.3 2.1.6 3.5.6 3.3 0 5.4-1.6 5.4-4.1 0-1.4-.8-2.4-2.7-3.3-1.1-.6-1.8-.9-1.8-1.5 0-.5.6-1 1.8-1 1 0 1.8.2 2.4.5l.3.1.5-2.6zm8.1 0H38c-1 0-1.7.3-2.1 1.2l-6 14.3h3.3l.7-1.8h4l.4 1.8H41l-2.6-12.1h2.4v-3.4zm-5.4 9.5l1.7-4.5.5-1.2.3 1.2 1 4.5h-3.5zM15.4 8.6l-3 8.5-.3-1.6c-.6-1.9-2.3-3.9-4.2-4.9l2.8 10.4h3.3l5-12.4h-3.6z" fill="white" />
+              <path d="M10.3 8.6H5.1l-.1.3c3.9 1 6.5 3.4 7.6 6.3l-1.1-5.5c-.2-.8-.8-1.1-1.2-1.1z" fill="#F9A533" />
+            </svg>
+            <svg className="h-6 w-auto" viewBox="0 0 48 32" fill="none">
+              <rect width="48" height="32" rx="4" fill="#252525" />
+              <circle cx="19" cy="16" r="8" fill="#EB001B" />
+              <circle cx="29" cy="16" r="8" fill="#F79E1B" />
+              <path d="M24 10.3a8 8 0 0 1 0 11.4 8 8 0 0 1 0-11.4z" fill="#FF5F00" />
+            </svg>
+          </div>
         </div>
         <button
           onClick={onCancel}
@@ -137,20 +156,69 @@ const StripeCardForm = ({
           <X className="h-4 w-4" />
         </button>
       </div>
-      <div className="rounded-2xl border border-white/80 bg-white/50 px-5 py-3.5">
-        <CardElement options={CARD_ELEMENT_OPTIONS} />
+
+      {/* Card Form — no labels, compact */}
+      <div className="space-y-2">
+        <input
+          type="text"
+          value={cardName}
+          onChange={(e) => setCardName(e.target.value)}
+          placeholder="Name on card"
+          className={inputClasses}
+        />
+        <div className="rounded-full border border-white/80 bg-white/50 px-5 py-3">
+          <CardNumberElement options={{ style: stripeElementStyle, placeholder: "Card number" }} />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-full border border-white/80 bg-white/50 px-5 py-3">
+            <CardExpiryElement options={{ style: stripeElementStyle }} />
+          </div>
+          <div className="rounded-full border border-white/80 bg-white/50 px-5 py-3">
+            <CardCvcElement options={{ style: stripeElementStyle }} />
+          </div>
+        </div>
       </div>
-      {error && (
-        <p className="text-sm text-red-500">{error}</p>
-      )}
+
+      {error && <p className="text-sm text-red-500">{error}</p>}
+
       <button
         onClick={handleSubmit}
-        disabled={saving || !stripe}
-        className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-medium bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-colors disabled:opacity-60"
+        disabled={cardSaving || !stripe || !cardName}
+        className="w-full inline-flex items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-medium bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-colors disabled:opacity-60"
       >
-        {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+        {cardSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
         Add Card
       </button>
+
+      {/* Divider */}
+      <div className="relative py-1">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-white/40" />
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-white/40 px-3 text-xs text-muted-foreground backdrop-blur-sm rounded-full">or</span>
+        </div>
+      </div>
+
+      {/* PayPal & Apple Pay side by side */}
+      <div className="flex gap-3">
+        <button
+          onClick={onPaypal}
+          disabled={saving}
+          className="flex-1 inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium bg-[#0070ba] text-white hover:bg-[#005ea6] transition-colors shadow-md disabled:opacity-60"
+        >
+          <Wallet className="h-4 w-4" />
+          PayPal
+        </button>
+        <button
+          onClick={onApplePay}
+          disabled={saving}
+          className="flex-1 inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium bg-black text-white hover:bg-gray-800 transition-colors shadow-md disabled:opacity-60"
+        >
+          <Smartphone className="h-4 w-4" />
+          Apple Pay
+        </button>
+      </div>
     </div>
   );
 };
@@ -162,23 +230,14 @@ const Payments = () => {
   // Payment methods
   const [savedMethods, setSavedMethods] = useState<SavedMethod[]>([]);
   const [addingMethod, setAddingMethod] = useState(false);
-  const [methodStep, setMethodStep] = useState<MethodType>(null);
   const [saving, setSaving] = useState(false);
-
-  // PayPal
-  const [paypalEmail, setPaypalEmail] = useState("");
 
   const filtered = filter === "All" ? MOCK_PAYMENTS : MOCK_PAYMENTS.filter((p) => p.status === filter);
   const statusInfo = selected ? statusIcons[selected.status] : null;
   const StatusIcon = statusInfo?.icon;
 
-  // Stable Elements key so Stripe doesn't re-mount unnecessarily
-  const stripeKey = useMemo(() => Date.now(), [methodStep === "card"]);
-
   const resetForm = () => {
     setAddingMethod(false);
-    setMethodStep(null);
-    setPaypalEmail("");
   };
 
   const handleCardSuccess = (brand: string, last4: string, expMonth: number, expYear: number) => {
@@ -196,7 +255,7 @@ const Payments = () => {
     resetForm();
   };
 
-  const handleSavePaypal = () => {
+  const handlePaypal = () => {
     setSaving(true);
     setTimeout(() => {
       setSavedMethods((prev) => [
@@ -204,7 +263,7 @@ const Payments = () => {
         {
           id: Date.now().toString(),
           brand: "PayPal",
-          detail: paypalEmail,
+          detail: "Connected",
           expiry: "",
           isDefault: prev.length === 0,
           type: "paypal",
@@ -215,7 +274,7 @@ const Payments = () => {
     }, 800);
   };
 
-  const handleSaveApplePay = () => {
+  const handleApplePay = () => {
     setSaving(true);
     setTimeout(() => {
       setSavedMethods((prev) => [
@@ -325,136 +384,17 @@ const Payments = () => {
           style={{ gridTemplateRows: addingMethod ? "1fr" : "0fr" }}
         >
           <div className="overflow-hidden">
-            <div className="pt-2 space-y-4">
-              {/* Step 1: Choose method type */}
-              {addingMethod && !methodStep && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-foreground">Choose payment method</p>
-                    <button
-                      onClick={resetForm}
-                      className="p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-white/50 transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <button
-                      onClick={() => setMethodStep("card")}
-                      className="flex items-center gap-3 p-4 rounded-xl bg-white/30 border border-white/50 hover:bg-white/50 transition-all text-left"
-                    >
-                      <CreditCard className="h-5 w-5 text-foreground/60 shrink-0" />
-                      <div>
-                        <p className="text-sm font-medium text-foreground">Credit / Debit Card</p>
-                        <p className="text-xs text-muted-foreground">Visa, Mastercard</p>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => setMethodStep("paypal")}
-                      className="flex items-center gap-3 p-4 rounded-xl bg-white/30 border border-white/50 hover:bg-white/50 transition-all text-left"
-                    >
-                      <Wallet className="h-5 w-5 text-foreground/60 shrink-0" />
-                      <div>
-                        <p className="text-sm font-medium text-foreground">PayPal</p>
-                        <p className="text-xs text-muted-foreground">Pay with PayPal</p>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => setMethodStep("apple-pay")}
-                      className="flex items-center gap-3 p-4 rounded-xl bg-white/30 border border-white/50 hover:bg-white/50 transition-all text-left"
-                    >
-                      <Smartphone className="h-5 w-5 text-foreground/60 shrink-0" />
-                      <div>
-                        <p className="text-sm font-medium text-foreground">Apple Pay</p>
-                        <p className="text-xs text-muted-foreground">Pay with Apple</p>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2: Stripe Card Form */}
-              {methodStep === "card" && (
-                <Elements stripe={stripePromise} key={stripeKey}>
-                  <StripeCardForm
-                    onSuccess={handleCardSuccess}
+            <div className="pt-2">
+              {addingMethod && (
+                <Elements stripe={stripePromise}>
+                  <AddPaymentForm
+                    onCardSuccess={handleCardSuccess}
+                    onPaypal={handlePaypal}
+                    onApplePay={handleApplePay}
                     onCancel={resetForm}
-                    onBack={() => setMethodStep(null)}
+                    saving={saving}
                   />
                 </Elements>
-              )}
-
-              {/* Step 2: PayPal */}
-              {methodStep === "paypal" && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => setMethodStep(null)} className="text-sm text-primary hover:underline">
-                        Back
-                      </button>
-                      <span className="text-muted-foreground">•</span>
-                      <p className="text-sm font-medium text-foreground">PayPal Account</p>
-                    </div>
-                    <button
-                      onClick={resetForm}
-                      className="p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-white/50 transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-foreground">PayPal Email</label>
-                    <input
-                      type="email"
-                      value={paypalEmail}
-                      onChange={(e) => setPaypalEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      className={inputClasses}
-                    />
-                  </div>
-                  <button
-                    onClick={handleSavePaypal}
-                    disabled={saving || !paypalEmail}
-                    className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-medium bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-colors disabled:opacity-60"
-                  >
-                    {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-                    Connect PayPal
-                  </button>
-                </div>
-              )}
-
-              {/* Step 2: Apple Pay */}
-              {methodStep === "apple-pay" && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => setMethodStep(null)} className="text-sm text-primary hover:underline">
-                        Back
-                      </button>
-                      <span className="text-muted-foreground">•</span>
-                      <p className="text-sm font-medium text-foreground">Apple Pay</p>
-                    </div>
-                    <button
-                      onClick={resetForm}
-                      className="p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-white/50 transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <div className="p-4 rounded-xl bg-white/30 border border-white/50 text-center">
-                    <Smartphone className="h-8 w-8 text-foreground/40 mx-auto mb-2" />
-                    <p className="text-sm text-foreground">Connect your Apple Pay account</p>
-                    <p className="text-xs text-muted-foreground mt-1">You'll be redirected to verify with Apple</p>
-                  </div>
-                  <button
-                    onClick={handleSaveApplePay}
-                    disabled={saving}
-                    className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-medium bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-colors disabled:opacity-60"
-                  >
-                    {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-                    Connect Apple Pay
-                  </button>
-                </div>
               )}
             </div>
           </div>
