@@ -205,9 +205,15 @@ const AddPaymentForm = ({
         <button
           onClick={onPaypal}
           disabled={saving}
-          className="flex-1 inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium bg-[#0070ba] text-white hover:bg-[#005ea6] transition-colors shadow-md disabled:opacity-60"
+          className="flex-1 inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium bg-[#FFC439] text-[#003087] hover:bg-[#f0b830] transition-colors shadow-md disabled:opacity-60"
         >
-          <Wallet className="h-4 w-4" />
+          <svg className="h-5 w-auto" viewBox="0 0 101 32" fill="none">
+            <path d="M12.2 4.3h8.1c4.4 0 6.1 2.2 5.8 5.5-.5 5.2-3.7 8.1-8 8.1h-2.1c-.6 0-1 .4-1.1 1L14 25.1c-.1.4-.4.6-.8.6H9.3c-.5 0-.8-.4-.7-.9L12.2 4.3z" fill="#003087"/>
+            <path d="M39.6 4.2h8.1c4.4 0 6.1 2.3 5.8 5.5-.5 5.2-3.7 8.1-8 8.1h-2.1c-.6 0-1 .4-1.1 1l-.9 6.2c-.1.4-.4.6-.8.6h-3.8c-.5 0-.8-.4-.7-.9l3.5-20.5z" fill="#0070E0"/>
+            <path d="M24.7 10.5c.2-1.2 1.1-2 2.3-2h5.7c.7 0 1.3.1 1.8.2.2.1.3.1.5.2.1.1.3.1.4.2l-.1.5c-.5 3.5-3.1 5.8-6.7 5.8h-2.7c-.5 0-.9.4-1 .9l-1 5.9-.3 1.7c0 .4.2.7.6.7h3.5c.5 0 .9-.3 1-.8l.7-4.6c.1-.5.5-.8 1-.8h.6c4 0 7.1-2.6 7.8-6.7.3-1.8 0-3.3-1-4.3-1-1.1-2.8-1.7-5.1-1.7h-8.1c-.5 0-1 .4-1.1.9l-1.5 8.9.7-4.1c.1-.5.5-.9 1-.9h.1l.9-4.9z" fill="#003087"/>
+            <path d="M52.1 10.5c.2-1.2 1.1-2 2.3-2h5.7c.7 0 1.3.1 1.8.2.2.1.3.1.5.2.1.1.3.1.4.2l-.1.5c-.5 3.5-3.1 5.8-6.7 5.8h-2.7c-.5 0-.9.4-1 .9l-1 5.9-.3 1.7c0 .4.2.7.6.7h3.5c.5 0 .9-.3 1-.8l.7-4.6c.1-.5.5-.8 1-.8h.6c4 0 7.1-2.6 7.8-6.7.3-1.8 0-3.3-1-4.3-1-1.1-2.8-1.7-5.1-1.7h-8.1c-.5 0-1 .4-1.1.9l-1.5 8.9.7-4.1c.1-.5.5-.9 1-.9h.1l.9-4.9z" fill="#0070E0"/>
+            <path d="M68.4 11.2h3.3c.4 0 .7.4.6.8l-2.4 15c-.1.4-.4.7-.8.7h-3c-.4 0-.7-.4-.6-.8l2.4-15c0-.4.3-.7.5-.7zm1.7-4.3c1.2 0 2.2 1 2.2 2.2s-1 2.2-2.2 2.2-2.2-1-2.2-2.2 1-2.2 2.2-2.2z" fill="#003087"/>
+          </svg>
           PayPal
         </button>
         <button
@@ -215,8 +221,10 @@ const AddPaymentForm = ({
           disabled={saving}
           className="flex-1 inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium bg-black text-white hover:bg-gray-800 transition-colors shadow-md disabled:opacity-60"
         >
-          <Smartphone className="h-4 w-4" />
-          Apple Pay
+          <svg className="h-5 w-auto" viewBox="0 0 24 24" fill="white">
+            <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+          </svg>
+          Pay
         </button>
       </div>
     </div>
