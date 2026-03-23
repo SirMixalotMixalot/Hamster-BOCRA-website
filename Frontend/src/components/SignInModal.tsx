@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -11,12 +12,28 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { getMe, login, logout, signInWithGoogle, signup } from "@/lib/auth";
 
 type Step = "sign-in" | "sign-up" | "admin-login";
 
 const SignInModal = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>("sign-in");
+  const [loading, setLoading] = useState(false);
+
+  const [signInEmail, setSignInEmail] = useState("");
+  const [signInPassword, setSignInPassword] = useState("");
+
+  const [signUpEmail, setSignUpEmail] = useState("");
+  const [signUpPassword, setSignUpPassword] = useState("");
+  const [signUpConfirm, setSignUpConfirm] = useState("");
+
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -43,6 +60,110 @@ const SignInModal = () => {
 
   const goBack = () => {
     setStep("sign-in");
+  };
+
+  const handleCustomerLogin = async () => {
+    setLoading(true);
+    try {
+      await login({ email: signInEmail, password: signInPassword });
+      const me = await getMe();
+      setOpen(false);
+      setStep("sign-in");
+      navigate(me.profile.role === "admin" ? "/admin/dashboard" : "/customer/dashboard");
+    } catch (error) {
+      toast({
+        title: "Sign in failed",
+        description: error instanceof Error ? error.message : "Please check your credentials and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCustomerRegister = async () => {
+    if (signUpPassword !== signUpConfirm) {
+      toast({
+        title: "Password mismatch",
+        description: "Password and confirm password must match.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await signup({
+        email: signUpEmail,
+        password: signUpPassword,
+      });
+
+      if (response.session?.access_token) {
+        const me = await getMe();
+        setOpen(false);
+        setStep("sign-in");
+        navigate(me.profile.role === "admin" ? "/admin/dashboard" : "/customer/dashboard");
+        return;
+      }
+
+      toast({
+        title: "Account created",
+        description: "Registration successful. Please check your email if confirmation is required.",
+      });
+      setStep("sign-in");
+    } catch (error) {
+      toast({
+        title: "Registration failed",
+        description: error instanceof Error ? error.message : "Unable to create account.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAdminLogin = async () => {
+    setLoading(true);
+    try {
+      await login({ email: adminEmail, password: adminPassword });
+      const me = await getMe();
+
+      if (me.profile.role !== "admin") {
+        await logout();
+        toast({
+          title: "Access denied",
+          description: "This account does not have admin access.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setOpen(false);
+      setStep("sign-in");
+      navigate("/admin/dashboard");
+    } catch (error) {
+      toast({
+        title: "Admin sign in failed",
+        description: error instanceof Error ? error.message : "Unable to sign in.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleOAuth = async () => {
+    setLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      setLoading(false);
+      toast({
+        title: "Google sign-in failed",
+        description: error instanceof Error ? error.message : "Unable to start Google sign-in.",
+        variant: "destructive",
+      });
+    }
   };
 
   const inputClasses = "bg-white/10 border-white/20 text-white placeholder:text-gray-400 rounded-full";
@@ -72,12 +193,9 @@ const SignInModal = () => {
               </DialogDescription>
             </DialogHeader>
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                // TODO: wire to Supabase Auth
-                setOpen(false);
-                setStep("sign-in");
-                window.location.href = "/customer/dashboard";
+                await handleCustomerLogin();
               }}
               className="space-y-4 mt-2"
             >
@@ -87,7 +205,10 @@ const SignInModal = () => {
                   id="signin-email"
                   type="email"
                   placeholder="you@example.com"
+                  value={signInEmail}
+                  onChange={(e) => setSignInEmail(e.target.value)}
                   className={inputClasses}
+                  required
                 />
               </div>
               <div className="space-y-2">
@@ -96,7 +217,10 @@ const SignInModal = () => {
                   id="signin-password"
                   type="password"
                   placeholder="Enter your password"
+                  value={signInPassword}
+                  onChange={(e) => setSignInPassword(e.target.value)}
                   className={inputClasses}
+                  required
                 />
               </div>
               <div className="flex items-center justify-end">
@@ -107,7 +231,9 @@ const SignInModal = () => {
                   Forgot password?
                 </a>
               </div>
-              <Button type="submit" className="w-full rounded-full">Sign In</Button>
+              <Button type="submit" className="w-full rounded-full" disabled={loading}>
+                {loading ? "Signing In..." : "Sign In"}
+              </Button>
             </form>
 
             {/* Divider */}
@@ -123,7 +249,11 @@ const SignInModal = () => {
               <Button
                 variant="outline"
                 className={socialBtnClasses}
-                onClick={(e) => e.preventDefault()}
+                onClick={(e) => {
+                  e.preventDefault();
+                  void handleGoogleOAuth();
+                }}
+                disabled={loading}
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
                   <path
@@ -149,6 +279,7 @@ const SignInModal = () => {
                 variant="outline"
                 className={socialBtnClasses}
                 onClick={(e) => e.preventDefault()}
+                disabled={loading}
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
@@ -192,12 +323,9 @@ const SignInModal = () => {
               </DialogDescription>
             </DialogHeader>
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                // TODO: wire to Supabase Auth registration
-                setOpen(false);
-                setStep("sign-in");
-                window.location.href = "/customer/dashboard";
+                await handleCustomerRegister();
               }}
               className="space-y-4 mt-2"
             >
@@ -207,7 +335,10 @@ const SignInModal = () => {
                   id="reg-email"
                   type="email"
                   placeholder="you@example.com"
+                  value={signUpEmail}
+                  onChange={(e) => setSignUpEmail(e.target.value)}
                   className={inputClasses}
+                  required
                 />
               </div>
               <div className="space-y-2">
@@ -216,7 +347,10 @@ const SignInModal = () => {
                   id="reg-password"
                   type="password"
                   placeholder="Create a password"
+                  value={signUpPassword}
+                  onChange={(e) => setSignUpPassword(e.target.value)}
                   className={inputClasses}
+                  required
                 />
               </div>
               <div className="space-y-2">
@@ -225,10 +359,15 @@ const SignInModal = () => {
                   id="reg-confirm"
                   type="password"
                   placeholder="Confirm your password"
+                  value={signUpConfirm}
+                  onChange={(e) => setSignUpConfirm(e.target.value)}
                   className={inputClasses}
+                  required
                 />
               </div>
-              <Button type="submit" className="w-full rounded-full">Create Account</Button>
+              <Button type="submit" className="w-full rounded-full" disabled={loading}>
+                {loading ? "Creating Account..." : "Create Account"}
+              </Button>
             </form>
 
             {/* Divider */}
@@ -244,7 +383,11 @@ const SignInModal = () => {
               <Button
                 variant="outline"
                 className={socialBtnClasses}
-                onClick={(e) => e.preventDefault()}
+                onClick={(e) => {
+                  e.preventDefault();
+                  void handleGoogleOAuth();
+                }}
+                disabled={loading}
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
                   <path
@@ -270,6 +413,7 @@ const SignInModal = () => {
                 variant="outline"
                 className={socialBtnClasses}
                 onClick={(e) => e.preventDefault()}
+                disabled={loading}
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
@@ -301,12 +445,9 @@ const SignInModal = () => {
               </DialogDescription>
             </DialogHeader>
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                // TODO: wire to Supabase Auth with password validation
-                setOpen(false);
-                setStep("sign-in");
-                window.location.href = "/admin/dashboard";
+                await handleAdminLogin();
               }}
               className="space-y-4 mt-2"
             >
@@ -316,7 +457,10 @@ const SignInModal = () => {
                   id="admin-email"
                   type="email"
                   placeholder="admin@bocra.org.bw"
+                  value={adminEmail}
+                  onChange={(e) => setAdminEmail(e.target.value)}
                   className={inputClasses}
+                  required
                 />
               </div>
               <div className="space-y-2">
@@ -325,7 +469,10 @@ const SignInModal = () => {
                   id="admin-password"
                   type="password"
                   placeholder="Enter your password"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
                   className={inputClasses}
+                  required
                 />
               </div>
               <div className="flex items-center justify-end">
@@ -336,8 +483,8 @@ const SignInModal = () => {
                   Forgot password?
                 </a>
               </div>
-              <Button type="submit" className="w-full rounded-full bg-bocra-navy hover:bg-bocra-navy/90">
-                Sign In
+              <Button type="submit" className="w-full rounded-full bg-bocra-navy hover:bg-bocra-navy/90" disabled={loading}>
+                {loading ? "Signing In..." : "Sign In"}
               </Button>
             </form>
           </>

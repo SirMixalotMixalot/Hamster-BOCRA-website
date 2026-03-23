@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import bocraLogo from "@/assets/bocra-logo.png";
 import AIChatbot from "@/components/AIChatbot";
+import { logout } from "@/lib/auth";
 
 const sidebarLinks = [
   { to: "/customer/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -33,7 +34,7 @@ const CustomerLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = () => {
-    // TODO: clear auth session when Supabase is wired
+    void logout();
     navigate("/");
   };
 

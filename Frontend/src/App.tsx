@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Route, Routes, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,8 +23,68 @@ import Complaints from "./pages/admin/Complaints.tsx";
 import Reports from "./pages/admin/Reports.tsx";
 import AdminSettings from "./pages/admin/Settings.tsx";
 import Careers from "./pages/Careers.tsx";
+import { bootstrapAuth, getAccessToken, getStoredRole, subscribeToSupabaseAuthChanges } from "@/lib/auth";
 
 const queryClient = new QueryClient();
+
+const AuthBootstrapper = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    let active = true;
+
+    const run = async () => {
+      const token = getAccessToken();
+      const storedRole = getStoredRole();
+
+      if (location.pathname === "/" && token && storedRole) {
+        navigate(storedRole === "admin" ? "/admin/dashboard" : "/customer/dashboard", {
+          replace: true,
+        });
+      }
+
+      const me = await bootstrapAuth();
+      if (!active) {
+        return;
+      }
+
+      const path = location.pathname;
+      const isProtected = path.startsWith("/admin") || path.startsWith("/customer");
+
+      if (!me) {
+        if (isProtected) {
+          navigate("/", { replace: true });
+        }
+        return;
+      }
+
+      const isAdmin = me.profile.role === "admin";
+
+      if (path === "/") {
+        navigate(isAdmin ? "/admin/dashboard" : "/customer/dashboard", { replace: true });
+        return;
+      }
+
+      if (path.startsWith("/admin") && !isAdmin) {
+        navigate("/customer/dashboard", { replace: true });
+      }
+    };
+
+    run();
+
+    const unsubscribe = subscribeToSupabaseAuthChanges(() => {
+      void run();
+    });
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [location.pathname, navigate]);
+
+  return null;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -31,6 +92,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <AuthBootstrapper />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/careers" element={<Careers />} />

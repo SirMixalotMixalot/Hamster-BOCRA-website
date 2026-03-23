@@ -46,6 +46,7 @@ Then open `.env` and fill in your Supabase credentials:
 ```
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SECRET_KEY=your-secret-key-here
+FRONTEND_ORIGIN=http://localhost:8080
 ```
 
 See [Environment Variables](#environment-variables) for where to find these values.
@@ -69,6 +70,7 @@ The backend requires Supabase credentials to be set in a `.env` file:
 ```
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SECRET_KEY=your-secret-key-here
+FRONTEND_ORIGIN=http://localhost:8080
 ```
 
 **Where to get these values:**
@@ -82,10 +84,26 @@ SUPABASE_SECRET_KEY=your-secret-key-here
 - The `secret_key` is backend-only and gives full administrative access to your Supabase project
 - Never expose it to the frontend or commit it to git (it's in `.gitignore`)
 - Keep it strictly on your server
+- The frontend should only use `VITE_SUPABASE_PUBLISHABLE_KEY` (safe to expose)
 
 **Legacy Support:**
 - If you have an older project using `SUPABASE_SERVICE_ROLE_KEY`, it will still work as a fallback
 - New projects should use `SUPABASE_SECRET_KEY` (the modern naming)
+
+## Auth Endpoints
+
+All auth is handled through Supabase Auth and exposed via FastAPI:
+
+- `POST /api/auth/signup`
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
+- `GET /api/auth/me`
+
+Notes:
+- Auth routes are rate limited to 5 requests per minute per IP.
+- JWT bearer tokens are validated for protected `/api/*` requests.
+- Role checks use `public.profiles.role` as the source of truth.
+- `/api/admin/*` paths are restricted to users with `role='admin'`.
 
 ## Virtual Environment Management
 
