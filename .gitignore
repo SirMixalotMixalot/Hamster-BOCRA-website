@@ -47,6 +47,12 @@ web_modules/
 # TypeScript cache
 *.tsbuildinfo
 
+# Never ignore source lib directories
+!/Frontend/src/lib/
+!/Frontend/src/lib/**
+!/backend/app/lib/
+!/backend/app/lib/**
+
 # Optional npm cache directory
 .npm
 
