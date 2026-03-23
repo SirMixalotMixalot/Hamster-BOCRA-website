@@ -44,6 +44,12 @@ const AuthBootstrapper = () => {
         });
       }
 
+      // First OAuth login has no cached role yet. Route optimistically to customer
+      // and let bootstrap role-check correct to admin when needed.
+      if (location.pathname === "/" && token && !storedRole) {
+        navigate("/customer/dashboard", { replace: true });
+      }
+
       const me = await bootstrapAuth();
       if (!active) {
         return;

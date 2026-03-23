@@ -29,6 +29,7 @@ const SignInModal = () => {
   const [signInPassword, setSignInPassword] = useState("");
 
   const [signUpEmail, setSignUpEmail] = useState("");
+  const [signUpFullName, setSignUpFullName] = useState("");
   const [signUpPassword, setSignUpPassword] = useState("");
   const [signUpConfirm, setSignUpConfirm] = useState("");
 
@@ -96,6 +97,7 @@ const SignInModal = () => {
       const response = await signup({
         email: signUpEmail,
         password: signUpPassword,
+        full_name: signUpFullName.trim() || undefined,
       });
 
       if (response.session?.access_token) {
@@ -329,6 +331,18 @@ const SignInModal = () => {
               }}
               className="space-y-4 mt-2"
             >
+              <div className="space-y-2">
+                <Label htmlFor="reg-full-name" className="text-gray-200">Full Name</Label>
+                <Input
+                  id="reg-full-name"
+                  type="text"
+                  placeholder="Your full name"
+                  value={signUpFullName}
+                  onChange={(e) => setSignUpFullName(e.target.value)}
+                  className={inputClasses}
+                  required
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="reg-email" className="text-gray-200">Email</Label>
                 <Input
