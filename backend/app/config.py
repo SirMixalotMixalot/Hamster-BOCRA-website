@@ -1,16 +1,4 @@
-from pydantic_settings import BaseSettings
-from functools import lru_cache
+# For backward compatibility, import from core
+from app.core.config import Settings, get_settings
 
-
-class Settings(BaseSettings):
-    supabase_url: str = ""
-    supabase_anon_key: str = ""
-    supabase_service_role_key: str = ""
-
-    class Config:
-        env_file = ".env"
-
-
-@lru_cache
-def get_settings() -> Settings:
-    return Settings()
+__all__ = ["Settings", "get_settings"]
