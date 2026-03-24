@@ -22,14 +22,21 @@ The app will be available at `http://localhost:8080`.
 | `npm run lint`     | Run ESLint                   |
 | `npm run test`     | Run tests                    |
 
-## Sign-In (Temporary – No Auth)
 
-Authentication is not wired yet. To access the portals:
+## Authentication
 
-1. Click **Sign In** on the landing page header.
-2. Choose a role:
-   - **Admin** → fill in any email/password → click **Sign In** → redirects to `/admin/dashboard`
-   - **Customer** → fill in any email/password → click **Sign In** → redirects to `/customer/dashboard`
-   - **Customer (Register)** → fill in the form → click **Create Account** → redirects to `/customer/dashboard`
+- Sign-up/login uses backend auth endpoints under `/api/auth/*`.
+- Google OAuth is handled through Supabase Auth.
+- Session bootstrap uses `GET /api/auth/me` to fetch profile role and route users.
 
-No credentials are validated. This will be replaced with Supabase Auth.
+## Vercel Deployment Notes
+
+- Deploy this frontend from the `Frontend/` directory.
+- Build command: `npm run build`
+- Output directory: `dist`
+- SPA rewrites are configured in `vercel.json`.
+- Ensure Vercel environment variables include the three `VITE_*` keys above.
+
+## Preview Deployments
+
+Vercel can automatically create preview deployments for pull requests when the repository is connected to a Vercel project and preview deploys are enabled in project settings.
