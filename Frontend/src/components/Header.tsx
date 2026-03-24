@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Menu, X, ChevronDown, FileText, Shield, Radio, BookOpen, Newspaper, HelpCircle, Building2, Users, Briefcase, Scale, Wifi, Mail as MailIcon, Tv, Package, Globe2, BarChart3, MessageSquare, ExternalLink, Award, ClipboardList, FileCheck, Sparkles } from "lucide-react";
+import { Search, Menu, X, ChevronDown, FileText, Shield, BookOpen, HelpCircle, Users, Briefcase, Scale, Wifi, Tv, Package, Globe2, BarChart3, ExternalLink, Award, ClipboardList, FileCheck, Newspaper } from "lucide-react";
 import bocraLogo from "@/assets/bocra-logo.png";
 import MegaMenuDrawer from "./MegaMenuDrawer";
 
@@ -15,37 +15,6 @@ const navItems = [
           { icon: Users, label: "Leadership", description: "Meet our Board and Executive team" },
           { icon: Award, label: "Strategic Plan", description: "Our vision for Botswana's digital future" },
           { icon: Briefcase, label: "Careers", description: "Join our team of professionals", action: "navigate:/careers" },
-        ],
-      },
-      {
-        title: "Governance",
-        items: [
-          { icon: Building2, label: "Board of Directors", description: "Our governing body" },
-          { icon: FileText, label: "Annual Reports", description: "Financial and operational reports" },
-          { icon: BookOpen, label: "Policies", description: "Regulatory policies and frameworks" },
-        ],
-      },
-    ],
-  },
-  {
-    label: "Services",
-    id: "services",
-    sections: [
-      {
-        title: "For Citizens",
-        items: [
-          { icon: MessageSquare, label: "File a Complaint", description: "Report service issues or disputes", action: "toggle-complaint-modal" },
-          { icon: Shield, label: "Consumer Rights", description: "Know your rights as a consumer" },
-          { icon: BarChart3, label: "Service Quality", description: "Quality of service standards" },
-        ],
-      },
-      {
-        title: "For Businesses",
-        items: [
-          { icon: FileCheck, label: "Licensing", description: "Apply for telecommunications licenses", action: "toggle-signin-modal" },
-          { icon: ClipboardList, label: "Type Approval", description: "Get equipment approved for use", action: "toggle-signin-modal" },
-          { icon: Wifi, label: "Spectrum Management", description: "Frequency allocation and management" },
-          { icon: ExternalLink, label: "Interconnection", description: "Network interconnection guidelines" },
         ],
       },
     ],
@@ -64,13 +33,10 @@ const navItems = [
         ],
       },
       {
-        title: "Actions",
+        title: "Regulatory Functions",
         items: [
-          { icon: FileCheck, label: "Apply for License", description: "Start a new license application", action: "toggle-signin-modal" },
-          { icon: ClipboardList, label: "Renew License", description: "Renew an existing license", action: "toggle-signin-modal" },
-          { icon: Shield, label: "Verify License", description: "Check license status and validity", action: "toggle-signin-modal" },
-          { icon: Scale, label: "Fee Schedule", description: "View licensing fees", action: "toggle-signin-modal" },
-          { icon: BarChart3, label: "Track Application", description: "Check your application status", action: "toggle-signin-modal" },
+          { icon: Wifi, label: "Spectrum Management", description: "Frequency allocation and management" },
+          { icon: ExternalLink, label: "Interconnection", description: "Network interconnection guidelines" },
         ],
       },
     ],
@@ -84,25 +50,45 @@ const navItems = [
         items: [
           { icon: BookOpen, label: "Legislation & Regulations", description: "Acts, policies, and guidelines" },
           { icon: FileText, label: "Publications", description: "Reports, studies, and papers" },
-          { icon: ClipboardList, label: "Consultations", description: "Draft documents for public comment" },
+          { icon: FileCheck, label: "Forms & Downloads", description: "Application forms and templates" },
           { icon: BarChart3, label: "Statistics", description: "Market data and sector indicators", action: "toggle-telecom-stats-modal" },
-        ],
-      },
-      {
-        title: "News & Media",
-        items: [
-          { icon: Newspaper, label: "News & Press", description: "Latest announcements and media" },
-          { icon: FileText, label: "Public Notices", description: "Official notices and advisories" },
-          { icon: Briefcase, label: "Tenders", description: "Procurement opportunities" },
-          { icon: MailIcon, label: "Contact BOCRA", description: "Office location, phone, and email", action: "toggle-contact-modal" },
         ],
       },
       {
         title: "Support",
         items: [
           { icon: HelpCircle, label: "FAQs", description: "Frequently asked questions" },
-          { icon: FileCheck, label: "Forms & Downloads", description: "Application forms and templates" },
           { icon: BookOpen, label: "Glossary", description: "Telecommunications terms explained" },
+        ],
+      },
+    ],
+  },
+  {
+    label: "Quick Links",
+    id: "quicklinks",
+    sections: [
+      {
+        title: "column-1",
+        items: [
+          { icon: FileCheck, label: "Apply for License", description: "Start a new license application", action: "toggle-signin-modal" },
+          { icon: ClipboardList, label: "Renew License", description: "Renew an existing license", action: "toggle-signin-modal" },
+          { icon: ClipboardList, label: "Type Approval", description: "Get equipment approved for use", action: "toggle-signin-modal" },
+        ],
+      },
+      {
+        title: "column-2",
+        items: [
+          { icon: Shield, label: "Verify License", description: "Check license status and validity", action: "toggle-signin-modal" },
+          { icon: Scale, label: "Fee Schedule", description: "View licensing fees", action: "toggle-signin-modal" },
+          { icon: BarChart3, label: "Track Application", description: "Check your application status", action: "toggle-signin-modal" },
+        ],
+      },
+      {
+        title: "column-3",
+        items: [
+          { icon: Newspaper, label: "News", description: "Latest announcements and media updates" },
+          { icon: BarChart3, label: "QOS Monitoring", description: "Quality of service metrics and performance" },
+          { icon: Briefcase, label: "Tenders", description: "View current procurement opportunities" },
         ],
       },
     ],
@@ -167,9 +153,6 @@ const Header = () => {
               }}
               className="hidden md:inline-flex items-center gap-2 px-3 py-2 bg-bocra-gold text-bocra-navy rounded-md text-sm font-semibold hover:opacity-90 transition-opacity shadow-sm"
             >
-              <div className="w-6 h-6 rounded-md bg-bocra-navy/20 flex items-center justify-center">
-                <Sparkles className="h-3.5 w-3.5 text-bocra-navy" />
-              </div>
               AI Assistant
             </button>
             <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden p-2 rounded-md hover:bg-white/10 transition-colors">
@@ -247,7 +230,6 @@ const Header = () => {
                   }}
                   className="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-sm font-medium text-white bg-white/10 rounded-md"
                 >
-                  <Sparkles className="h-4 w-4" />
                   AI Assistant
                 </button>
                 <button

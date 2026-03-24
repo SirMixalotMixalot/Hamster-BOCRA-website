@@ -11,9 +11,9 @@ import TypeApprovalModal from "@/components/TypeApprovalModal";
 
 const Index = () => {
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-background">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      <main className="flex-1 relative">
+      <main className="min-w-0 flex-1">
         <HeroSection />
       </main>
       <BottomBar />

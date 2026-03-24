@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react";
-import { HelpCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 type NavSection = {
@@ -44,7 +43,6 @@ const MegaMenuDrawer = ({ isOpen, onClose, activeItem }: MegaMenuDrawerProps) =>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-8">
             {activeItem.sections.map((section) => (
               <div key={section.title}>
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">{section.title}</h3>
                 <div className="space-y-1">
                   {section.items.map((item) => (
                     <a
@@ -75,27 +73,6 @@ const MegaMenuDrawer = ({ isOpen, onClose, activeItem }: MegaMenuDrawerProps) =>
                 </div>
               </div>
             ))}
-          </div>
-          {/* Need Help? */}
-          <div className="mt-6 pt-6 border-t border-border flex items-center justify-between bg-muted/40 -mx-8 px-8 -mb-8 py-4 rounded-b-lg">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <HelpCircle className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <div className="text-sm font-semibold text-foreground">Need Help?</div>
-                <div className="text-xs text-muted-foreground">Our support team is here to assist you with any questions.</div>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                onClose();
-                window.dispatchEvent(new CustomEvent("toggle-contact-modal"));
-              }}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:opacity-90 transition-opacity"
-            >
-              Contact Us
-            </button>
           </div>
         </div>
       </div>
