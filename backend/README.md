@@ -105,6 +105,88 @@ Notes:
 - Role checks use `public.profiles.role` as the source of truth.
 - `/api/admin/*` paths are restricted to users with `role='admin'`.
 
+## Supabase Auth Flow
+
+- Supabase Auth is the source of truth for sign-up, login, token issuance, and OAuth.
+- The backend proxies auth operations via `/api/auth/*` and validates bearer JWTs for protected routes.
+- `GET /api/auth/me` returns merged auth + profile information from `auth.users` + `public.profiles`.
+- Sensitive profile fields (for example `id_number`) are intentionally excluded from auth response models.
+
+## Migration Workflow
+
+Apply schema changes from the repository root with the Supabase CLI:
+
+```bash
+supabase db push
+```
+
+Notes:
+- Migrations live in `supabase/migrations/` and should be additive/corrective.
+- Seed scripts/data belong in `supabase/seed/`.
+- Do not commit real `.env` files.
+
+## RLS Overview
+
+Row Level Security (RLS) is enabled on core app tables including:
+
+- `profiles`
+- `applications`
+- `application_status_log`
+- `documents`
+- `complaints`
+- `complaint_status_log`
+- `payments`
+- `news`
+- `telecom_stats`
+- `regulatory_decisions`
+- `support_tickets`
+- `audit_log`
+
+Policy model summary:
+
+- Users can access their own records for user-owned tables.
+- Admin permissions are derived from `public.profiles.role` via `public.is_admin(auth.uid())`.
+- Public read access is limited to explicitly public content (for example published news and public decisions).
+- `audit_log` is admin-readable only; client-authenticated inserts are not allowed by policy.
+
+## Storage Buckets And Policies
+
+Storage setup is managed via migration `supabase/migrations/20260323103000_create_storage_buckets_and_policies.sql`.
+
+Buckets:
+
+- `application-documents` (private, 10 MB, PDF/JPG/PNG)
+- `profile-photos` (private, 5 MB, JPG/PNG)
+- `evidence-uploads` (private, 10 MB, PDF/JPG/PNG/MP4)
+- `public-documents` (public, 20 MB, PDF)
+
+Storage policy model:
+
+- Private bucket files must be stored under the user prefix path: `<auth.uid()>/<filename>`.
+- Users can read/write/delete only their own files in private buckets.
+- Admins can read all files in private buckets.
+- `public-documents` is readable by everyone; writes are admin-only.
+
+## CORS And Rate Limiting
+
+- CORS is restricted to localhost dev origins and configured frontend/Vercel domains.
+- Add additional production domains via `FRONTEND_ORIGIN` as a comma-separated list.
+- Auth endpoints are rate limited at 5 attempts/minute per IP and endpoint path.
+
+## Manual Dashboard Steps
+
+Complete these in Supabase dashboard if not already configured:
+
+1. Auth → Providers: enable Email and Google OAuth.
+2. Auth → URL Configuration: add site URL + redirect URLs for localhost and Vercel domains.
+3. Confirm project API keys and set `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, and frontend publishable key env vars.
+
+## Deployment Notes
+
+- Frontend deployment is expected on Vercel from the `Frontend/` directory.
+- Configure preview deployments for pull requests in Vercel project settings (if not already enabled).
+- Ensure backend CORS allowlist includes active production and preview frontend domains.
+
 ## Virtual Environment Management
 
 **Activate the virtual environment:**
