@@ -54,8 +54,8 @@ const statusIcons: Record<string, { icon: typeof CheckCircle2; color: string; bg
   Failed: { icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
 };
 
-const cardClasses = "bg-white/40 backdrop-blur-sm rounded-2xl border border-white/60 shadow-lg";
-const inputClasses = "w-full px-1 py-2.5 border-0 border-b-2 border-gray-300 bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors";
+const cardClasses = "glass rounded-2xl";
+const inputClasses = "w-full px-5 py-2.5 border border-[hsl(var(--input-border))] bg-[hsl(var(--input-bg))] rounded-full text-sm placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all";
 
 const stripeElementStyle = {
   base: {
@@ -163,7 +163,7 @@ const AddPaymentForm = ({
       <button
         onClick={handleSubmit}
         disabled={cardSaving || !stripe}
-        className="w-full inline-flex items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-medium bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-colors disabled:opacity-60"
+        className="w-full inline-flex items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-medium bg-gradient-to-r from-primary to-[hsl(210_85%_35%)] text-primary-foreground shadow-glow-primary hover:opacity-90 transition-all disabled:opacity-60"
       >
         {cardSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
         Add Card
@@ -308,7 +308,7 @@ const Payments = () => {
           {!addingMethod && (
             <button
               onClick={() => setAddingMethod(true)}
-              className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium bg-white/50 text-foreground border border-white/80 hover:bg-white/70 transition-all"
+              className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium bg-[hsl(var(--input-bg))] text-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-primary transition-all"
             >
               <Plus className="h-3.5 w-3.5" />
               Add Method
@@ -396,8 +396,8 @@ const Payments = () => {
               onClick={() => { setFilter(s); setSelected(null); }}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
                 filter === s
-                  ? "bg-primary text-primary-foreground shadow-md"
-                  : "bg-white/50 text-foreground border border-white/80 hover:bg-white/70"
+                  ? "bg-gradient-to-r from-primary to-[hsl(210_85%_35%)] text-primary-foreground shadow-glow-primary"
+                  : "bg-[hsl(var(--input-bg))] text-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-primary"
               }`}
             >
               {s}
@@ -470,7 +470,7 @@ const Payments = () => {
                 <p className="text-sm text-muted-foreground">{selected.ref}</p>
               </div>
             </div>
-            <button className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium bg-white/50 text-foreground border border-white/80 hover:bg-white/70 transition-all">
+            <button className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium bg-[hsl(var(--input-bg))] text-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-primary transition-all">
               <Download className="h-3.5 w-3.5" />
               Download Receipt
             </button>

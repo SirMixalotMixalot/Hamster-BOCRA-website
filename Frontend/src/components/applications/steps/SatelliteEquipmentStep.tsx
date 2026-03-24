@@ -22,7 +22,7 @@ export default function SatelliteEquipmentStep({ data, onChange, readOnly }: Ste
             <div className="flex gap-2">
               {["Watts", "dBm"].map((u) => (
                 <button key={u} type="button" disabled={readOnly} onClick={() => update("power_unit", u)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${data.power_unit === u ? "bg-primary text-primary-foreground shadow-sm" : "bg-white/50 text-foreground border border-white/80 hover:bg-white/70"}`}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${data.power_unit === u ? "bg-gradient-to-r from-primary to-[hsl(210_85%_35%)] text-primary-foreground shadow-glow-primary" : "bg-[hsl(var(--input-bg))] text-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-primary"}`}
                 >{u}</button>
               ))}
             </div>

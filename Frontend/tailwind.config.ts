@@ -75,6 +75,11 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
       },
+      boxShadow: {
+        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+        'glass-lg': '0 8px 32px 0 rgba(31, 38, 135, 0.12), 0 2px 8px 0 rgba(31, 38, 135, 0.05)',
+        'glow-primary': '0 0 16px hsl(210 85% 50% / 0.3), 0 0 4px hsl(210 85% 50% / 0.15)',
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",

@@ -2,13 +2,13 @@ import { useState, useRef, useEffect } from "react";
 import { User as UserIcon, Camera, Loader2, Lock, Bell, Mail, MessageSquare, Pencil } from "lucide-react";
 
 const inputBase =
-  "w-full px-5 py-2.5 rounded-full border text-sm focus:outline-none transition-colors";
+  "w-full px-5 py-2.5 rounded-full border text-sm focus:outline-none transition-all duration-200";
 const inputEnabled =
-  `${inputBase} border-white/80 bg-white/50 placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30 focus:border-primary`;
+  `${inputBase} border-[hsl(215_20%_50%/0.25)] bg-[hsl(215_25%_15%/0.06)] text-foreground placeholder:text-muted-foreground/70 focus:ring-2 focus:ring-primary/25 focus:border-primary focus:shadow-[0_0_0_3px_hsl(210_85%_50%/0.1)]`;
 const inputDisabled =
-  `${inputBase} border-white/60 bg-white/30 text-foreground cursor-default`;
+  `${inputBase} border-[hsl(215_20%_50%/0.15)] bg-[hsl(215_25%_15%/0.03)] text-foreground/70 cursor-default`;
 
-const cardClasses = "bg-white/40 backdrop-blur-sm rounded-2xl border border-white/60 shadow-lg p-6";
+const cardClasses = "glass rounded-2xl p-6";
 
 const Profile = () => {
   // Edit mode
@@ -120,7 +120,7 @@ const Profile = () => {
             {!editing ? (
               <button
                 onClick={() => setEditing(true)}
-                className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium bg-white/50 text-foreground border border-white/80 hover:bg-white/70 transition-all"
+                className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium bg-[hsl(var(--input-bg))] text-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-primary transition-all"
               >
                 <Pencil className="h-3.5 w-3.5" />
                 Edit
@@ -162,7 +162,7 @@ const Profile = () => {
                       className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
                         gender === g
                           ? "bg-primary text-primary-foreground shadow-md"
-                          : "bg-white/50 text-foreground border border-white/80 hover:bg-white/70"
+                          : "bg-[hsl(var(--input-bg))] text-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-primary"
                       }`}
                     >
                       {g}
@@ -227,7 +227,7 @@ const Profile = () => {
             className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${
               passwordOpen
                 ? "bg-primary text-primary-foreground shadow-md"
-                : "bg-white/50 text-foreground border border-white/80 hover:bg-white/70"
+                : "bg-[hsl(var(--input-bg))] text-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-primary"
             }`}
           >
             <Lock className="h-3.5 w-3.5" />
@@ -282,7 +282,7 @@ const Profile = () => {
             className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${
               notifOpen
                 ? "bg-primary text-primary-foreground shadow-md"
-                : "bg-white/50 text-foreground border border-white/80 hover:bg-white/70"
+                : "bg-[hsl(var(--input-bg))] text-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-primary"
             }`}
           >
             <Bell className="h-3.5 w-3.5" />
@@ -300,7 +300,7 @@ const Profile = () => {
                   className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${
                     emailNotif
                       ? "bg-primary text-primary-foreground shadow-md"
-                      : "bg-white/50 text-foreground border border-white/80 hover:bg-white/70"
+                      : "bg-[hsl(var(--input-bg))] text-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-primary"
                   }`}
                 >
                   <Mail className="h-3.5 w-3.5" />
@@ -312,7 +312,7 @@ const Profile = () => {
                   className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${
                     smsNotif
                       ? "bg-primary text-primary-foreground shadow-md"
-                      : "bg-white/50 text-foreground border border-white/80 hover:bg-white/70"
+                      : "bg-[hsl(var(--input-bg))] text-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-primary"
                   }`}
                 >
                   <MessageSquare className="h-3.5 w-3.5" />

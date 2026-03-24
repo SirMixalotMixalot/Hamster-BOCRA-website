@@ -41,7 +41,7 @@ export default function FrequencyTechnicalStep({ data, onChange, readOnly }: Ste
         <div className="flex flex-wrap gap-2">
           {TRANSMISSION_TYPES.map((t) => (
             <button key={t} type="button" disabled={readOnly} onClick={() => update("transmission_type", t)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${data.transmission_type === t ? "bg-primary text-primary-foreground shadow-sm" : "bg-white/50 text-foreground border border-white/80 hover:bg-white/70"}`}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${data.transmission_type === t ? "bg-gradient-to-r from-primary to-[hsl(210_85%_35%)] text-primary-foreground shadow-glow-primary" : "bg-[hsl(var(--input-bg))] text-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-primary"}`}
             >{t}</button>
           ))}
         </div>
@@ -76,7 +76,7 @@ export default function FrequencyTechnicalStep({ data, onChange, readOnly }: Ste
         <div className="flex flex-wrap gap-2">
           {OPERATION_METHODS.map((m) => (
             <button key={m} type="button" disabled={readOnly} onClick={() => update("operation_method", m)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${data.operation_method === m ? "bg-primary text-primary-foreground shadow-sm" : "bg-white/50 text-foreground border border-white/80 hover:bg-white/70"}`}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${data.operation_method === m ? "bg-gradient-to-r from-primary to-[hsl(210_85%_35%)] text-primary-foreground shadow-glow-primary" : "bg-[hsl(var(--input-bg))] text-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-primary"}`}
             >{m}</button>
           ))}
         </div>
@@ -87,7 +87,7 @@ export default function FrequencyTechnicalStep({ data, onChange, readOnly }: Ste
         <div className="flex gap-2 mb-3">
           {["Yes", "No"].map((v) => (
             <button key={v} type="button" disabled={readOnly} onClick={() => update("taking_over_licence", v)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${data.taking_over_licence === v ? "bg-primary text-primary-foreground shadow-sm" : "bg-white/50 text-foreground border border-white/80 hover:bg-white/70"}`}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${data.taking_over_licence === v ? "bg-gradient-to-r from-primary to-[hsl(210_85%_35%)] text-primary-foreground shadow-glow-primary" : "bg-[hsl(var(--input-bg))] text-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-primary"}`}
             >{v}</button>
           ))}
         </div>
@@ -101,7 +101,7 @@ export default function FrequencyTechnicalStep({ data, onChange, readOnly }: Ste
         <div className="flex gap-2 mb-4">
           {["Yes", "No - operational area only"].map((v) => (
             <button key={v} type="button" disabled={readOnly} onClick={() => update("has_base_station", v)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${data.has_base_station === v ? "bg-primary text-primary-foreground shadow-sm" : "bg-white/50 text-foreground border border-white/80 hover:bg-white/70"}`}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${data.has_base_station === v ? "bg-gradient-to-r from-primary to-[hsl(210_85%_35%)] text-primary-foreground shadow-glow-primary" : "bg-[hsl(var(--input-bg))] text-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-primary"}`}
             >{v}</button>
           ))}
         </div>
@@ -120,7 +120,7 @@ export default function FrequencyTechnicalStep({ data, onChange, readOnly }: Ste
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {ANTENNA_TYPES.map((t) => (
                   <button key={t} type="button" disabled={readOnly} onClick={() => update("antenna_type", t)}
-                    className={`px-3 py-2 rounded-xl text-xs font-medium transition-colors ${data.antenna_type === t ? "bg-primary text-primary-foreground shadow-sm" : "bg-white/50 text-foreground border border-white/80 hover:bg-white/70"}`}
+                    className={`px-3 py-2 rounded-xl text-xs font-medium transition-colors ${data.antenna_type === t ? "bg-gradient-to-r from-primary to-[hsl(210_85%_35%)] text-primary-foreground shadow-glow-primary" : "bg-[hsl(var(--input-bg))] text-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-primary"}`}
                   >{t}</button>
                 ))}
               </div>

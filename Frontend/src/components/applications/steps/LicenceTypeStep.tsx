@@ -38,7 +38,7 @@ const LICENCE_META: Record<string, { icon: React.ElementType; description: strin
 
 export default function LicenceTypeStep({ selectedType, onSelect }: LicenceTypeStepProps) {
   return (
-    <div className="bg-white/40 backdrop-blur-sm rounded-2xl border border-white/60 shadow-lg p-6 space-y-6">
+    <div className="glass rounded-2xl p-6 space-y-6">
       <div>
         <h2 className="text-lg font-heading font-bold text-foreground">Select Licence Type</h2>
         <p className="text-sm text-muted-foreground mt-1">
@@ -59,14 +59,14 @@ export default function LicenceTypeStep({ selectedType, onSelect }: LicenceTypeS
               onClick={() => onSelect(type)}
               className={`group relative text-left p-4 rounded-xl border-2 transition-all duration-200 ${
                 isSelected
-                  ? "border-primary bg-primary/10 shadow-md"
-                  : "border-white/60 bg-white/20 hover:border-primary/40 hover:bg-white/40 hover:shadow-sm"
+                  ? "border-primary bg-primary/8 shadow-glow-primary ring-1 ring-primary/20"
+                  : "border-[hsl(var(--glass-border))] glass-subtle hover:border-primary/30 hover:bg-primary/5 hover:shadow-glass"
               }`}
             >
               <div className="flex items-start gap-3">
                 <div
                   className={`shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
-                    isSelected ? "bg-primary text-white" : `bg-white/50 ${meta.color}`
+                    isSelected ? "bg-primary text-white" : `bg-[hsl(var(--glass-bg))] ${meta.color}`
                   }`}
                 >
                   <Icon className="h-4.5 w-4.5" />

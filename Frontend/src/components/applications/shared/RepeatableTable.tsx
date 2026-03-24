@@ -40,10 +40,10 @@ export default function RepeatableTable({
 
   return (
     <div className="space-y-3">
-      <div className="overflow-x-auto rounded-xl border border-white/60">
+      <div className="overflow-x-auto rounded-xl glass-subtle">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-white/30">
+            <tr className="bg-primary/5">
               {columns.map((col) => (
                 <th key={col.key} className="px-3 py-2 text-left text-xs font-medium text-muted-foreground" style={{ width: col.width }}>
                   {col.label}
@@ -61,7 +61,7 @@ export default function RepeatableTable({
               </tr>
             )}
             {rows.map((row, i) => (
-              <tr key={i} className="border-t border-white/40">
+              <tr key={i} className="border-t border-[hsl(var(--glass-border))]">
                 {columns.map((col) => (
                   <td key={col.key} className="px-2 py-1.5">
                     <input
@@ -70,7 +70,7 @@ export default function RepeatableTable({
                       onChange={(e) => updateCell(i, col.key, e.target.value)}
                       readOnly={readOnly}
                       placeholder={col.placeholder}
-                      className="w-full px-3 py-1.5 rounded-lg border border-white/60 bg-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                      className="w-full px-3 py-1.5 rounded-lg border border-[hsl(var(--input-border))] bg-[hsl(var(--input-bg))] text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary"
                     />
                   </td>
                 ))}

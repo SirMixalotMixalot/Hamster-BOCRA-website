@@ -31,8 +31,8 @@ export default function ApplicantParticularsStep({ data, onChange, readOnly }: S
               onClick={() => update("client_type", type)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 clientType === type
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "bg-white/50 text-foreground border border-white/80 hover:bg-white/70"
+                  ? "bg-gradient-to-r from-primary to-[hsl(210_85%_35%)] text-primary-foreground shadow-glow-primary"
+                  : "bg-[hsl(var(--input-bg))] text-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-primary"
               } ${readOnly ? "cursor-default" : ""}`}
             >
               {type}

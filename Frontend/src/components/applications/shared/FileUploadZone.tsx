@@ -53,7 +53,7 @@ export default function FileUploadZone({
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleDrop}
           onClick={() => inputRef.current?.click()}
-          className="border-2 border-dashed border-primary/30 rounded-2xl p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
+          className="border-2 border-dashed border-primary/30 rounded-2xl p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 glass-subtle transition-all duration-200"
         >
           <Upload className="h-8 w-8 text-primary/40 mx-auto mb-2" />
           <p className="text-sm font-medium text-foreground">
@@ -76,7 +76,7 @@ export default function FileUploadZone({
       {files.length > 0 && (
         <div className="space-y-2">
           {files.map((file, i) => (
-            <div key={i} className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/30 border border-white/60">
+            <div key={i} className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[hsl(var(--input-bg))] border border-[hsl(var(--input-border))]">
               <FileText className="h-4 w-4 text-primary/60 shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{file.name}</p>

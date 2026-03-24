@@ -34,7 +34,7 @@ const Dashboard = () => {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
-          <div key={stat.label} className="bg-card rounded-xl border border-border p-4">
+          <div key={stat.label} className="glass rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stat.color}`}>
                 <stat.icon className="h-5 w-5" />
@@ -54,7 +54,7 @@ const Dashboard = () => {
             <a
               key={action.label}
               href={action.to}
-              className="flex items-center gap-4 p-4 bg-card rounded-xl border border-border hover:border-primary/30 hover:bg-primary/5 transition-all group"
+              className="flex items-center gap-4 p-4 glass rounded-xl hover:border-primary/30 hover:bg-primary/5 hover:shadow-glass-lg transition-all group"
             >
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
                 <action.icon className="h-5 w-5 text-primary" />
@@ -72,7 +72,7 @@ const Dashboard = () => {
       {/* Recent Activity */}
       <div>
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Recent Activity</h3>
-        <div className="bg-card rounded-xl border border-border p-8 text-center">
+        <div className="glass rounded-xl p-8 text-center">
           <FileText className="h-10 w-10 text-muted-foreground/30 mx-auto" />
           <p className="text-sm text-muted-foreground mt-3">No recent activity</p>
           <p className="text-xs text-muted-foreground/60 mt-1">Your application updates and notifications will appear here</p>

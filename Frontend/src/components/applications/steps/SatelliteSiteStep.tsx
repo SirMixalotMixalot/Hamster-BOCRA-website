@@ -21,7 +21,7 @@ export default function SatelliteSiteStep({ data, onChange, readOnly }: StepProp
         <div className="flex flex-wrap gap-2">
           {SATELLITE_TYPES.map((t) => (
             <button key={t} type="button" disabled={readOnly} onClick={() => update("satellite_type", t)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${data.satellite_type === t ? "bg-primary text-primary-foreground shadow-sm" : "bg-white/50 text-foreground border border-white/80 hover:bg-white/70"}`}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${data.satellite_type === t ? "bg-gradient-to-r from-primary to-[hsl(210_85%_35%)] text-primary-foreground shadow-glow-primary" : "bg-[hsl(var(--input-bg))] text-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-primary"}`}
             >{t}</button>
           ))}
         </div>
@@ -33,7 +33,7 @@ export default function SatelliteSiteStep({ data, onChange, readOnly }: StepProp
         <div className="flex flex-wrap gap-2">
           {SITE_CATEGORIES.map((t) => (
             <button key={t} type="button" disabled={readOnly} onClick={() => update("site_category", t)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${data.site_category === t ? "bg-primary text-primary-foreground shadow-sm" : "bg-white/50 text-foreground border border-white/80 hover:bg-white/70"}`}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${data.site_category === t ? "bg-gradient-to-r from-primary to-[hsl(210_85%_35%)] text-primary-foreground shadow-glow-primary" : "bg-[hsl(var(--input-bg))] text-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-primary"}`}
             >{t}</button>
           ))}
         </div>

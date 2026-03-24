@@ -12,11 +12,11 @@ interface FormFieldProps {
 }
 
 const inputBase =
-  "w-full px-5 py-2.5 rounded-full border text-sm focus:outline-none transition-colors";
+  "w-full px-5 py-2.5 rounded-full border text-sm focus:outline-none transition-all duration-200";
 const inputEnabled =
-  `${inputBase} border-white/80 bg-white/50 placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30 focus:border-primary`;
+  `${inputBase} border-[hsl(215_20%_50%/0.25)] bg-[hsl(215_25%_15%/0.06)] text-foreground placeholder:text-muted-foreground/70 focus:ring-2 focus:ring-primary/25 focus:border-primary focus:shadow-[0_0_0_3px_hsl(210_85%_50%/0.1)]`;
 const inputDisabled =
-  `${inputBase} border-white/60 bg-white/30 text-foreground cursor-default`;
+  `${inputBase} border-[hsl(215_20%_50%/0.15)] bg-[hsl(215_25%_15%/0.03)] text-foreground/70 cursor-default`;
 
 export default function FormField({
   label,

@@ -91,7 +91,7 @@ const Applications = () => {
         </div>
         <button
           onClick={() => navigate("/customer/applications/new")}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-[hsl(210_85%_35%)] text-primary-foreground rounded-full text-sm font-medium shadow-glow-primary hover:opacity-90 transition-all"
         >
           <Plus className="h-4 w-4" />
           New Application
@@ -106,8 +106,8 @@ const Applications = () => {
             onClick={() => setFilter(tab.value)}
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
               filter === tab.value
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "bg-white/50 text-muted-foreground border border-white/80 hover:bg-white/70 hover:text-foreground"
+                ? "bg-gradient-to-r from-primary to-[hsl(210_85%_35%)] text-primary-foreground shadow-glow-primary"
+                : "bg-[hsl(var(--input-bg))] text-muted-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-foreground"
             }`}
           >
             {tab.label}
@@ -117,7 +117,7 @@ const Applications = () => {
 
       {/* Applications Table */}
       {filtered.length === 0 ? (
-        <div className="bg-white/40 backdrop-blur-sm rounded-2xl border border-white/60 shadow-lg p-8 text-center">
+        <div className="glass rounded-2xl p-8 text-center">
           <FileText className="h-10 w-10 text-muted-foreground/30 mx-auto" />
           <p className="text-sm text-muted-foreground mt-3">No applications found</p>
           <p className="text-xs text-muted-foreground/60 mt-1">
@@ -125,11 +125,11 @@ const Applications = () => {
           </p>
         </div>
       ) : (
-        <div className="bg-white/40 backdrop-blur-sm rounded-2xl border border-white/60 shadow-lg overflow-hidden">
+        <div className="glass rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/40">
+                <tr className="border-b border-[hsl(var(--glass-border))]">
                   <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground">Reference</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground">Licence Type</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground">Status</th>
@@ -144,7 +144,7 @@ const Applications = () => {
                   return (
                     <tr
                       key={app.id}
-                      className="border-b border-white/30 last:border-0 hover:bg-white/20 transition-colors cursor-pointer"
+                      className="border-b border-white/30 last:border-0 hover:bg-primary/5 transition-colors cursor-pointer"
                       onClick={() => {
                         if (app.status === "draft") navigate("/customer/applications/new");
                       }}

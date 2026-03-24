@@ -87,7 +87,7 @@ export default function DigitalSignatureCanvas({ value, onChange, readOnly }: Di
 
   return (
     <div className="space-y-2">
-      <div className="relative rounded-xl border-2 border-dashed border-white/60 bg-white/20 overflow-hidden">
+      <div className="relative rounded-xl border-2 border-dashed border-[hsl(var(--input-border))] bg-[hsl(var(--input-bg))] overflow-hidden">
         <canvas
           ref={canvasRef}
           className="w-full h-32 cursor-crosshair touch-none"

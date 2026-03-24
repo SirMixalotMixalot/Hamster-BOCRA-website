@@ -25,7 +25,7 @@ export default function FormSection({
         onClick={collapsible ? () => setOpen(!open) : undefined}
       >
         <div>
-          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><span className="w-1 h-4 bg-primary rounded-full shrink-0" />{title}</h3>
           {description && (
             <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
           )}
@@ -46,7 +46,7 @@ export default function FormSection({
           </div>
         </div>
       ) : (
-        <div className="space-y-4">{children}</div>
+        <div className="glass-subtle rounded-xl p-4 space-y-4">{children}</div>
       )}
     </div>
   );

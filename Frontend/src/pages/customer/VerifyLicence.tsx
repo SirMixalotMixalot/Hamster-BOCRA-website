@@ -116,7 +116,7 @@ const VerifyLicence = () => {
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
                   licenceType === type
                     ? "bg-primary text-primary-foreground shadow-md"
-                    : "bg-white/50 text-foreground border border-white/80 hover:bg-white/70"
+                    : "bg-[hsl(var(--input-bg))] text-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-primary"
                 }`}
               >
                 {type}
