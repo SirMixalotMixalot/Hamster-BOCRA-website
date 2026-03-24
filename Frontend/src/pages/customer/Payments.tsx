@@ -3,9 +3,7 @@ import { CreditCard, Plus, Download, CheckCircle2, Clock, XCircle, Wallet, Smart
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
-  CardNumberElement,
-  CardExpiryElement,
-  CardCvcElement,
+  CardElement,
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
@@ -57,7 +55,7 @@ const statusIcons: Record<string, { icon: typeof CheckCircle2; color: string; bg
 };
 
 const cardClasses = "bg-white/40 backdrop-blur-sm rounded-2xl border border-white/60 shadow-lg";
-const inputClasses = "w-full px-5 py-2.5 rounded-full border border-white/80 bg-white/50 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary";
+const inputClasses = "w-full px-1 py-2.5 border-0 border-b-2 border-gray-300 bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors";
 
 const stripeElementStyle = {
   base: {
@@ -93,7 +91,6 @@ const AddPaymentForm = ({
   const elements = useElements();
   const [cardSaving, setCardSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [cardName, setCardName] = useState("");
 
   const handleSubmit = async () => {
     if (!stripe || !elements) return;
@@ -101,13 +98,12 @@ const AddPaymentForm = ({
     setCardSaving(true);
     setError(null);
 
-    const cardNumber = elements.getElement(CardNumberElement);
-    if (!cardNumber) return;
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) return;
 
     const { error: stripeError, paymentMethod } = await stripe.createPaymentMethod({
       type: "card",
-      card: cardNumber,
-      billing_details: { name: cardName },
+      card: cardElement,
     });
 
     if (stripeError) {
@@ -157,33 +153,16 @@ const AddPaymentForm = ({
         </button>
       </div>
 
-      {/* Card Form — no labels, compact */}
-      <div className="space-y-2">
-        <input
-          type="text"
-          value={cardName}
-          onChange={(e) => setCardName(e.target.value)}
-          placeholder="Name on card"
-          className={inputClasses}
-        />
-        <div className="rounded-full border border-white/80 bg-white/50 px-5 py-3">
-          <CardNumberElement options={{ style: stripeElementStyle, placeholder: "Card number" }} />
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-full border border-white/80 bg-white/50 px-5 py-3">
-            <CardExpiryElement options={{ style: stripeElementStyle }} />
-          </div>
-          <div className="rounded-full border border-white/80 bg-white/50 px-5 py-3">
-            <CardCvcElement options={{ style: stripeElementStyle }} />
-          </div>
-        </div>
+      {/* Unified Stripe CardElement */}
+      <div className="rounded-lg border border-gray-300 bg-white/50 px-4 py-3 focus-within:border-primary transition-colors">
+        <CardElement options={{ style: stripeElementStyle, hidePostalCode: true }} />
       </div>
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 
       <button
         onClick={handleSubmit}
-        disabled={cardSaving || !stripe || !cardName}
+        disabled={cardSaving || !stripe}
         className="w-full inline-flex items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-medium bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-colors disabled:opacity-60"
       >
         {cardSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
@@ -207,12 +186,10 @@ const AddPaymentForm = ({
           disabled={saving}
           className="flex-1 inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium bg-[#FFC439] text-[#003087] hover:bg-[#f0b830] transition-colors shadow-md disabled:opacity-60"
         >
-          <svg className="h-5 w-auto" viewBox="0 0 101 32" fill="none">
-            <path d="M12.2 4.3h8.1c4.4 0 6.1 2.2 5.8 5.5-.5 5.2-3.7 8.1-8 8.1h-2.1c-.6 0-1 .4-1.1 1L14 25.1c-.1.4-.4.6-.8.6H9.3c-.5 0-.8-.4-.7-.9L12.2 4.3z" fill="#003087"/>
-            <path d="M39.6 4.2h8.1c4.4 0 6.1 2.3 5.8 5.5-.5 5.2-3.7 8.1-8 8.1h-2.1c-.6 0-1 .4-1.1 1l-.9 6.2c-.1.4-.4.6-.8.6h-3.8c-.5 0-.8-.4-.7-.9l3.5-20.5z" fill="#0070E0"/>
-            <path d="M24.7 10.5c.2-1.2 1.1-2 2.3-2h5.7c.7 0 1.3.1 1.8.2.2.1.3.1.5.2.1.1.3.1.4.2l-.1.5c-.5 3.5-3.1 5.8-6.7 5.8h-2.7c-.5 0-.9.4-1 .9l-1 5.9-.3 1.7c0 .4.2.7.6.7h3.5c.5 0 .9-.3 1-.8l.7-4.6c.1-.5.5-.8 1-.8h.6c4 0 7.1-2.6 7.8-6.7.3-1.8 0-3.3-1-4.3-1-1.1-2.8-1.7-5.1-1.7h-8.1c-.5 0-1 .4-1.1.9l-1.5 8.9.7-4.1c.1-.5.5-.9 1-.9h.1l.9-4.9z" fill="#003087"/>
-            <path d="M52.1 10.5c.2-1.2 1.1-2 2.3-2h5.7c.7 0 1.3.1 1.8.2.2.1.3.1.5.2.1.1.3.1.4.2l-.1.5c-.5 3.5-3.1 5.8-6.7 5.8h-2.7c-.5 0-.9.4-1 .9l-1 5.9-.3 1.7c0 .4.2.7.6.7h3.5c.5 0 .9-.3 1-.8l.7-4.6c.1-.5.5-.8 1-.8h.6c4 0 7.1-2.6 7.8-6.7.3-1.8 0-3.3-1-4.3-1-1.1-2.8-1.7-5.1-1.7h-8.1c-.5 0-1 .4-1.1.9l-1.5 8.9.7-4.1c.1-.5.5-.9 1-.9h.1l.9-4.9z" fill="#0070E0"/>
-            <path d="M68.4 11.2h3.3c.4 0 .7.4.6.8l-2.4 15c-.1.4-.4.7-.8.7h-3c-.4 0-.7-.4-.6-.8l2.4-15c0-.4.3-.7.5-.7zm1.7-4.3c1.2 0 2.2 1 2.2 2.2s-1 2.2-2.2 2.2-2.2-1-2.2-2.2 1-2.2 2.2-2.2z" fill="#003087"/>
+          <svg className="h-5 w-auto" viewBox="0 0 24 24" fill="none">
+            <path d="M7.02 21.5l.47-2.99h-1.1c-1.83 0-3.26-1.22-3.56-3.04L1.5 6.67C1.32 5.55 2.12 4.5 3.24 4.5h5.3c2.67 0 4.64 1.92 4.87 4.57l.02.18c.3 2.86-1.73 5.25-4.57 5.25H7.28c-.38 0-.7.28-.76.66L6.02 18.5l-.24 1.54c-.06.38.2.73.58.73h.66v.73z" fill="#003087"/>
+            <path d="M20.08 6.67c-.3 3.9-3.07 5.83-6.52 5.83h-.87c-.44 0-.82.32-.88.76l-.72 4.58-.2 1.28c-.05.33.2.63.53.63h3.05c.39 0 .72-.28.78-.66l.03-.17.62-3.9.04-.21c.06-.38.39-.66.78-.66h.49c3.18 0 5.67-1.29 6.4-5.03.3-1.56.14-2.86-.65-3.78-.24-.28-.54-.5-.88-.67z" fill="#0070E0"/>
+            <path d="M18.88 5.98c-.34-.1-.7-.18-1.07-.23-.38-.05-.77-.08-1.19-.08h-5.04c-.39 0-.72.28-.78.66l-1.07 6.8-.03.2c.06-.44.44-.76.88-.76h1.58c3.45 0 6.22-1.93 6.52-5.83.01-.12.02-.23.03-.34-.28-.15-.58-.27-.83-.42z" fill="#001C64"/>
           </svg>
           PayPal
         </button>

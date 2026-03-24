@@ -11,12 +11,10 @@ import {
   LogOut,
   Menu,
   X,
-  Sparkles,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
 import bocraLogo from "@/assets/bocra-logo.png";
-import AIChatbot from "@/components/AIChatbot";
 import { logout } from "@/lib/auth";
 
 const sidebarLinks = [
@@ -139,16 +137,6 @@ const CustomerLayout = () => {
             </button>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => window.dispatchEvent(new CustomEvent("toggle-ai-chatbot"))}
-              className="flex items-center gap-2 px-3 py-1.5 bg-bocra-gold/20 text-bocra-gold rounded-md text-sm font-medium hover:bg-bocra-gold/30 transition-colors"
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-              AI Help
-            </button>
-            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-              <User className="h-4 w-4 text-white" />
-            </div>
           </div>
         </header>
 
@@ -158,7 +146,6 @@ const CustomerLayout = () => {
         </main>
       </div>
 
-      <AIChatbot />
     </div>
   );
 };
