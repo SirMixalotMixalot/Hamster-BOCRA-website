@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageSquare, Shield, BarChart3, BookOpen, ArrowRight, ChevronDown, ClipboardList, Radio, Newspaper, Calendar, ArrowUpRight, Wifi, Tv, Package, Globe2, HelpCircle, ExternalLink, X, Scale } from "lucide-react";
+import { MessageSquare, Shield, BarChart3, BookOpen, ArrowRight, ChevronDown, ClipboardList, Radio, Newspaper, Calendar, ArrowUpRight, Wifi, Tv, Package, Globe2, HelpCircle, ExternalLink, X, Scale, ShieldCheck } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
 
 const serviceColumns = [
@@ -8,7 +8,7 @@ const serviceColumns = [
     items: [
       { icon: MessageSquare, label: "File a Complaint", description: "Submit a formal complaint against a provider", action: "toggle-complaint-modal" },
       { icon: HelpCircle, label: "Consumer Education", description: "Know your rights and protections" },
-      { icon: BarChart3, label: "Telecom Statistics", description: "Market data and sector indicators" },
+      { icon: BarChart3, label: "Statistics", description: "Market data and sector indicators", action: "toggle-telecom-stats-modal" },
       { icon: ExternalLink, label: "Tools & Portals", description: "Access external BOCRA systems" },
     ],
   },
@@ -63,6 +63,18 @@ const newsItems = [
   },
 ];
 
+const row1Buttons = [
+  { label: "File a Complaint", description: "Report a service provider issue", icon: MessageSquare, event: "toggle-complaint-modal" },
+  { label: "Verify Licence", description: "Check licence validity", icon: ShieldCheck, event: "toggle-verify-licence-modal" },
+  { label: "Type Approval", description: "Equipment certification", icon: Shield, event: "toggle-type-approval-modal" },
+];
+
+const row2Buttons = [
+  { label: "Consumer Rights", description: "Know your protections", icon: Scale, event: "" },
+  { label: "Statistics", description: "Market data & indicators", icon: BarChart3, event: "toggle-telecom-stats-modal" },
+  { label: "News", description: "Latest updates & notices", icon: Newspaper, event: "__news__" },
+];
+
 const HeroSection = () => {
   const [exploreOpen, setExploreOpen] = useState(false);
   const [newsOpen, setNewsOpen] = useState(false);
@@ -103,54 +115,61 @@ const HeroSection = () => {
           BOCRA oversees telecommunications, broadcasting, internet, and postal services to ensure accessible, affordable, and quality services for all Batswana.
         </p>
 
-        {/* Action buttons */}
-        <div className="mt-10 flex flex-col sm:flex-row items-center gap-4 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-          {/* File a Complaint */}
-          <button
-            onClick={() => window.dispatchEvent(new CustomEvent("toggle-complaint-modal"))}
-            className="group flex items-center gap-4 px-6 py-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-[1.02]"
-          >
-            <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-              <MessageSquare className="h-6 w-6 text-white" />
-            </div>
-            <div className="text-left">
-              <div className="text-base font-semibold text-primary-foreground">File a Complaint</div>
-              <div className="text-xs text-primary-foreground/60">Report a service provider issue</div>
-            </div>
-            <ArrowRight className="h-5 w-5 text-primary-foreground/50 group-hover:text-bocra-gold group-hover:translate-x-1 transition-all duration-300 ml-2" />
-          </button>
-
-          {/* Consumer Rights */}
-          <button
-            className="group flex items-center gap-4 px-6 py-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-[1.02]"
-          >
-            <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-              <Scale className="h-6 w-6 text-white" />
-            </div>
-            <div className="text-left">
-              <div className="text-base font-semibold text-primary-foreground">Consumer Rights</div>
-              <div className="text-xs text-primary-foreground/60">Know your protections</div>
-            </div>
-            <ArrowRight className="h-5 w-5 text-primary-foreground/50 group-hover:text-bocra-gold group-hover:translate-x-1 transition-all duration-300 ml-2" />
-          </button>
-
-          {/* News */}
-          <button
-            onClick={() => { setNewsOpen(!newsOpen); setExploreOpen(false); }}
-            className={`flex items-center gap-3 px-6 py-4 rounded-xl backdrop-blur-md border transition-all duration-300 ${
-              newsOpen ? "bg-white/20 border-white/30" : "bg-white/10 border-white/20 hover:bg-white/20"
-            }`}
-          >
-            <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-              <Newspaper className="h-6 w-6 text-white" />
-            </div>
-            <div className="text-left">
-              <div className="text-base font-semibold text-primary-foreground">News</div>
-              <div className="text-xs text-primary-foreground/60">Latest updates & notices</div>
-            </div>
-            <ChevronDown className={`h-5 w-5 text-primary-foreground/50 transition-transform duration-300 ml-2 ${newsOpen ? "rotate-180" : ""}`} />
-          </button>
+        {/* Row 1 — File a Complaint, Verify Licence, Type Approval */}
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
+          {row1Buttons.map((btn) => (
+            <button
+              key={btn.label}
+              onClick={() => window.dispatchEvent(new CustomEvent(btn.event))}
+              className="group flex items-center gap-3 px-4 py-3 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-[1.02]"
+            >
+              <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                <btn.icon className="h-5 w-5 text-white" />
+              </div>
+              <div className="text-left flex-1 min-w-0">
+                <div className="text-sm font-semibold text-primary-foreground">{btn.label}</div>
+                <div className="text-[11px] text-primary-foreground/60 truncate">{btn.description}</div>
+              </div>
+              <ArrowRight className="h-4 w-4 text-primary-foreground/50 group-hover:text-bocra-gold group-hover:translate-x-1 transition-all duration-300 shrink-0" />
+            </button>
+          ))}
         </div>
+
+        {/* Row 2 — Consumer Rights, Telecom Stats, News */}
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
+          {row2Buttons.map((btn) => (
+            <button
+              key={btn.label}
+              onClick={() => {
+                if (btn.event === "__news__") {
+                  setNewsOpen(!newsOpen);
+                  setExploreOpen(false);
+                } else if (btn.event) {
+                  window.dispatchEvent(new CustomEvent(btn.event));
+                }
+              }}
+              className={`group flex items-center gap-3 px-4 py-3 rounded-xl backdrop-blur-md border transition-all duration-300 hover:scale-[1.02] ${
+                btn.event === "__news__" && newsOpen
+                  ? "bg-white/20 border-white/30"
+                  : "bg-white/10 border-white/20 hover:bg-white/20"
+              }`}
+            >
+              <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                <btn.icon className="h-5 w-5 text-white" />
+              </div>
+              <div className="text-left flex-1 min-w-0">
+                <div className="text-sm font-semibold text-primary-foreground">{btn.label}</div>
+                <div className="text-[11px] text-primary-foreground/60 truncate">{btn.description}</div>
+              </div>
+              {btn.event === "__news__" ? (
+                <ChevronDown className={`h-4 w-4 text-primary-foreground/50 transition-transform duration-300 shrink-0 ${newsOpen ? "rotate-180" : ""}`} />
+              ) : (
+                <ArrowRight className="h-4 w-4 text-primary-foreground/50 group-hover:text-bocra-gold group-hover:translate-x-1 transition-all duration-300 shrink-0" />
+              )}
+            </button>
+          ))}
+        </div>
+
       </div>
 
       {/* Explore Services Overlay */}
@@ -246,6 +265,7 @@ const HeroSection = () => {
           </div>
         </div>
       )}
+
     </section>
   );
 };

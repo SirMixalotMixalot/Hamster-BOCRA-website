@@ -85,7 +85,7 @@ const navItems = [
           { icon: BookOpen, label: "Legislation & Regulations", description: "Acts, policies, and guidelines" },
           { icon: FileText, label: "Publications", description: "Reports, studies, and papers" },
           { icon: ClipboardList, label: "Consultations", description: "Draft documents for public comment" },
-          { icon: BarChart3, label: "Telecom Statistics", description: "Market data and sector indicators" },
+          { icon: BarChart3, label: "Statistics", description: "Market data and sector indicators", action: "toggle-telecom-stats-modal" },
         ],
       },
       {

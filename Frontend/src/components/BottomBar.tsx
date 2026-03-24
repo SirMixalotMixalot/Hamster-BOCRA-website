@@ -1,4 +1,4 @@
-import { Phone, Mail, MapPin, Facebook, Twitter, Linkedin, Instagram, Youtube } from "lucide-react";
+import { Phone, Mail, MapPin, Facebook, Linkedin, Youtube } from "lucide-react";
 
 const BottomBar = () => {
   return (
@@ -21,27 +21,21 @@ const BottomBar = () => {
             <span>info@bocra.org.bw</span>
           </a>
           <span className="hidden md:inline text-white/30">|</span>
-          <span className="hidden md:flex items-center gap-1">
+          <a href="https://maps.app.goo.gl/XZqHwegSw9n6mNzY7" target="_blank" rel="noopener noreferrer" className="hidden md:flex items-center gap-1 hover:text-bocra-gold transition-colors">
             <MapPin className="h-3 w-3" />
             Plot 50671, Independence Avenue, Gaborone, Botswana
-          </span>
+          </a>
         </div>
 
         {/* Social Media */}
         <div className="flex items-center gap-3 mr-4">
-          <a href="#" aria-label="Facebook" className="hover:text-bocra-gold transition-colors">
+          <a href="https://www.facebook.com/BTAbw" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="hover:text-bocra-gold transition-colors">
             <Facebook className="h-3.5 w-3.5" />
           </a>
-          <a href="#" aria-label="X (Twitter)" className="hover:text-bocra-gold transition-colors">
-            <Twitter className="h-3.5 w-3.5" />
-          </a>
-          <a href="#" aria-label="LinkedIn" className="hover:text-bocra-gold transition-colors">
+          <a href="https://www.linkedin.com/company/bta_3/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="hover:text-bocra-gold transition-colors">
             <Linkedin className="h-3.5 w-3.5" />
           </a>
-          <a href="#" aria-label="Instagram" className="hover:text-bocra-gold transition-colors">
-            <Instagram className="h-3.5 w-3.5" />
-          </a>
-          <a href="#" aria-label="YouTube" className="hover:text-bocra-gold transition-colors">
+          <a href="https://www.youtube.com/@bocra7629" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="hover:text-bocra-gold transition-colors">
             <Youtube className="h-3.5 w-3.5" />
           </a>
         </div>

@@ -5,6 +5,9 @@ import BottomBar from "@/components/BottomBar";
 import SignInModal from "@/components/SignInModal";
 import ContactModal from "@/components/ContactModal";
 import ComplaintModal from "@/components/ComplaintModal";
+import VerifyLicenceModal from "@/components/VerifyLicenceModal";
+import TelecomStatsModal from "@/components/TelecomStatsModal";
+import TypeApprovalModal from "@/components/TypeApprovalModal";
 
 const Index = () => {
   return (
@@ -18,6 +21,9 @@ const Index = () => {
       <SignInModal />
       <ContactModal />
       <ComplaintModal />
+      <VerifyLicenceModal />
+      <TelecomStatsModal />
+      <TypeApprovalModal />
     </div>
   );
 };
