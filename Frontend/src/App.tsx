@@ -23,6 +23,7 @@ import Complaints from "./pages/admin/Complaints.tsx";
 import Reports from "./pages/admin/Reports.tsx";
 import AdminSettings from "./pages/admin/Settings.tsx";
 import Careers from "./pages/Careers.tsx";
+import NewApplication from "./pages/customer/applications/NewApplication.tsx";
 import { bootstrapAuth, getAccessToken, getStoredRole, subscribeToSupabaseAuthChanges } from "@/lib/auth";
 
 const queryClient = new QueryClient();
@@ -109,6 +110,7 @@ const App = () => (
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="profile" element={<Profile />} />
             <Route path="applications" element={<Applications />} />
+            <Route path="applications/new" element={<NewApplication />} />
             <Route path="payments" element={<Payments />} />
             <Route path="verify" element={<VerifyLicence />} />
             <Route path="documents" element={<Documents />} />
