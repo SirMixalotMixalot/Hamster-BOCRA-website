@@ -14,6 +14,8 @@ EXEMPT_API_PATHS = {
     "/api/news",
     "/api/news/",
     "/api/search",
+    "/api/stats",
+    "/api/stats/",
 }
 logger = logging.getLogger("app.auth.middleware")
 
