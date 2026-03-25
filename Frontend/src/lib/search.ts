@@ -1,3 +1,5 @@
+import { getApiBaseUrl } from "@/lib/api";
+
 export type SearchResultType = "news" | "decision" | "document" | "service";
 export type SearchResultAction =
   | "open_signin_modal"
@@ -19,12 +21,6 @@ export interface SearchResultItem {
 export interface SearchResponse {
   query: string;
   results: SearchResultItem[];
-}
-
-function getApiBaseUrl(): string {
-  const configured = import.meta.env.VITE_API_BASE_URL?.trim();
-  const fallback = "http://localhost:8000";
-  return (configured || fallback).replace(/\/$/, "");
 }
 
 function isSearchType(value: unknown): value is SearchResultType {

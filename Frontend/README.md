@@ -12,6 +12,12 @@ npm run dev
 
 The app will be available at `http://localhost:8080`.
 
+## API Configuration
+
+- Default backend: `https://hamster-bocra-website-production.up.railway.app`
+- To force local backend during development, set `VITE_USE_LOCAL_API=true` in your local `.env`.
+- Optional override: set `VITE_API_BASE_URL` to any custom backend URL.
+
 ## Available Scripts
 
 | Command            | Description                  |

@@ -1,4 +1,5 @@
 import { getAccessToken } from "@/lib/auth";
+import { getApiBaseUrl } from "@/lib/api";
 import type { BocraLicenceType } from "@/lib/constants";
 
 export type ApplicationStatus =
@@ -29,12 +30,6 @@ export interface ApplicationDetail extends ApplicationListItem {
   decision_reason: string | null;
   decided_by: string | null;
   decided_at: string | null;
-}
-
-function getApiBaseUrl(): string {
-  const configured = import.meta.env.VITE_API_BASE_URL?.trim();
-  const fallback = "http://localhost:8000";
-  return (configured || fallback).replace(/\/$/, "");
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
