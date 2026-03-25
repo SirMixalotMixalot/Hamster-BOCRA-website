@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Plus, Clock, CheckCircle, XCircle, AlertCircle, Eye } from "lucide-react";
+import { FileText, Plus, Clock, CheckCircle, XCircle, AlertCircle, Eye, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 type AppStatus = "all" | "draft" | "submitted" | "under_review" | "approved" | "rejected";
@@ -89,13 +89,22 @@ const Applications = () => {
           <h2 className="text-2xl font-heading font-bold text-foreground">My Applications</h2>
           <p className="text-sm text-muted-foreground mt-1">Track your licence applications</p>
         </div>
-        <button
-          onClick={() => navigate("/customer/applications/new")}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-[hsl(210_85%_35%)] text-primary-foreground rounded-full text-sm font-medium shadow-glow-primary hover:opacity-90 transition-all"
-        >
-          <Plus className="h-4 w-4" />
-          New Application
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate("/customer/licences")}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-[hsl(var(--input-bg))] text-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-primary transition-all"
+          >
+            <Award className="h-4 w-4" />
+            View Licences
+          </button>
+          <button
+            onClick={() => navigate("/customer/applications/new")}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-[hsl(210_85%_35%)] text-primary-foreground rounded-full text-sm font-medium shadow-glow-primary hover:opacity-90 transition-all"
+          >
+            <Plus className="h-4 w-4" />
+            New Application
+          </button>
+        </div>
       </div>
 
       {/* Filter Tabs */}
