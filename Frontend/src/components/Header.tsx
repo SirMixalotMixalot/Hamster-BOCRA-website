@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import bocraLogo from "@/assets/bocra-logo.png";
 import MegaMenuDrawer from "./MegaMenuDrawer";
 import { SearchResultAction, SearchResultItem, searchContent } from "@/lib/search";
+import { getAccessToken, getStoredRole } from "@/lib/auth";
 
 const navItems = [
   {
@@ -109,7 +110,12 @@ const Header = () => {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
+  const [isCustomer, setIsCustomer] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setIsCustomer(!!getAccessToken() && getStoredRole() === "customer");
+  }, []);
 
   const groupedResults = useMemo(() => {
     const grouped: Record<SearchResultItem["type"], SearchResultItem[]> = {
@@ -304,12 +310,21 @@ const Header = () => {
             >
               <Search className="h-5 w-5 text-white/70" />
             </button>
-            <button
-              onClick={() => window.dispatchEvent(new CustomEvent("toggle-signin-modal"))}
-              className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 border border-white/30 rounded-md text-sm font-medium text-white hover:bg-white/10 transition-colors"
-            >
-              Sign In
-            </button>
+            {isCustomer ? (
+              <button
+                onClick={() => navigate("/customer/dashboard")}
+                className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 border border-white/30 rounded-md text-sm font-medium text-white hover:bg-white/10 transition-colors"
+              >
+                Customer Portal
+              </button>
+            ) : (
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent("toggle-signin-modal"))}
+                className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 border border-white/30 rounded-md text-sm font-medium text-white hover:bg-white/10 transition-colors"
+              >
+                Sign In
+              </button>
+            )}
             <button
               onClick={() => {
                 const event = new CustomEvent("toggle-ai-chatbot");
