@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, ArrowRight, FileText, MapPinned, PieChart as PieChartIcon, ShieldCheck, Activity } from "lucide-react";
+import { getApiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth";
 
 type LicenceTypeDistributionItem = {
@@ -205,12 +206,6 @@ const MOCK_COMPLAINTS_ANALYTICS: ComplaintsAnalyticsResponse = {
   ],
   alert_count: 2,
 };
-
-function getApiBaseUrl(): string {
-  const configured = import.meta.env.VITE_API_BASE_URL?.trim();
-  const fallback = "http://localhost:8000";
-  return (configured || fallback).replace(/\/$/, "");
-}
 
 async function fetchJson<T>(path: string): Promise<T> {
   const token = getAccessToken();

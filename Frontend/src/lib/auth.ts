@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { getApiBaseUrl } from "@/lib/api";
 
 export type AppRole = "admin" | "customer" | string;
 
@@ -61,14 +62,6 @@ class ApiError extends Error {
     this.status = status;
   }
 }
-
-
-function getApiBaseUrl(): string {
-  const configured = import.meta.env.VITE_API_BASE_URL?.trim();
-  const fallback = "http://localhost:8000";
-  return (configured || fallback).replace(/\/$/, "");
-}
-
 function getAuthHeader() {
   const token = localStorage.getItem(ACCESS_TOKEN_KEY);
   return token ? { Authorization: `Bearer ${token}` } : {};

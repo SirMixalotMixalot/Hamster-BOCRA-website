@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { FileText, Gavel, Megaphone, Newspaper, ScrollText, TrendingUp, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { mergeHomePublishPayload, type HomeResourceItem, type HomeStatItem } from "@/lib/homePublishing";
+import { getApiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -50,12 +51,6 @@ const MOCK_LEGISLATION = [
 ];
 
 type SectionKey = "stats" | "news" | "tenders" | "forms" | "publications" | "legislation";
-
-function getApiBaseUrl(): string {
-  const configured = import.meta.env.VITE_API_BASE_URL?.trim();
-  const fallback = "http://localhost:8000";
-  return (configured || fallback).replace(/\/$/, "");
-}
 
 const SECTION_UPLOAD_TITLES: Record<Exclude<SectionKey, "stats">, string> = {
   news: "news content",

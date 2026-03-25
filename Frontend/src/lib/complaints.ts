@@ -1,4 +1,5 @@
 import { getAccessToken } from "@/lib/auth";
+import { getApiBaseUrl } from "@/lib/api";
 
 export type ComplaintStatus = "open" | "investigating" | "resolved" | "closed";
 
@@ -26,12 +27,6 @@ interface ComplaintsListResponse {
   count: number;
   limit: number;
   offset: number;
-}
-
-function getApiBaseUrl(): string {
-  const configured = import.meta.env.VITE_API_BASE_URL?.trim();
-  const fallback = "http://localhost:8000";
-  return (configured || fallback).replace(/\/$/, "");
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { LifeBuoy, Search } from "lucide-react";
+import { getApiBaseUrl } from "@/lib/api";
 
 type TicketStatus = "open" | "in_progress" | "replied" | "resolved" | string;
 
@@ -47,12 +48,6 @@ const MOCK_TICKETS: SupportTicket[] = [
     updated_at: "2026-03-20T11:40:00Z",
   },
 ];
-
-function getApiBaseUrl(): string {
-  const configured = import.meta.env.VITE_API_BASE_URL?.trim();
-  const fallback = "http://localhost:8000";
-  return (configured || fallback).replace(/\/$/, "");
-}
 
 const Tickets = () => {
   const [search, setSearch] = useState("");
