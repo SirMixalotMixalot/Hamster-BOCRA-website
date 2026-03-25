@@ -11,6 +11,8 @@ from app.db.client import get_supabase_admin
 EXEMPT_API_PATHS = {
     "/api/auth/signup",
     "/api/auth/login",
+    "/api/ai/chat",
+    "/api/ai/chat/",
     "/api/decisions",
     "/api/decisions/",
     "/api/news",

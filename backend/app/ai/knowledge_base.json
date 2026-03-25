@@ -1,0 +1,658 @@
+[
+  {
+    "id": 1,
+    "category": "licensing",
+    "question": "How do I apply for a telecommunications licence?",
+    "answer": "To apply for a telecommunications licence, sign in to your BOCRA account, go to 'My Applications', click 'New Application', and select 'Telecommunications' as the licence type. You will need to upload supporting documents and pay the application fee.",
+    "keywords": ["licence", "license", "apply", "application", "telecommunications", "telecom"],
+    "link": "/customer/applications/new"
+  },
+  {
+    "id": 2,
+    "category": "licensing",
+    "question": "What types of licences does BOCRA issue?",
+    "answer": "BOCRA issues four types of licences: **Telecommunications** (mobile and fixed-line networks), **Broadcasting** (radio and television), **Postal Services** (courier and postal), and **Internet/ISP** (internet service providers and .bw domain).",
+    "keywords": ["licence", "license", "types", "categories", "broadcasting", "postal", "internet", "ISP"],
+    "link": "/customer/applications/new"
+  },
+  {
+    "id": 3,
+    "category": "licensing",
+    "question": "How do I renew my licence?",
+    "answer": "To renew an existing licence, sign in to your account, go to 'My Applications', and click 'Renew Licence' on the licence you want to renew. Make sure to start the renewal process before your current licence expires.",
+    "keywords": ["renew", "renewal", "expire", "expiry", "extend"],
+    "link": "/customer/applications"
+  },
+  {
+    "id": 4,
+    "category": "licensing",
+    "question": "How do I verify a licence?",
+    "answer": "You can verify any BOCRA licence by going to the 'Verify Licence' page and entering the licence number. The system will show you the licence holder's name, licence type, issue date, expiry date, and current status.",
+    "keywords": ["verify", "verification", "check", "valid", "status", "licence number"],
+    "link": "/customer/verify"
+  },
+  {
+    "id": 5,
+    "category": "licensing",
+    "question": "How much does a licence cost?",
+    "answer": "Licence fees vary by type and category. You can view the full fee schedule on the Licensing page. Payment can be made online using credit card, debit card, or PayPal through our secure payment system.",
+    "keywords": ["cost", "fee", "price", "payment", "pay", "how much", "charge"],
+    "link": "/customer/payments"
+  },
+  {
+    "id": 6,
+    "category": "complaints",
+    "question": "How do I file a complaint?",
+    "answer": "To file a complaint against a service provider, sign in to your account and go to the 'Support' section. Click 'New Complaint', select the category (service quality, billing, coverage, or other), describe your issue, and attach any evidence. You'll receive a reference number to track your complaint.",
+    "keywords": ["complaint", "complain", "report", "issue", "problem", "file"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 7,
+    "category": "complaints",
+    "question": "How do I track my complaint?",
+    "answer": "You can track your complaint status by signing in to your account and going to the 'Support' section. Your complaints are listed with their current status: Open, Investigating, Resolved, or Closed. Click on any complaint to see the full timeline and any responses from BOCRA.",
+    "keywords": ["track", "status", "complaint", "progress", "update", "where", "check"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 8,
+    "category": "complaints",
+    "question": "What can I complain about?",
+    "answer": "You can submit complaints about: **Service Quality** (poor network, dropped calls, slow internet), **Billing** (incorrect charges, unauthorized deductions), **Coverage** (no signal in your area), or **Other** issues with your telecommunications, broadcasting, postal, or internet service provider.",
+    "keywords": ["what", "complain", "complaint", "type", "category", "about", "issue"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 9,
+    "category": "about",
+    "question": "What is BOCRA?",
+    "answer": "BOCRA (Botswana Communications Regulatory Authority) is the government body that regulates telecommunications, broadcasting, internet, and postal services in Botswana. Our mission is to ensure accessible, affordable, and quality communications services for all Batswana.",
+    "keywords": ["what", "BOCRA", "about", "who", "authority", "regulator", "regulate"],
+    "link": "/"
+  },
+  {
+    "id": 10,
+    "category": "about",
+    "question": "What does BOCRA regulate?",
+    "answer": "BOCRA regulates four sectors: **Telecommunications** (mobile and fixed-line phone services), **Broadcasting** (radio and TV stations), **Postal Services** (mail and courier companies), and **Internet & ICT** (internet service providers and the .bw domain).",
+    "keywords": ["regulate", "sector", "telecom", "broadcasting", "postal", "internet", "ICT", "what"],
+    "link": "/"
+  },
+  {
+    "id": 11,
+    "category": "about",
+    "question": "Where is BOCRA located?",
+    "answer": "BOCRA's head office is located in Gaborone, Botswana. You can reach us by phone at +267 395 7755 or by email at info@bocra.org.bw. Our office hours are Monday to Friday, 7:30 AM to 4:30 PM.",
+    "keywords": ["where", "location", "address", "office", "contact", "phone", "email", "visit", "find"],
+    "link": "/"
+  },
+  {
+    "id": 12,
+    "category": "about",
+    "question": "How do I contact BOCRA?",
+    "answer": "You can contact BOCRA in several ways: **Phone:** +267 395 7755, **Email:** info@bocra.org.bw, or use the **AI Assistant** (that's me!) for quick answers. For formal matters, you can also submit a support ticket through your account.",
+    "keywords": ["contact", "reach", "phone", "email", "call", "talk", "help", "support"],
+    "link": "/"
+  },
+  {
+    "id": 13,
+    "category": "type_approval",
+    "question": "What is type approval?",
+    "answer": "Type approval is the process of certifying that telecommunications equipment meets BOCRA's technical standards before it can be sold or used in Botswana. This includes phones, routers, broadcasting equipment, and other communications devices.",
+    "keywords": ["type approval", "approval", "equipment", "certify", "certification", "device", "phone", "router"],
+    "link": "/customer/applications/new"
+  },
+  {
+    "id": 14,
+    "category": "type_approval",
+    "question": "How do I get equipment approved?",
+    "answer": "To get equipment type-approved: sign in to your BOCRA account, start a new application, select 'Type Approval', upload the equipment specifications and test certificates, and submit for review. BOCRA will evaluate and respond within the standard processing period.",
+    "keywords": ["equipment", "approve", "approved", "type approval", "submit", "how", "get"],
+    "link": "/customer/applications/new"
+  },
+  {
+    "id": 15,
+    "category": "spectrum",
+    "question": "What is spectrum management?",
+    "answer": "Spectrum management is how BOCRA allocates and manages radio frequencies in Botswana. Radio spectrum is a limited resource used by mobile networks, TV/radio broadcasters, satellite communications, and more. BOCRA ensures fair allocation and prevents interference between users.",
+    "keywords": ["spectrum", "frequency", "radio", "allocate", "allocation", "management", "signal"],
+    "link": "/"
+  },
+  {
+    "id": 16,
+    "category": "account",
+    "question": "How do I create an account?",
+    "answer": "Click 'Sign In' on the top menu, then choose 'Customer'. Click 'Create Account' and fill in your details. You can also sign up quickly using your Google account. After registration, complete your profile with your ID number and personal details.",
+    "keywords": ["account", "create", "register", "sign up", "signup", "new account", "join"],
+    "link": "/"
+  },
+  {
+    "id": 17,
+    "category": "account",
+    "question": "I forgot my password",
+    "answer": "On the Sign In page, click 'Forgot password?' and enter your email address. You'll receive a password reset link in your inbox. Check your spam folder if you don't see it within a few minutes.",
+    "keywords": ["forgot", "password", "reset", "can't login", "locked", "access"],
+    "link": "/"
+  },
+  {
+    "id": 18,
+    "category": "account",
+    "question": "How do I update my profile?",
+    "answer": "Sign in to your account and go to 'Profile'. You can update your personal details including name, phone number, address, and profile photo. Your ID number and date of birth cannot be changed after verification — contact BOCRA support if there's an error.",
+    "keywords": ["update", "profile", "edit", "change", "details", "information", "name", "phone"],
+    "link": "/customer/profile"
+  },
+  {
+    "id": 19,
+    "category": "payments",
+    "question": "What payment methods are accepted?",
+    "answer": "BOCRA accepts payments via **credit card**, **debit card**, and **PayPal** through our secure online payment system powered by Stripe. All transactions are encrypted and you'll receive a receipt by email after payment.",
+    "keywords": ["payment", "pay", "method", "credit", "debit", "card", "paypal", "stripe", "how to pay"],
+    "link": "/customer/payments"
+  },
+  {
+    "id": 20,
+    "category": "payments",
+    "question": "Can I get a receipt for my payment?",
+    "answer": "Yes, a receipt is automatically emailed to you after every successful payment. You can also view and download all your receipts from the 'Payments' section in your account.",
+    "keywords": ["receipt", "proof", "payment", "download", "invoice"],
+    "link": "/customer/payments"
+  },
+  {
+    "id": 21,
+    "category": "regulations",
+    "question": "Where can I find BOCRA regulations?",
+    "answer": "All BOCRA regulations, acts, policies, and guidelines are available in the 'Documents & Resources' section. You can browse by category or use the search bar to find specific documents.",
+    "keywords": ["regulation", "law", "act", "policy", "guideline", "legislation", "document", "find", "where"],
+    "link": "/customer/documents"
+  },
+  {
+    "id": 22,
+    "category": "regulations",
+    "question": "What is a public consultation?",
+    "answer": "A public consultation is when BOCRA publishes draft regulations or policies and invites the public and stakeholders to submit comments before the final version is adopted. Active consultations are listed in the 'Documents & Resources' section.",
+    "keywords": ["consultation", "public", "comment", "draft", "stakeholder", "opinion", "feedback"],
+    "link": "/customer/documents"
+  },
+  {
+    "id": 23,
+    "category": "statistics",
+    "question": "Where can I find telecom statistics?",
+    "answer": "Telecom statistics including mobile subscriptions, broadband penetration, market share, and sector indicators are available in the 'Statistics' section of your dashboard. Data is updated quarterly by BOCRA.",
+    "keywords": ["statistics", "stats", "data", "numbers", "telecom", "market", "subscribers", "penetration"],
+    "link": "/customer/documents"
+  },
+  {
+    "id": 24,
+    "category": "consumer_rights",
+    "question": "What are my rights as a consumer?",
+    "answer": "As a communications consumer in Botswana, you have the right to: **Quality service** that meets BOCRA standards, **Fair billing** with transparent pricing, **Number portability** (keep your number when switching providers), **File complaints** against providers, and **Access information** about service quality and coverage.",
+    "keywords": ["rights", "consumer", "protection", "fair", "entitled", "what can I"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 25,
+    "category": "consumer_rights",
+    "question": "What is number portability?",
+    "answer": "Number portability allows you to keep your phone number when switching from one mobile provider to another. Contact your new provider to initiate the porting process. BOCRA ensures providers comply with portability regulations.",
+    "keywords": ["number", "portability", "port", "keep", "switch", "transfer", "provider", "change"],
+    "link": "/"
+  },
+  {
+    "id": 26,
+    "category": "complaints",
+    "question": "My provider keeps charging me for data I did not use",
+    "answer": "This is a billing dispute. First, contact your service provider directly and ask for a detailed usage breakdown. If they cannot explain the charges or refuse to refund you, file a **Billing complaint** with BOCRA through the Support section of your account. Attach your bill or screenshots as evidence.",
+    "keywords": ["charging", "data", "didn't use", "wrong charge", "billing", "deduction", "overcharged", "data balance", "unfair charge"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 27,
+    "category": "complaints",
+    "question": "My line was disconnected without warning",
+    "answer": "Service providers are required to notify you before disconnecting your line. If you were disconnected without notice, this may be a violation of your consumer rights. File a complaint with BOCRA through the Support section and include the date of disconnection and any communication you received from your provider.",
+    "keywords": ["disconnected", "line cut", "suspended", "no warning", "no notice", "cut off", "service stopped"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 28,
+    "category": "complaints",
+    "question": "My internet data finishes too fast",
+    "answer": "If your data is depleting faster than expected, first check for background apps consuming data on your device. If the problem persists, request a usage report from your ISP. If you believe the provider is misreporting your usage, file a **Billing or Service Quality complaint** with BOCRA.",
+    "keywords": ["data finishes", "data depletes", "data gone", "fast", "too quick", "bundles", "data usage", "background"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 29,
+    "category": "complaints",
+    "question": "I am getting much slower internet speed than what I was promised",
+    "answer": "Internet providers must deliver speeds reasonably close to what was advertised. Run a speed test and save the results as evidence. Contact your ISP first — if they do not resolve it, file a **Service Quality complaint** with BOCRA and attach your speed test results and your service contract or plan details.",
+    "keywords": ["slow speed", "promised speed", "advertised", "not getting", "speed test", "mbps", "bandwidth", "slower than"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 30,
+    "category": "consumer_rights",
+    "question": "I want to switch from one network to another but keep my number",
+    "answer": "You have the right to keep your phone number when switching providers — this is called **Mobile Number Portability (MNP)**. Contact your new provider and ask them to initiate the porting process. Your old provider is legally required to release your number. If they refuse or delay, report it to BOCRA.",
+    "keywords": ["switch network", "keep number", "port", "portability", "MNP", "Mascom to Orange", "change provider", "same number"],
+    "link": "/"
+  },
+  {
+    "id": 31,
+    "category": "complaints",
+    "question": "My complaint has been open for weeks with no response",
+    "answer": "BOCRA aims to resolve complaints within **30 working days**. If your complaint has exceeded this and you have heard nothing, sign in to your account, go to the Support section, and check the status. If it is still unresolved, you can escalate it by calling BOCRA directly at **+267 395 7755** or emailing info@bocra.org.bw and quoting your complaint reference number.",
+    "keywords": ["no response", "waiting", "weeks", "months", "complaint ignored", "slow", "unresolved", "escalate", "reference number"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 32,
+    "category": "complaints",
+    "question": "Can BOCRA fine or punish my service provider?",
+    "answer": "Yes. BOCRA has the legal authority to investigate service providers and impose penalties for violations of licensing conditions and consumer protection regulations. This includes fines, warnings, and in serious cases, suspension of a provider's licence.",
+    "keywords": ["fine", "punish", "penalise", "penalty", "authority", "power", "action", "sanction", "BOCRA powers"],
+    "link": "/"
+  },
+  {
+    "id": 33,
+    "category": "complaints",
+    "question": "My provider is not taking my complaint seriously",
+    "answer": "If your service provider is dismissing or ignoring your complaint, you do not have to accept that. Escalate directly to BOCRA by filing a complaint through your account. BOCRA will formally contact the provider on your behalf and require them to respond within a set timeframe.",
+    "keywords": ["ignored", "dismissed", "not serious", "provider ignoring", "no help", "escalate", "frustrated", "useless"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 34,
+    "category": "complaints",
+    "question": "I was subscribed to a service I never signed up for",
+    "answer": "Unauthorised subscriptions — where a provider adds paid services to your account without your consent — are a violation of consumer rights. Contact your provider immediately to cancel and request a refund. If they refuse, file a **Billing complaint** with BOCRA and include proof that you never agreed to the subscription.",
+    "keywords": ["subscribed", "never signed up", "unauthorized", "unwanted service", "added without consent", "VAS", "value added service", "deducting"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 35,
+    "category": "complaints",
+    "question": "My network has been down for days",
+    "answer": "Extended network outages should first be reported to your service provider. Providers are obligated to restore service within a reasonable time. If the outage continues without explanation or compensation, file a **Service Quality complaint** with BOCRA. Note the dates and duration of the outage when submitting.",
+    "keywords": ["network down", "outage", "no service", "down for days", "not working", "offline", "no network", "service down"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 36,
+    "category": "complaints",
+    "question": "I returned a device but my provider is still charging me",
+    "answer": "If you have returned a device or cancelled a contract but are still being billed, this is a serious billing dispute. Gather proof of the return (receipt, email confirmation) and contact your provider. If unresolved, file a **Billing complaint** with BOCRA and attach all proof of return and continued charges.",
+    "keywords": ["returned device", "still charging", "cancelled contract", "billing after return", "refund", "stop charging"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 37,
+    "category": "complaints",
+    "question": "My broadband was installed but it is not working",
+    "answer": "Contact your ISP's technical support immediately and log a fault ticket. If they fail to resolve the installation issue within a reasonable time, file a **Service Quality complaint** with BOCRA. Include your installation date, fault ticket number, and a description of the problem.",
+    "keywords": ["broadband", "installed", "not working", "fibre", "ADSL", "setup", "installation", "fault", "technical"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 50,
+    "category": "telecom_operators",
+    "question": "Who are the licensed mobile network operators in Botswana?",
+    "answer": "BOCRA has licensed three main mobile network operators in Botswana: **Mascom Wireless** (the largest network), **Orange Botswana**, and **BTC beMobile**. All three are regulated by BOCRA and must meet service quality standards.",
+    "keywords": ["mobile operators", "networks", "Mascom", "Orange", "beMobile", "BTC", "providers", "who", "licensed"],
+    "link": "/"
+  },
+  {
+    "id": 51,
+    "category": "telecom_operators",
+    "question": "Is Mascom licensed by BOCRA?",
+    "answer": "Yes. Mascom Wireless is a fully licensed telecommunications operator regulated by BOCRA. If you have unresolved issues with Mascom's service, billing, or coverage, you can file a complaint with BOCRA through the Support section of your account.",
+    "keywords": ["Mascom", "licensed", "regulated", "BOCRA", "Mascom Wireless", "operator"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 40,
+    "category": "telecom_operators",
+    "question": "Is Orange Botswana regulated by BOCRA?",
+    "answer": "Yes. Orange Botswana is a licensed mobile network operator regulated by BOCRA. If Orange has not resolved your complaint after you contacted them directly, you can escalate it to BOCRA through the Support section.",
+    "keywords": ["Orange", "Orange Botswana", "licensed", "regulated", "BOCRA", "operator"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 41,
+    "category": "telecom_operators",
+    "question": "What is BTC and beMobile?",
+    "answer": "**BTC** (Botswana Telecommunications Corporation) is Botswana's national telecommunications company. **beMobile** is BTC's mobile network brand. BTC also provides fixed-line, broadband, and internet services across Botswana and is regulated by BOCRA.",
+    "keywords": ["BTC", "beMobile", "Botswana Telecommunications", "national", "fixed line", "broadband", "operator"],
+    "link": "/"
+  },
+  {
+    "id": 42,
+    "category": "telecom_operators",
+    "question": "What is BoFiNet?",
+    "answer": "**BoFiNet** (Botswana Fibre Networks) is a government-owned company that manages Botswana's national fibre optic backbone infrastructure. It provides wholesale broadband capacity to internet service providers and mobile operators. BoFiNet is regulated by BOCRA.",
+    "keywords": ["BoFiNet", "fibre", "backbone", "infrastructure", "wholesale", "broadband", "internet", "government"],
+    "link": "/"
+  },
+  {
+    "id": 43,
+    "category": "telecom_operators",
+    "question": "Who are the licensed internet service providers in Botswana?",
+    "answer": "BOCRA licenses multiple Internet Service Providers (ISPs) in Botswana including BTC, Botswana Fibre Networks (BoFiNet), and several private ISPs. You can verify whether your ISP is licensed using the 'Verify Licence' feature on the BOCRA website.",
+    "keywords": ["ISP", "internet provider", "licensed", "broadband", "who", "list", "providers", "internet service"],
+    "link": "/customer/verify"
+  },
+  {
+    "id": 44,
+    "category": "telecom_operators",
+    "question": "Can I complain about my mobile network operator to BOCRA?",
+    "answer": "Yes. If you have raised an issue with your mobile operator — whether Mascom, Orange, or beMobile — and they have not resolved it, BOCRA can step in. File a complaint through your BOCRA account and BOCRA will formally engage the operator on your behalf.",
+    "keywords": ["complain", "mobile operator", "Mascom", "Orange", "beMobile", "network", "BOCRA", "step in", "escalate"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 45,
+    "category": "domain",
+    "question": "How do I register a .bw domain?",
+    "answer": "To register a .bw domain, contact an accredited .bw domain registrar. BOCRA oversees the .bw country-code domain and sets the registration policies. You will need to provide proof of identity and a valid connection to Botswana to qualify for a .bw domain.",
+    "keywords": [".bw", "domain", "register", "website", "web address", "URL", "botswana domain", "how to"],
+    "link": "/"
+  },
+  {
+    "id": 46,
+    "category": "domain",
+    "question": "What types of .bw domains are available?",
+    "answer": "Several .bw domain types are available: **.bw** (general), **.co.bw** (companies), **.org.bw** (organisations), **.ac.bw** (academic institutions), **.gov.bw** (government), and **.net.bw** (network providers). Each has its own eligibility requirements.",
+    "keywords": [".bw", ".co.bw", ".org.bw", ".ac.bw", ".gov.bw", "domain types", "domain", "website", "categories"],
+    "link": "/"
+  },
+  {
+    "id": 47,
+    "category": "domain",
+    "question": "Who manages .bw domains in Botswana?",
+    "answer": "BOCRA is responsible for overseeing the .bw country-code top-level domain (ccTLD). This includes setting registration policies, managing disputes, and ensuring the .bw namespace is properly administered for the benefit of Botswana.",
+    "keywords": [".bw", "manages", "who", "ccTLD", "country code", "domain", "responsible", "BOCRA"],
+    "link": "/"
+  },
+  {
+    "id": 48,
+    "category": "domain",
+    "question": "Do I need a licence to provide internet services in Botswana?",
+    "answer": "Yes. Any business providing internet services to the public in Botswana must hold a valid BOCRA licence — specifically a **VANS (Value Added Network Services)** licence or an **ISP licence**. Operating without a licence is illegal and can result in penalties.",
+    "keywords": ["licence", "internet services", "ISP", "VANS", "provide", "business", "required", "illegal", "wi-fi", "hotspot"],
+    "link": "/customer/applications/new"
+  },
+  {
+    "id": 49,
+    "category": "domain",
+    "question": "Do I need a licence to provide public WiFi hotspots?",
+    "answer": "Yes. If you are providing WiFi hotspot services commercially — for example in a hotel, restaurant, or campus — you may need a BOCRA VANS licence. Contact BOCRA to confirm the specific requirements for your type of service before operating.",
+    "keywords": ["wifi", "hotspot", "public wifi", "licence", "commercial", "hotel", "restaurant", "internet access"],
+    "link": "/customer/applications/new"
+  },
+  {
+    "id": 50,
+    "category": "domain",
+    "question": "What is a VANS licence?",
+    "answer": "A **VANS (Value Added Network Services)** licence is required for businesses that provide internet, data, or other value-added communication services over existing network infrastructure. This includes ISPs, VoIP providers, and businesses offering public WiFi. Apply through your BOCRA account.",
+    "keywords": ["VANS", "value added", "network services", "licence", "ISP", "VoIP", "internet", "data services"],
+    "link": "/customer/applications/new"
+  },
+  {
+    "id": 51,
+    "category": "domain",
+    "question": "Is VoIP legal in Botswana?",
+    "answer": "VoIP (Voice over Internet Protocol) services such as WhatsApp calls, Skype, and similar apps are generally permitted for personal use in Botswana. However, businesses providing VoIP as a commercial service must hold the appropriate BOCRA licence.",
+    "keywords": ["VoIP", "WhatsApp calls", "Skype", "internet calls", "legal", "allowed", "Botswana", "voice over internet"],
+    "link": "/"
+  },
+  {
+    "id": 52,
+    "category": "account",
+    "question": "I cannot log in to my account",
+    "answer": "If you cannot log in, first try resetting your password by clicking 'Forgot password?' on the Sign In page. If you still cannot access your account after resetting, contact BOCRA support with your registered email address and we will help restore your access.",
+    "keywords": ["log in", "login", "can't sign in", "access", "account", "locked out", "password", "problem", "not working"],
+    "link": "/"
+  },
+  {
+    "id": 53,
+    "category": "account",
+    "question": "Can I have multiple licences under one account?",
+    "answer": "Yes. One BOCRA account can hold multiple applications and licences across different categories. All your licences are visible under 'My Applications' once you are signed in. You do not need a separate account for each licence.",
+    "keywords": ["multiple", "licences", "one account", "several", "more than one", "manage", "two licences"],
+    "link": "/customer/applications"
+  },
+  {
+    "id": 54,
+    "category": "payments",
+    "question": "Can I get a refund for a licence payment?",
+    "answer": "Refund eligibility depends on the stage of your application. If your application has not been processed yet, contact BOCRA support to request a refund. Fees for completed or approved applications are generally non-refundable. Contact us at +267 395 7755 or info@bocra.org.bw for assistance.",
+    "keywords": ["refund", "money back", "cancel", "payment", "return", "reimburse", "get my money"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 55,
+    "category": "payments",
+    "question": "My payment failed — what should I do?",
+    "answer": "If your payment fails, first check that your card details are correct and that you have sufficient funds. Try again or use a different payment method. If the problem persists, contact BOCRA support with your transaction details and we will help resolve it.",
+    "keywords": ["payment failed", "transaction failed", "declined", "card error", "pay", "error", "not working", "unsuccessful"],
+    "link": "/customer/payments"
+  },
+  {
+    "id": 56,
+    "category": "regulations",
+    "question": "How do I submit comments on a public consultation?",
+    "answer": "Visit the 'Documents & Resources' section and find the active consultation you want to comment on. Download the consultation document, prepare your written comments, and submit them via the provided email address or online form before the closing date. Late submissions may not be considered.",
+    "keywords": ["submit", "comments", "consultation", "public", "feedback", "respond", "closing date", "participate", "opinion"],
+    "link": "/customer/documents"
+  },
+  {
+    "id": 57,
+    "category": "statistics",
+    "question": "Does BOCRA publish annual reports?",
+    "answer": "Yes. BOCRA publishes annual reports covering sector performance, regulatory activities, and key industry statistics. These are free to download in the 'Documents & Resources' section of the website.",
+    "keywords": ["annual report", "report", "yearly", "download", "sector", "performance", "statistics", "published"],
+    "link": "/customer/documents"
+  },
+  {
+    "id": 58,
+    "category": "statistics",
+    "question": "How often does BOCRA update its telecom statistics?",
+    "answer": "BOCRA updates its telecom statistics **quarterly** — that is, four times a year. The data covers mobile subscriptions, broadband penetration, market share, and other sector indicators. You can find the latest figures in the 'Documents & Resources' section.",
+    "keywords": ["how often", "updated", "quarterly", "statistics", "data", "latest", "recent", "frequency"],
+    "link": "/customer/documents"
+  },
+  {
+    "id": 59,
+    "category": "licensing",
+    "question": "How much does an internet service provider licence cost?",
+    "answer": "A BOCRA licence for an Internet Service Provider (ISP) or Data Service Provider costs **P10,000 once-off** as an initial fee, plus **P3,000 every year** as an annual renewal fee. Both amounts are subject to VAT. You can pay online through your BOCRA account.",
+    "keywords": ["ISP licence cost", "internet licence fee", "how much", "P10000", "data service", "annual fee", "price", "cost"],
+    "link": "/customer/payments"
+  },
+  {
+    "id": 60,
+    "category": "licensing",
+    "question": "How do I apply for a Citizen Band CB radio licence?",
+    "answer": "To apply for a Citizen Band (CB) radio licence, download the application form from the BOCRA website or collect it from the BOCRA offices in Gaborone. Fill in the form with your details and the intended use of the radio, then submit it to BOCRA for processing.",
+    "keywords": ["CB radio", "citizen band", "radio licence", "apply", "form", "personal radio", "walkie talkie"],
+    "link": "/customer/applications/new"
+  },
+  {
+    "id": 61,
+    "category": "licensing",
+    "question": "What is a Network Facility Provider licence and who needs it?",
+    "answer": "A **Network Facility Provider (NFP)** licence is required by any operator that wants to use radio frequency spectrum in Botswana — for example, companies using the 700 MHz or 2.6 GHz frequency bands. If you are building or operating a network that uses radio frequencies, you need this licence before you can operate legally.",
+    "keywords": ["NFP", "network facility provider", "licence", "frequency", "spectrum", "700MHz", "2.6GHz", "who needs", "operator"],
+    "link": "/customer/applications/new"
+  },
+  {
+    "id": 62,
+    "category": "type_approval",
+    "question": "Can I bring radio equipment into Botswana from another country?",
+    "answer": "You should be very careful about bringing radio equipment into Botswana from outside the country. It is **illegal to enter Botswana with unlicensed radio equipment** unless you have express permission from BOCRA. BOCRA strongly recommends buying radio equipment from local, recognised radio dealers so that if the equipment is faulty or needs reprogramming, you can get it sorted locally.",
+    "keywords": ["buy radio", "outside country", "import", "bring in", "legal", "illegal", "foreign", "radio equipment", "cross border"],
+    "link": "/"
+  },
+  {
+    "id": 63,
+    "category": "type_approval",
+    "question": "Do I need to type approve equipment that has already been type approved before?",
+    "answer": "Yes. Every piece of telecommunications equipment that enters the Botswana market must go through BOCRA type approval — even if it was previously approved. The only exception is if the manufacturer has already type approved it with BOCRA on behalf of the distributor. Also note that **any software update or change to the equipment requires a new type approval application**.",
+    "keywords": ["already approved", "type approve again", "re-approve", "previously approved", "new approval", "software update", "type approval"],
+    "link": "/customer/applications/new"
+  },
+  {
+    "id": 64,
+    "category": "type_approval",
+    "question": "What documents do I need to get equipment type approved?",
+    "answer": "To get equipment type approved by BOCRA you will need: a completed **type approval application form**, the **technical specifications** of the equipment, a **type approval certificate** from a recognised regulator (such as from Africa or Europe), and a **declaration of conformity** from the manufacturer. Submit all these through your BOCRA account.",
+    "keywords": ["type approval", "documents", "requirements", "what do I need", "certificate", "technical specs", "declaration", "conformity"],
+    "link": "/customer/applications/new"
+  },
+  {
+    "id": 65,
+    "category": "licensing",
+    "question": "What is a radio dealer and what do they do?",
+    "answer": "A **radio dealer** is a BOCRA-licensed company that sells, repairs, and programmes radio equipment. They tune radios to the correct allocated frequency and can also deprogram radios that are no longer in use. If you buy radio equipment, using a licensed radio dealer is important — they can help if your radio is faulty, needs repairs, or needs to be set to the right frequency.",
+    "keywords": ["radio dealer", "what is", "radio repair", "programme radio", "frequency", "deprogram", "licensed dealer", "radio shop"],
+    "link": "/"
+  },
+  {
+    "id": 66,
+    "category": "licensing",
+    "question": "How do I get a radio dealers licence?",
+    "answer": "To get a Radio Dealers licence from BOCRA, you need to demonstrate that you have the **technical expertise** to work with radio equipment, that you own **test equipment** to tune and test radios, and that your business is **financially sustainable**. Apply through your BOCRA account and select 'Radio Dealers Licence' as the application type.",
+    "keywords": ["radio dealer licence", "sell radios", "repair radios", "how to get", "requirements", "radio shop licence", "distribute radios"],
+    "link": "/customer/applications/new"
+  },
+  {
+    "id": 67,
+    "category": "licensing",
+    "question": "How do I dispose of old radios I no longer need?",
+    "answer": "You cannot just throw away licensed radio equipment. To dispose of radios you no longer need: first, **write to BOCRA** explaining what you intend to do with them. Then take them to a licensed radio dealer who will **deprogram** them (remove the frequency). If the radios still work, they can be sold to another licensed operator. If they are broken beyond repair, the dealer will issue a **boarding certificate**. Note that all radios must remain licensed whether in use or not.",
+    "keywords": ["dispose", "old radios", "get rid of", "deprogram", "no longer need", "boarding certificate", "radio disposal", "sell old radio"],
+    "link": "/"
+  },
+  {
+    "id": 68,
+    "category": "licensing",
+    "question": "How long does it take to get a radio licence?",
+    "answer": "A radio licence is usually processed within a **maximum of 3 working days**, as long as you have submitted all the required information correctly. Incomplete applications will cause delays, so make sure everything is filled in properly before submitting.",
+    "keywords": ["how long", "radio licence", "processing time", "days", "wait", "how fast", "turnaround"],
+    "link": "/customer/applications/new"
+  },
+  {
+    "id": 69,
+    "category": "licensing",
+    "question": "What do I need to apply for a radio licence?",
+    "answer": "To apply for a radio licence you will need to fill in a **frequency application form** (available on the BOCRA website), clearly stating the type of service you are running and your area of operation. You also need to attach a **copy of your company registration** and fill in a **licence renewal form** with details of the radio equipment you will use — including the serial number, make, and model of each radio.",
+    "keywords": ["radio licence", "requirements", "what do I need", "frequency form", "company registration", "serial number", "apply", "documents"],
+    "link": "/customer/applications/new"
+  },
+  {
+    "id": 70,
+    "category": "complaints",
+    "question": "How do I know if BOCRA received my complaint?",
+    "answer": "When you submit a complaint through your BOCRA account, you will immediately receive a **reference number**. This confirms your complaint was received. You can use this reference number to track your complaint status at any time by going to the 'Support' section of your account. If you did not receive a reference number, your complaint may not have gone through — try submitting again.",
+    "keywords": ["received", "confirmation", "reference number", "complaint submitted", "did it go through", "acknowledged", "proof"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 71,
+    "category": "complaints",
+    "question": "Can I file a complaint anonymously?",
+    "answer": "BOCRA requires your contact details to investigate and follow up on complaints effectively. However, if you have concerns about your identity being shared with the service provider, you can contact BOCRA directly by phone at **+267 395 7755** or email **info@bocra.org.bw** to discuss your situation before filing formally.",
+    "keywords": ["anonymous", "anonymously", "without name", "identity", "scared", "private", "confidential", "hide identity"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 72,
+    "category": "complaints",
+    "question": "My SIM card was swapped without my permission",
+    "answer": "Unauthorised SIM swaps are a serious consumer rights violation and can be used for fraud. Report it **immediately** to your mobile network operator to freeze the SIM. Then file an urgent complaint with BOCRA through the Support section. Also consider reporting it to the Botswana Police Service if you suspect fraud or financial theft.",
+    "keywords": ["SIM swap", "SIM swapped", "unauthorised", "without permission", "fraud", "SIM card", "stolen number", "hijacked"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 73,
+    "category": "complaints",
+    "question": "Someone else is using my phone number",
+    "answer": "If someone appears to be using your number without your knowledge, this could be a SIM swap or identity fraud. Contact your mobile network operator immediately to investigate and suspend the number if necessary. File a complaint with BOCRA and report the matter to the Botswana Police Service as it may involve criminal activity.",
+    "keywords": ["someone using my number", "my number stolen", "identity theft", "phone number", "fraud", "SIM", "hijacked", "stolen"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 74,
+    "category": "complaints",
+    "question": "I was scammed by an online service in Botswana — who do I report it to?",
+    "answer": "If you were scammed by a telecommunications or internet service provider operating in Botswana, you can report it to BOCRA through the Support section of your account. For financial scams or criminal fraud, also report the matter to the **Botswana Police Service**. BOCRA can investigate whether the service provider is licensed and take regulatory action.",
+    "keywords": ["scammed", "scam", "fraud", "online", "ripped off", "cheated", "report", "who to tell", "fake service"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 75,
+    "category": "complaints",
+    "question": "How do I report offensive or inappropriate content on TV or radio?",
+    "answer": "If you have seen or heard content on a Botswana TV or radio station that you believe is offensive, harmful, or inappropriate, you can file a **Broadcasting complaint** with BOCRA. Sign in to your account, go to 'Support', click 'New Complaint', and select 'Broadcasting' as the category. Provide the station name, date, time, and a description of the content.",
+    "keywords": ["offensive content", "inappropriate", "TV", "radio", "broadcast", "complain about content", "harmful", "report station"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 76,
+    "category": "broadcasting",
+    "question": "How do I check if a radio station is licensed by BOCRA?",
+    "answer": "You can verify whether any radio or TV station holds a valid BOCRA broadcasting licence by using the 'Verify Licence' feature on the BOCRA website. Enter the station name or licence number and the system will show the current licence status.",
+    "keywords": ["radio station licensed", "verify", "check", "broadcasting licence", "is it legal", "FM station", "TV station", "valid"],
+    "link": "/customer/verify"
+  },
+  {
+    "id": 77,
+    "category": "payments",
+    "question": "I paid but my application still shows as unpaid",
+    "answer": "Payments can sometimes take a few minutes to reflect on the system. Wait 10–15 minutes and refresh your application page. If it still shows as unpaid after that, **do not pay again**. Contact BOCRA support immediately with your payment receipt or proof of transaction and we will resolve it manually.",
+    "keywords": ["paid", "still unpaid", "payment not showing", "not reflecting", "paid twice", "double payment", "receipt", "transaction"],
+    "link": "/customer/support"
+  },
+  {
+    "id": 78,
+    "category": "licensing",
+    "question": "I submitted my application but have not heard anything",
+    "answer": "After submitting an application, you can track its status at any time by signing in to your account and going to 'My Applications'. Most applications are reviewed within **10–15 working days**. If your application has exceeded this timeframe with no update, contact BOCRA at **+267 395 7755** or **info@bocra.org.bw** and quote your application reference number.",
+    "keywords": ["submitted", "no response", "heard nothing", "application status", "waiting", "how long", "no update", "silence"],
+    "link": "/customer/applications"
+  },
+  {
+    "id": 79,
+    "category": "licensing",
+    "question": "Can I apply for a licence on behalf of a company?",
+    "answer": "Yes. You can apply for a BOCRA licence on behalf of a registered company. When creating your account or submitting an application, select 'Company' as the account type and provide your company registration documents. The licence will be issued in the company's name.",
+    "keywords": ["company", "on behalf", "business", "organisation", "apply for company", "registered company", "corporate", "business licence"],
+    "link": "/customer/applications/new"
+  },
+  {
+    "id": 80,
+    "category": "about",
+    "question": "What is BOCRA's physical address?",
+    "answer": "BOCRA's head office is located at **Plot 50671, Independence Avenue, Gaborone, Botswana**. Office hours are Monday to Friday, 7:30 AM to 4:30 PM. You can also reach us by phone at +267 395 7755 or by email at info@bocra.org.bw.",
+    "keywords": ["address", "plot", "physical", "where", "location", "Independence Avenue", "Gaborone", "plot number", "directions"],
+    "link": "/"
+  },
+  {
+    "id": 81,
+    "category": "about",
+    "question": "Does BOCRA have a mobile app?",
+    "answer": "BOCRA currently does not have a dedicated mobile app. All services including licence applications, complaint submissions, and account management are available through the **BOCRA website** on your phone's browser. The website is mobile-friendly and works on any smartphone.",
+    "keywords": ["mobile app", "app", "android", "iPhone", "download", "play store", "app store", "phone app"],
+    "link": "/"
+  },
+  {
+    "id": 82,
+    "category": "about",
+    "question": "Can I visit BOCRA offices in person to apply?",
+    "answer": "Yes. You are welcome to visit the BOCRA offices in person at **Plot 50671, Independence Avenue, Gaborone**. Staff can assist you with application forms, licence queries, and complaints. Office hours are **Monday to Friday, 7:30 AM to 4:30 PM**. However, many services can also be completed online through your BOCRA account without needing to visit.",
+    "keywords": ["visit", "walk in", "in person", "offices", "physically", "come in", "face to face", "Gaborone", "apply in person"],
+    "link": "/"
+  }
+]

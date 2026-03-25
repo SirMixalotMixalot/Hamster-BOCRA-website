@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -99,3 +101,56 @@ SERVICE_CATALOG: tuple[ServiceCatalogItem, ...] = (
         action=None,
     ),
 )
+
+
+def _tokenize_query(query: str) -> list[str]:
+    return [token for token in re.split(r"\W+", query.lower()) if token]
+
+
+def score_service_match(query: str, item: ServiceCatalogItem) -> float:
+    normalized_query = query.lower().strip()
+    if not normalized_query:
+        return 0.0
+
+    tokens = _tokenize_query(normalized_query)
+    title = item.title.lower()
+    description = item.description.lower()
+    keywords = tuple(keyword.lower() for keyword in item.keywords)
+
+    score = 0.0
+    if normalized_query in title:
+        score += 4.0
+    if normalized_query in description:
+        score += 2.0
+    if any(normalized_query in keyword for keyword in keywords):
+        score += 4.0
+
+    for token in tokens:
+        if token in title:
+            score += 1.5
+        if token in description:
+            score += 0.5
+        if any(token in keyword for keyword in keywords):
+            score += 1.0
+
+    return score
+
+
+def search_services(query: str) -> list[dict[str, Any]]:
+    matches: list[dict[str, Any]] = []
+    for service in SERVICE_CATALOG:
+        score = score_service_match(query, service)
+        if score <= 0:
+            continue
+        matches.append(
+            {
+                "type": "service",
+                "title": service.title,
+                "snippet": service.description,
+                "url": service.url,
+                "action": service.action,
+                "score": score,
+            }
+        )
+
+    return sorted(matches, key=lambda row: float(row.get("score") or 0.0), reverse=True)

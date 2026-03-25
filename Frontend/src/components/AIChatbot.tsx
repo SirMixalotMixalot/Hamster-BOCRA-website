@@ -1,7 +1,17 @@
 import { useState, useRef, useEffect } from "react";
 import { Bot, Send, X, Minimize2, MessageCircle, Sparkles } from "lucide-react";
 
-type Message = { role: "user" | "assistant"; content: string };
+type Message = { role: "user" | "assistant"; content: string; sources?: string[] };
+
+function getApiBaseUrl(): string {
+  const configured = import.meta.env.VITE_API_BASE_URL?.trim();
+  const fallback = "http://localhost:8000";
+  return (configured || fallback).replace(/\/$/, "");
+}
+
+function isHttpLikeLink(value: string): boolean {
+  return value.startsWith("/") || value.startsWith("http://") || value.startsWith("https://") || value.startsWith("mailto:") || value.startsWith("tel:");
+}
 
 const suggestions = [
   "How do I apply for a licence?",
@@ -30,30 +40,71 @@ const AIChatbot = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = (text?: string) => {
+  const handleSend = async (text?: string) => {
     const userMsg = (text || input).trim();
     if (!userMsg) return;
     setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
     setInput("");
     setIsTyping(true);
 
-    setTimeout(() => {
-      const responses: Record<string, string> = {
-        licence: "To apply for a licence, visit the **Licensing** section under Services. BOCRA issues licences for telecommunications, broadcasting, postal, and ICT services. You can start your application through our online portal or download the relevant forms from the Documents section.",
-        complaint: "To file a complaint, go to the **Complaints** section. You can submit complaints about service quality, billing disputes, or unfair practices by communications service providers. BOCRA investigates all valid complaints.",
-        statistics: "Telecom statistics are available in the **Resources** section. You'll find data on mobile subscriptions, internet penetration, service quality metrics, and market reports updated quarterly.",
-        "type approval": "**Type Approval** is the process of certifying that communications equipment meets Botswana's technical standards. Manufacturers and importers must obtain type approval before selling equipment in Botswana.",
-        regulation: "BOCRA's regulatory framework includes the Communications Regulatory Authority Act (2012), Telecommunications Act, Broadcasting Act amendments, and various sector-specific regulations. Find them in the **Documents & Legislation** section.",
-      };
+    try {
+      const response = await fetch(`${getApiBaseUrl()}/api/ai/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: userMsg }),
+      });
 
-      const key = Object.keys(responses).find((k) => userMsg.toLowerCase().includes(k));
-      const reply = key
-        ? responses[key]
-        : "Thank you for your question. I can help you navigate BOCRA's services including licensing, complaints, type approval, regulations, and telecom statistics. Could you please be more specific about what you're looking for?";
+      if (!response.ok) {
+        let detail = "I could not fetch an answer right now. Please try again.";
+        try {
+          const payload = (await response.json()) as { detail?: string };
+          if (typeof payload.detail === "string" && payload.detail.trim()) {
+            detail = payload.detail;
+          }
+        } catch {
+          // Keep fallback detail.
+        }
 
-      setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: detail,
+          },
+        ]);
+        return;
+      }
+
+      const payload = (await response.json()) as { reply?: string; sources?: string[] };
+      const reply = typeof payload.reply === "string" && payload.reply.trim()
+        ? payload.reply
+        : "I found limited information. Please contact BOCRA via +267 395 7755 or info@bocra.org.bw.";
+
+      const sources = Array.isArray(payload.sources)
+        ? payload.sources.filter((source) => typeof source === "string" && source.trim() && isHttpLikeLink(source))
+        : undefined;
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: reply,
+          sources: sources && sources.length > 0 ? sources : undefined,
+        },
+      ]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "I could not reach the BOCRA assistant service right now. Please try again or contact BOCRA at +267 395 7755.",
+        },
+      ]);
+    } finally {
       setIsTyping(false);
-    }, 1200);
+    }
   };
 
   return (
@@ -84,13 +135,28 @@ const AIChatbot = () => {
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[85%] rounded-xl px-3.5 py-2.5 text-sm ${
+                <div className={`max-w-[85%] rounded-xl px-3.5 py-2.5 text-sm whitespace-pre-line ${
                   msg.role === "user"
                     ? "bg-primary text-primary-foreground rounded-br-sm"
                     : "bg-muted text-foreground rounded-bl-sm"
                 }`}>
                   {msg.content.split("**").map((part, j) =>
                     j % 2 === 1 ? <strong key={j}>{part}</strong> : <span key={j}>{part}</span>
+                  )}
+                  {msg.role === "assistant" && Array.isArray(msg.sources) && msg.sources.length > 0 && (
+                    <div className="mt-2 space-y-1 text-xs">
+                      {msg.sources.map((source, idx) => (
+                        <a
+                          key={`${source}-${idx}`}
+                          href={source}
+                          target={source.startsWith("http") ? "_blank" : undefined}
+                          rel={source.startsWith("http") ? "noopener noreferrer" : undefined}
+                          className="block underline text-primary hover:opacity-80"
+                        >
+                          Source {idx + 1}
+                        </a>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
