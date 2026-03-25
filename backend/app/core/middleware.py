@@ -11,9 +11,13 @@ from app.db.client import get_supabase_admin
 EXEMPT_API_PATHS = {
     "/api/auth/signup",
     "/api/auth/login",
+    "/api/decisions",
+    "/api/decisions/",
     "/api/news",
     "/api/news/",
     "/api/search",
+    "/api/stats",
+    "/api/stats/",
 }
 logger = logging.getLogger("app.auth.middleware")
 
