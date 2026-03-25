@@ -25,6 +25,7 @@ import AdminSettings from "./pages/admin/Settings.tsx";
 import Careers from "./pages/Careers.tsx";
 import NewApplication from "./pages/customer/applications/NewApplication.tsx";
 import { bootstrapAuth, getAccessToken, getStoredRole, subscribeToSupabaseAuthChanges } from "@/lib/auth";
+import Faqs from "./pages/Faqs.tsx";
 
 const queryClient = new QueryClient();
 
@@ -103,6 +104,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/careers" element={<Careers />} />
+          <Route path="/faqs" element={<Faqs />} />
 
           {/* Customer Portal */}
           <Route path="/customer" element={<CustomerLayout />}>

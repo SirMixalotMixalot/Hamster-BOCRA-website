@@ -93,6 +93,13 @@ const statsHighlights = [
   { value: "200+", label: "Licensed Service Providers" },
 ];
 
+const heroQuickActions = [
+  { label: "Telecommunications", dotClass: "bg-bocra-blue" },
+  { label: "Broadcasting", dotClass: "bg-bocra-teal" },
+  { label: "Postal", dotClass: "bg-bocra-rose" },
+  { label: "Internet", dotClass: "bg-bocra-gold" },
+];
+
 const HeroSection = () => {
   return (
     <>
@@ -128,6 +135,22 @@ const HeroSection = () => {
           <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-10">
             BOCRA oversees telecommunications, broadcasting, internet, and postal services to ensure accessible, affordable, and quality services for all Batswana.
           </p>
+
+          <div
+            className="mt-10 flex w-full flex-col items-center justify-center gap-4 animate-fade-in-up sm:flex-row"
+            style={{ animationDelay: "0.2s" }}
+          >
+            {heroQuickActions.map((action) => (
+              <button
+                key={action.label}
+                type="button"
+                className="inline-flex min-w-[220px] items-center justify-center gap-3 rounded-2xl border border-white/25 bg-white/10 px-6 py-4 text-sm font-semibold uppercase tracking-[0.08em] text-white backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/15"
+              >
+                <span className={`h-3.5 w-3.5 shrink-0 rounded-full ${action.dotClass}`} />
+                <span>{action.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 

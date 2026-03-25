@@ -59,7 +59,7 @@ const navItems = [
       {
         title: "Support",
         items: [
-          { icon: HelpCircle, label: "FAQs", description: "Frequently asked questions" },
+          { icon: HelpCircle, label: "FAQs", description: "Frequently asked questions", action: "navigate:/faqs" },
           { icon: BookOpen, label: "Glossary", description: "Telecommunications terms explained" },
         ],
       },
@@ -271,12 +271,8 @@ const Header = () => {
       <header className="sticky top-0 z-50 bg-bocra-navy shadow-sm">
         <div className="container flex items-center justify-between h-16 md:h-[72px]">
           {/* Logo */}
-          <a href="#" className="flex items-center gap-2.5 shrink-0">
-            <img src={bocraLogo} alt="BOCRA" className="h-10 w-10 object-contain brightness-200" />
-            <div className="hidden sm:block">
-              <div className="font-heading font-bold text-white text-sm leading-tight">BOCRA</div>
-              <div className="text-[10px] text-white/60 leading-tight">Communications Regulatory Authority</div>
-            </div>
+          <a href="#" className="shrink-0">
+            <img src={bocraLogo} alt="BOCRA" className="h-16 w-auto object-contain brightness-200 md:h-[72px]" />
           </a>
 
           {/* Desktop Nav */}
