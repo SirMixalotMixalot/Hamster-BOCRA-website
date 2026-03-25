@@ -1,21 +1,86 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, status
 
 from app.db.client import get_supabase_admin
 from app.models.search import SearchResponse, SearchResultItem
+from app.search.services import SERVICE_CATALOG, ServiceCatalogItem
 
 router = APIRouter(prefix="/api/search", tags=["search"])
 logger = logging.getLogger("app.search")
 
 _MAX_QUERY_LENGTH = 200
 _DEFAULT_LIMIT = 10
+_DB_FETCH_LIMIT = 25
 
-# TODO: Replace with DB-backed services once a services table/source exists.
-_SERVICE_RESULTS: list[dict[str, Any]] = []
+
+def _tokenize_query(query: str) -> list[str]:
+    return [token for token in re.split(r"\W+", query.lower()) if token]
+
+
+def _score_service_match(query: str, item: ServiceCatalogItem) -> float:
+    normalized_query = query.lower().strip()
+    if not normalized_query:
+        return 0.0
+
+    tokens = _tokenize_query(normalized_query)
+    title = item.title.lower()
+    description = item.description.lower()
+    keywords = tuple(keyword.lower() for keyword in item.keywords)
+
+    score = 0.0
+    if normalized_query in title:
+        score += 4.0
+    if normalized_query in description:
+        score += 2.0
+    if any(normalized_query in keyword for keyword in keywords):
+        score += 4.0
+
+    for token in tokens:
+        if token in title:
+            score += 1.5
+        if token in description:
+            score += 0.5
+        if any(token in keyword for keyword in keywords):
+            score += 1.0
+
+    return score
+
+
+def _search_services(query: str) -> list[dict[str, Any]]:
+    matches: list[dict[str, Any]] = []
+    for service in SERVICE_CATALOG:
+        score = _score_service_match(query, service)
+        if score <= 0:
+            continue
+        matches.append(
+            {
+                "type": "service",
+                "title": service.title,
+                "snippet": service.description,
+                "url": service.url,
+                "action": service.action,
+                "score": score,
+            }
+        )
+
+    # TODO: fold service ranking into a unified semantic/hybrid search ranker.
+    return sorted(matches, key=lambda row: float(row.get("score") or 0.0), reverse=True)
+
+
+def _safe_score(value: Any) -> float:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return 0.0
+    return 0.0
 
 
 def _normalize_result(row: dict[str, Any]) -> SearchResultItem:
@@ -24,6 +89,7 @@ def _normalize_result(row: dict[str, Any]) -> SearchResultItem:
         title=row.get("title") or "Untitled",
         snippet=row.get("snippet") or "No preview available.",
         url=row.get("url") or "#",
+        action=row.get("action") if isinstance(row.get("action"), str) else None,
         score=float(row.get("score") or 0.0),
     )
 
@@ -52,7 +118,7 @@ async def search_public_content(
             "search_public_content",
             {
                 "search_query": query,
-                "result_limit": _DEFAULT_LIMIT,
+                "result_limit": _DB_FETCH_LIMIT,
             },
         ).execute()
     except Exception as e:
@@ -62,13 +128,12 @@ async def search_public_content(
             detail="Search query failed",
         )
 
-    rows = rpc_result.data or []
-    results = [_normalize_result(row) for row in rows]
+    raw_db_rows = rpc_result.data if isinstance(rpc_result.data, list) else []
+    db_rows = [row for row in raw_db_rows if isinstance(row, dict)]
+    service_rows = _search_services(query)
 
-    # Keep the source shape extensible for future hybrid/semantic search fusion.
-    if _SERVICE_RESULTS:
-        service_results = [_normalize_result(row) for row in _SERVICE_RESULTS]
-        results.extend(service_results)
-        results = sorted(results, key=lambda item: item.score, reverse=True)[:_DEFAULT_LIMIT]
+    merged_rows = db_rows + service_rows
+    merged_rows.sort(key=lambda row: _safe_score(row.get("score")), reverse=True)
+    results = [_normalize_result(row) for row in merged_rows[:_DEFAULT_LIMIT]]
 
     return SearchResponse(query=query, results=results)
