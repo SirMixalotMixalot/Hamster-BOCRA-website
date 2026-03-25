@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   FileText,
   Clock,
@@ -8,6 +9,7 @@ import {
   ShieldCheck,
   LifeBuoy,
 } from "lucide-react";
+import { getMe } from "@/lib/auth";
 
 const stats = [
   { label: "Active Licences", value: 0, icon: CheckCircle2, color: "text-bocra-teal bg-bocra-teal/10" },
@@ -18,16 +20,30 @@ const stats = [
 
 const quickActions = [
   { label: "New Application", description: "Apply for a licence", icon: Plus, to: "/customer/applications/new" },
-  { label: "Verify Licence", description: "Check licence validity", icon: ShieldCheck, to: "/customer/verify" },
+  { label: "View Licences", description: "View your approved licences", icon: ShieldCheck, to: "/customer/licences" },
   { label: "Get Support", description: "Contact BOCRA", icon: LifeBuoy, to: "/customer/support" },
 ];
 
 const Dashboard = () => {
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    getMe()
+      .then((me) => {
+        const fullName = me.profile.full_name || me.user.email?.split("@")[0] || "";
+        const name = fullName.split(" ")[0];
+        setUserName(name);
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <div className="space-y-6 max-w-6xl">
       {/* Welcome */}
       <div>
-        <h2 className="text-2xl font-heading font-bold text-foreground">Welcome back</h2>
+        <h2 className="text-2xl font-heading font-bold text-foreground">
+          Welcome back{userName ? `, ${userName}` : ""}!
+        </h2>
         <p className="text-sm text-muted-foreground mt-1">Here's an overview of your account</p>
       </div>
 

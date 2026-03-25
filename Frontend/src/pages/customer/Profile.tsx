@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { User as UserIcon, Camera, Loader2, Lock, Bell, Mail, MessageSquare, Pencil } from "lucide-react";
+import { getMe } from "@/lib/auth";
 
 const inputBase =
   "w-full px-5 py-2.5 rounded-full border text-sm focus:outline-none transition-all duration-200";
@@ -11,24 +12,43 @@ const inputDisabled =
 const cardClasses = "glass rounded-2xl p-6";
 
 const Profile = () => {
+  // Loading
+  const [loading, setLoading] = useState(true);
+
   // Edit mode
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Personal details
-  const [fullName, setFullName] = useState("Kgosi Morapedi");
-  const [idNumber, setIdNumber] = useState("548912345");
-  const [gender, setGender] = useState("Male");
-  const [dob, setDob] = useState("1990-05-15");
-  const [phone, setPhone] = useState("+267 71 234 567");
-  const [email] = useState("kgosi.morapedi@gmail.com");
+  const [fullName, setFullName] = useState("");
+  const [idNumber, setIdNumber] = useState("");
+  const [gender, setGender] = useState("");
+  const [dob, setDob] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
 
   // Address
-  const [street, setStreet] = useState("Plot 1234, Masa Close");
-  const [city, setCity] = useState("Gaborone");
-  const [district, setDistrict] = useState("South-East");
+  const [street, setStreet] = useState("");
+  const [city, setCity] = useState("");
+  const [district, setDistrict] = useState("");
   const [country] = useState("Botswana");
-  const [postalCode, setPostalCode] = useState("00000");
+  const [postalCode, setPostalCode] = useState("");
+
+  // Fetch profile data on mount
+  useEffect(() => {
+    getMe()
+      .then((me) => {
+        setFullName(me.profile.full_name || "");
+        setEmail(me.user.email || "");
+        setGender(me.profile.gender || "");
+        setDob(me.profile.date_of_birth || "");
+        setPhone(me.profile.phone || "");
+        setStreet(me.profile.address || "");
+        setPhotoUrl(me.profile.profile_photo_url || null);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   // Collapsible sections
   const [passwordOpen, setPasswordOpen] = useState(false);
@@ -78,6 +98,14 @@ const Profile = () => {
   };
 
   const inputCls = editing ? inputEnabled : inputDisabled;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">

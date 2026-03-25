@@ -14,6 +14,7 @@ import Payments from "./pages/customer/Payments.tsx";
 import VerifyLicence from "./pages/customer/VerifyLicence.tsx";
 import Documents from "./pages/customer/Documents.tsx";
 import Support from "./pages/customer/Support.tsx";
+import CustomerLicences from "./pages/customer/Licences.tsx";
 import AdminLayout from "./layouts/AdminLayout.tsx";
 import AdminDashboard from "./pages/admin/Dashboard.tsx";
 import AdminUsers from "./pages/admin/Users.tsx";
@@ -113,6 +114,7 @@ const App = () => (
             <Route path="profile" element={<Profile />} />
             <Route path="applications" element={<Applications />} />
             <Route path="applications/new" element={<NewApplication />} />
+            <Route path="licences" element={<CustomerLicences />} />
             <Route path="payments" element={<Payments />} />
             <Route path="verify" element={<VerifyLicence />} />
             <Route path="documents" element={<Documents />} />
