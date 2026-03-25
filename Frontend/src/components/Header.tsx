@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Search, Menu, X, ChevronDown, FileText, Shield, BookOpen, HelpCircle, Users, Briefcase, Scale, Wifi, Tv, Package, Globe2, BarChart3, ExternalLink, Award, ClipboardList, FileCheck, Newspaper } from "lucide-react";
+import { Search, Menu, X, ChevronDown, FileText, Shield, BookOpen, HelpCircle, Users, Briefcase, Scale, Wifi, Tv, Package, Globe2, BarChart3, ExternalLink, Award, ClipboardList, FileCheck, Newspaper, LogIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import bocraLogo from "@/assets/bocra-logo.png";
 import MegaMenuDrawer from "./MegaMenuDrawer";
@@ -307,19 +307,37 @@ const Header = () => {
               <Search className="h-5 w-5 text-white/70" />
             </button>
             {isCustomer ? (
-              <button
-                onClick={() => navigate("/customer/dashboard")}
-                className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 border border-white/30 rounded-md text-sm font-medium text-white hover:bg-white/10 transition-colors"
-              >
-                Customer Portal
-              </button>
+              <>
+                <button
+                  onClick={() => navigate("/customer/dashboard")}
+                  className="md:hidden p-2 rounded-md hover:bg-white/10 transition-colors"
+                  aria-label="Customer Portal"
+                >
+                  <LogIn className="h-5 w-5 text-white/70" />
+                </button>
+                <button
+                  onClick={() => navigate("/customer/dashboard")}
+                  className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 border border-white/30 rounded-md text-sm font-medium text-white hover:bg-white/10 transition-colors"
+                >
+                  Customer Portal
+                </button>
+              </>
             ) : (
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent("toggle-signin-modal"))}
-                className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 border border-white/30 rounded-md text-sm font-medium text-white hover:bg-white/10 transition-colors"
-              >
-                Sign In
-              </button>
+              <>
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent("toggle-signin-modal"))}
+                  className="md:hidden p-2 rounded-md hover:bg-white/10 transition-colors"
+                  aria-label="Sign In"
+                >
+                  <LogIn className="h-5 w-5 text-white/70" />
+                </button>
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent("toggle-signin-modal"))}
+                  className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 border border-white/30 rounded-md text-sm font-medium text-white hover:bg-white/10 transition-colors"
+                >
+                  Sign In
+                </button>
+              </>
             )}
             <button
               onClick={() => {

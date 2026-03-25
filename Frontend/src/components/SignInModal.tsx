@@ -173,7 +173,7 @@ const SignInModal = () => {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md bg-gray-900/70 backdrop-blur-xl border border-white/10 shadow-2xl [&>button]:text-white">
+      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md bg-gray-900/70 backdrop-blur-xl border border-white/10 shadow-2xl [&>button]:text-white">
         {/* Back button only for admin-login */}
         {step === "admin-login" && (
           <button
