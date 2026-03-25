@@ -5,14 +5,13 @@ import {
   User,
   FileText,
   CreditCard,
-  ShieldCheck,
-  FolderOpen,
   LifeBuoy,
   LogOut,
   Menu,
   X,
   PanelLeftClose,
   PanelLeftOpen,
+  Home,
 } from "lucide-react";
 import bocraLogo from "@/assets/bocra-logo.png";
 import { logout } from "@/lib/auth";
@@ -21,8 +20,6 @@ const sidebarLinks = [
   { to: "/customer/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/customer/applications", icon: FileText, label: "Applications" },
   { to: "/customer/payments", icon: CreditCard, label: "Payments" },
-  { to: "/customer/verify", icon: ShieldCheck, label: "Verify Licence" },
-  { to: "/customer/documents", icon: FolderOpen, label: "Documents" },
   { to: "/customer/support", icon: LifeBuoy, label: "Support" },
 ];
 
@@ -62,6 +59,15 @@ const CustomerLayout = () => {
         <div className="flex-1 flex flex-col glass-strong border-r border-[hsl(var(--glass-border-strong))]">
           {/* Nav links */}
           <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
+            <NavLink
+              to="/"
+              onClick={() => setSidebarOpen(false)}
+              title={collapsed ? "Home" : undefined}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-foreground/60 hover:bg-primary/5 hover:text-primary ${collapsed ? "justify-center" : ""}`}
+            >
+              <Home className="h-4 w-4 shrink-0" />
+              {!collapsed && "Home"}
+            </NavLink>
             {sidebarLinks.map((link) => (
               <NavLink
                 key={link.to}
@@ -142,7 +148,9 @@ const CustomerLayout = () => {
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto p-4 lg:p-6 bg-portal-gradient">
-          <Outlet />
+          <div className="max-w-5xl mx-auto">
+            <Outlet />
+          </div>
         </main>
       </div>
 

@@ -40,16 +40,15 @@ const AuthBootstrapper = () => {
       const token = getAccessToken();
       const storedRole = getStoredRole();
 
-      if (location.pathname === "/" && token && storedRole) {
-        navigate(storedRole === "admin" ? "/admin/dashboard" : "/customer/dashboard", {
-          replace: true,
-        });
+      // Only auto-redirect admins from landing page; customers can stay
+      if (location.pathname === "/" && token && storedRole === "admin") {
+        navigate("/admin/dashboard", { replace: true });
       }
 
-      // First OAuth login has no cached role yet. Route optimistically to customer
-      // and let bootstrap role-check correct to admin when needed.
+      // First OAuth login has no cached role yet. Don't redirect yet —
+      // let bootstrap determine the role first.
       if (location.pathname === "/" && token && !storedRole) {
-        navigate("/customer/dashboard", { replace: true });
+        // Will be handled after bootstrapAuth() below
       }
 
       const me = await bootstrapAuth();
@@ -69,8 +68,9 @@ const AuthBootstrapper = () => {
 
       const isAdmin = me.profile.role === "admin";
 
-      if (path === "/") {
-        navigate(isAdmin ? "/admin/dashboard" : "/customer/dashboard", { replace: true });
+      // Only auto-redirect admins; customers can browse the landing page
+      if (path === "/" && isAdmin) {
+        navigate("/admin/dashboard", { replace: true });
         return;
       }
 
