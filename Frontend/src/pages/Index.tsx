@@ -8,6 +8,7 @@ import ComplaintModal from "@/components/ComplaintModal";
 import VerifyLicenceModal from "@/components/VerifyLicenceModal";
 import TelecomStatsModal from "@/components/TelecomStatsModal";
 import TypeApprovalModal from "@/components/TypeApprovalModal";
+import TrackComplaintModal from "@/components/TrackComplaintModal";
 
 const Index = () => {
   return (
@@ -24,6 +25,7 @@ const Index = () => {
       <VerifyLicenceModal />
       <TelecomStatsModal />
       <TypeApprovalModal />
+      <TrackComplaintModal />
     </div>
   );
 };

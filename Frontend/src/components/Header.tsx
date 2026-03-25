@@ -81,6 +81,7 @@ const navItems = [
           { icon: Shield, label: "Verify License", description: "Check license status and validity", action: "toggle-signin-modal" },
           { icon: Scale, label: "Fee Schedule", description: "View licensing fees", action: "toggle-signin-modal" },
           { icon: BarChart3, label: "Track Application", description: "Check your application status", action: "toggle-signin-modal" },
+          { icon: Search, label: "Track Complaint", description: "Check your complaint status", action: "toggle-track-complaint-modal" },
         ],
       },
       {
@@ -133,12 +134,6 @@ const Header = () => {
           <div className="flex items-center gap-2">
             <button onClick={() => setSearchOpen(!searchOpen)} className="p-2 rounded-md hover:bg-white/10 transition-colors">
               <Search className="h-5 w-5 text-white/70" />
-            </button>
-            <button
-              onClick={() => window.dispatchEvent(new CustomEvent("toggle-signin-modal", { detail: { step: "sign-in" } }))}
-              className="hidden md:inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-white/10 border border-white/20 text-sm font-medium text-white hover:bg-white/20 transition-colors"
-            >
-              Apply for License
             </button>
             <button
               onClick={() => window.dispatchEvent(new CustomEvent("toggle-signin-modal"))}
@@ -231,15 +226,6 @@ const Header = () => {
                   className="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-sm font-medium text-white bg-white/10 rounded-md"
                 >
                   AI Assistant
-                </button>
-                <button
-                  onClick={() => {
-                    setMobileOpen(false);
-                    window.dispatchEvent(new CustomEvent("toggle-signin-modal", { detail: { step: "sign-in" } }));
-                  }}
-                  className="block w-full text-center px-4 py-2.5 bg-bocra-gold text-bocra-navy rounded-md text-sm font-semibold"
-                >
-                  Apply for License
                 </button>
               </div>
             </div>

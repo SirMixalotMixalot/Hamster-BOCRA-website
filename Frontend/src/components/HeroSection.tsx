@@ -128,20 +128,6 @@ const HeroSection = () => {
           <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-10">
             BOCRA oversees telecommunications, broadcasting, internet, and postal services to ensure accessible, affordable, and quality services for all Batswana.
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <button
-              onClick={() => window.dispatchEvent(new CustomEvent("toggle-complaint-modal"))}
-              className="px-7 py-3.5 rounded-xl bg-white text-primary font-semibold hover:bg-white/90 transition-all duration-300 hover:scale-105 shadow-lg shadow-black/20"
-            >
-              File a Complaint
-            </button>
-            <button
-              onClick={() => window.dispatchEvent(new CustomEvent("toggle-telecom-stats-modal"))}
-              className="px-7 py-3.5 rounded-xl bg-white/10 backdrop-blur-md text-white font-semibold border border-white/30 hover:bg-white/20 transition-all duration-300 hover:scale-105"
-            >
-              View Statistics
-            </button>
-          </div>
         </div>
       </section>
 
@@ -176,6 +162,14 @@ const HeroSection = () => {
                   <div>
                     <div className="font-semibold text-foreground mb-1.5">{step.title}</div>
                     <div className="text-muted-foreground text-sm leading-relaxed">{step.description}</div>
+                    {step.number === "03" && (
+                      <button
+                        onClick={() => window.dispatchEvent(new CustomEvent("toggle-track-complaint-modal"))}
+                        className="mt-3 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary/10 text-primary font-semibold text-sm hover:bg-primary/20 transition-all duration-300"
+                      >
+                        Track Complaint <ArrowRight className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
