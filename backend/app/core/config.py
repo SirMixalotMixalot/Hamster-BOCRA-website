@@ -5,6 +5,11 @@ from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def _normalize_origin(origin: str) -> str:
+    """Normalize origin strings so CORS checks are not broken by trailing slashes."""
+    return origin.strip().rstrip("/")
+
+
 class Settings(BaseSettings):
     """
     Application settings loaded from environment variables.
@@ -39,18 +44,18 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins(self) -> list[str]:
-        origins = {
+        default_origins = {
             "http://localhost:8080",
             "http://127.0.0.1:8080",
-            "http://localhost:5173",
-            "http://127.0.0.1:5173",
             "https://hamster-bocra-website.vercel.app",
             "https://hamster-bocra-website-bfcixftw5-sirmixalotmixalots-projects.vercel.app",
         }
+
+        origins = {_normalize_origin(origin) for origin in default_origins}
         if self.frontend_origin:
             for origin in (item.strip() for item in self.frontend_origin.split(",")):
                 if origin:
-                    origins.add(origin)
+                    origins.add(_normalize_origin(origin))
         return sorted(origins)
 
 
