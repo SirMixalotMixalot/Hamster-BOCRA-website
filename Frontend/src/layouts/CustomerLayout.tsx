@@ -5,8 +5,6 @@ import {
   User,
   FileText,
   CreditCard,
-  ShieldCheck,
-  FolderOpen,
   LifeBuoy,
   LogOut,
   Menu,
@@ -22,8 +20,6 @@ const sidebarLinks = [
   { to: "/customer/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/customer/applications", icon: FileText, label: "Applications" },
   { to: "/customer/payments", icon: CreditCard, label: "Payments" },
-  { to: "/customer/verify", icon: ShieldCheck, label: "Verify Licence" },
-  { to: "/customer/documents", icon: FolderOpen, label: "Documents" },
   { to: "/customer/support", icon: LifeBuoy, label: "Support" },
 ];
 
@@ -152,7 +148,9 @@ const CustomerLayout = () => {
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto p-4 lg:p-6 bg-portal-gradient">
-          <Outlet />
+          <div className="max-w-5xl mx-auto">
+            <Outlet />
+          </div>
         </main>
       </div>
 
