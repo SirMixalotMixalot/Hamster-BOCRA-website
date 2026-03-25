@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import Counter, defaultdict
 from datetime import datetime, timezone
 import logging
 from typing import Any
@@ -9,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.db.client import get_supabase_admin
 from app.dependencies.auth import get_current_profile, require_admin
+from app.core.email import send_email
 from app.models.applications import (
     ApplicationCreateRequest,
     ApplicationDecideRequest,
@@ -21,6 +23,120 @@ from app.models.applications import (
 
 router = APIRouter(prefix="/api/applications", tags=["applications"])
 logger = logging.getLogger("app.applications")
+
+SECTOR_ORDER = ("telecom", "broadcasting", "postal", "internet")
+
+
+def _derive_sector_from_licence_type(licence_type: str | None) -> str:
+    label = (licence_type or "").strip().lower()
+    if "broadcast" in label:
+        return "broadcasting"
+    if "postal" in label:
+        return "postal"
+    if "vans" in label or "internet" in label:
+        return "internet"
+    return "telecom"
+
+
+def _extract_region_candidates(value: Any) -> list[str]:
+    candidates: list[str] = []
+    if isinstance(value, dict):
+        for key, nested in value.items():
+            key_lower = str(key).lower()
+            if key_lower in {"district", "region", "city", "town", "location"}:
+                if isinstance(nested, str) and nested.strip():
+                    candidates.append(nested.strip())
+            elif "district" in key_lower or "region" in key_lower:
+                if isinstance(nested, str) and nested.strip():
+                    candidates.append(nested.strip())
+                elif isinstance(nested, list):
+                    for item in nested:
+                        if isinstance(item, str) and item.strip():
+                            candidates.append(item.strip())
+            candidates.extend(_extract_region_candidates(nested))
+    elif isinstance(value, list):
+        for item in value:
+            candidates.extend(_extract_region_candidates(item))
+    return candidates
+
+
+def _get_profile_full_name(supabase, user_id: str) -> str | None:
+    result = (
+        supabase.table("profiles")
+        .select("full_name")
+        .eq("id", user_id)
+        .limit(1)
+        .execute()
+    )
+    rows = result.data or []
+    first = rows[0] if rows else None
+    if isinstance(first, dict):
+        full_name = str(first.get("full_name") or "").strip()
+        return full_name or None
+    return None
+
+
+def _get_auth_email(supabase, user_id: str) -> str | None:
+    try:
+        admin_client = getattr(supabase.auth, "admin", None)
+        if admin_client is None:
+            return None
+        response = admin_client.get_user_by_id(user_id)
+        user = getattr(response, "user", None)
+        email = getattr(user, "email", None)
+        return str(email).strip() if email else None
+    except Exception as exc:
+        logger.warning("application_notification_lookup_failed user_id=%s error=%s", user_id, exc)
+        return None
+
+
+def _send_application_submission_ack_email(
+    supabase,
+    *,
+    applicant_id: str,
+    reference_number: str,
+    licence_type: str,
+) -> None:
+    email = _get_auth_email(supabase, applicant_id)
+    if not email:
+        return
+    full_name = _get_profile_full_name(supabase, applicant_id) or "Applicant"
+    subject = f"BOCRA Application Acknowledgement - {reference_number}"
+    body = (
+        f"Dear {full_name},\n\n"
+        f"We acknowledge receipt of your application.\n"
+        f"Application Number: {reference_number}\n"
+        f"Licence Type: {licence_type}\n"
+        f"Current Status: submitted\n\n"
+        "You can track status updates in the BOCRA customer portal.\n\n"
+        "Regards,\nBOCRA"
+    )
+    send_email(to_email=email, subject=subject, body=body)
+
+
+def _send_application_status_email(
+    supabase,
+    *,
+    applicant_id: str,
+    reference_number: str,
+    licence_type: str,
+    new_status: str,
+) -> None:
+    email = _get_auth_email(supabase, applicant_id)
+    if not email:
+        return
+    full_name = _get_profile_full_name(supabase, applicant_id) or "Applicant"
+    subject = f"BOCRA Application Status Update - {reference_number}"
+    body = (
+        f"Dear {full_name},\n\n"
+        "Your application status has been updated.\n"
+        f"Application Number: {reference_number}\n"
+        f"Licence Type: {licence_type}\n"
+        f"New Status: {new_status}\n\n"
+        "Please log in to the customer portal for details.\n\n"
+        "Regards,\nBOCRA"
+    )
+    send_email(to_email=email, subject=subject, body=body)
 
 
 def _generate_reference_number(supabase_admin, current_year: int) -> str:
@@ -117,6 +233,78 @@ async def list_applications(
 
     logger.info("list_applications user_id=%s count=%d is_admin=%s", current_user_id, len(items), is_admin)
     return items
+
+
+@router.get("/analytics")
+async def applications_analytics(
+    current_profile: dict[str, Any] = Depends(require_admin),
+) -> dict[str, Any]:
+    """
+    Admin analytics for dashboard:
+    - licence type distribution
+    - regional coverage by sector and licence type
+    """
+    _ = current_profile
+    supabase = get_supabase_admin()
+
+    result = supabase.table("applications").select(
+        "licence_type,status,form_data_a,form_data_b,form_data_c,form_data_d"
+    ).execute()
+    rows = [row for row in (result.data or []) if isinstance(row, dict)]
+
+    licence_counter: Counter[str] = Counter()
+    region_sector_counter: dict[str, Counter[str]] = defaultdict(Counter)
+    region_licence_counter: dict[str, Counter[str]] = defaultdict(Counter)
+
+    eligible_rows = [
+        row for row in rows if str(row.get("status") or "").lower() not in {"draft", "rejected"}
+    ]
+
+    for row in eligible_rows:
+        licence_type = str(row.get("licence_type") or "Unknown").strip() or "Unknown"
+        sector = _derive_sector_from_licence_type(licence_type)
+        licence_counter[licence_type] += 1
+
+        all_regions: list[str] = []
+        all_regions.extend(_extract_region_candidates(row.get("form_data_a")))
+        all_regions.extend(_extract_region_candidates(row.get("form_data_b")))
+        all_regions.extend(_extract_region_candidates(row.get("form_data_c")))
+        all_regions.extend(_extract_region_candidates(row.get("form_data_d")))
+
+        regions = sorted({region for region in all_regions if region})
+        if not regions:
+            regions = ["Unknown"]
+
+        for region in regions:
+            region_sector_counter[region][sector] += 1
+            region_licence_counter[region][licence_type] += 1
+
+    licence_distribution = [
+        {"licence_type": licence_type, "count": count}
+        for licence_type, count in licence_counter.most_common()
+    ]
+
+    regional_coverage = []
+    for region in sorted(region_sector_counter.keys()):
+        by_sector = {sector: int(region_sector_counter[region].get(sector, 0)) for sector in SECTOR_ORDER}
+        by_licence_type = [
+            {"licence_type": licence_type, "count": count}
+            for licence_type, count in region_licence_counter[region].most_common()
+        ]
+        regional_coverage.append(
+            {
+                "region": region,
+                "total": int(sum(by_sector.values())),
+                "by_sector": by_sector,
+                "by_licence_type": by_licence_type,
+            }
+        )
+
+    return {
+        "total_eligible_licences": len(eligible_rows),
+        "licence_type_distribution": licence_distribution,
+        "regional_coverage": regional_coverage,
+    }
 
 
 @router.post("", response_model=ApplicationDetail, status_code=status.HTTP_201_CREATED)
@@ -324,6 +512,17 @@ async def patch_application(
 
     if is_admin and new_status != old_status:
         _log_status_change(supabase, application_id, old_status, new_status, current_user_id, reason="Admin update") # type: ignore
+        applicant_id = str(updated_row.get("applicant_id") or "")
+        reference_number = str(updated_row.get("reference_number") or "")
+        licence_type = str(updated_row.get("licence_type") or "")
+        if applicant_id and reference_number:
+            _send_application_status_email(
+                supabase,
+                applicant_id=applicant_id,
+                reference_number=reference_number,
+                licence_type=licence_type,
+                new_status=str(new_status),
+            )
 
     logger.info("patch_application app_id=%s user_id=%s is_admin=%s", application_id, current_user_id, is_admin)
 
@@ -403,6 +602,16 @@ async def submit_application(
         current_user_id,
         reason="User submitted application",
     )
+    applicant_id = str(updated_row.get("applicant_id") or "")
+    reference_number = str(updated_row.get("reference_number") or "")
+    licence_type = str(updated_row.get("licence_type") or "")
+    if applicant_id and reference_number:
+        _send_application_submission_ack_email(
+            supabase,
+            applicant_id=applicant_id,
+            reference_number=reference_number,
+            licence_type=licence_type,
+        )
 
     logger.info("submit_application app_id=%s user_id=%s", application_id, current_user_id)
 
@@ -492,6 +701,17 @@ async def decide_application(
         current_user_id,
         reason=f"Admin decision: {payload.decision_reason}",
     )
+    applicant_id = str(updated_row.get("applicant_id") or "")
+    reference_number = str(updated_row.get("reference_number") or "")
+    licence_type = str(updated_row.get("licence_type") or "")
+    if applicant_id and reference_number:
+        _send_application_status_email(
+            supabase,
+            applicant_id=applicant_id,
+            reference_number=reference_number,
+            licence_type=licence_type,
+            new_status=str(payload.status),
+        )
 
     logger.info(
         "decide_application app_id=%s decision=%s admin_id=%s",

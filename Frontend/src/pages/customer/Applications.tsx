@@ -1,60 +1,9 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FileText, Plus, Clock, CheckCircle, XCircle, AlertCircle, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { listApplications, type ApplicationListItem } from "@/lib/applications";
 
 type AppStatus = "all" | "draft" | "submitted" | "under_review" | "approved" | "rejected";
-
-interface MockApplication {
-  id: string;
-  reference_number: string;
-  licence_type: string;
-  status: "draft" | "submitted" | "under_review" | "approved" | "rejected" | "requires_action";
-  created_at: string;
-  submitted_at: string | null;
-}
-
-const MOCK_APPLICATIONS: MockApplication[] = [
-  {
-    id: "1",
-    reference_number: "BOCRA-2026-0001",
-    licence_type: "Radio Frequency Licence",
-    status: "approved",
-    created_at: "2026-02-15",
-    submitted_at: "2026-02-16",
-  },
-  {
-    id: "2",
-    reference_number: "BOCRA-2026-0002",
-    licence_type: "Broadcasting Licence",
-    status: "under_review",
-    created_at: "2026-03-01",
-    submitted_at: "2026-03-02",
-  },
-  {
-    id: "3",
-    reference_number: "BOCRA-2026-0003",
-    licence_type: "Point-to-Point Licence",
-    status: "submitted",
-    created_at: "2026-03-10",
-    submitted_at: "2026-03-10",
-  },
-  {
-    id: "4",
-    reference_number: "BOCRA-2026-0004",
-    licence_type: "Cellular Licence",
-    status: "draft",
-    created_at: "2026-03-20",
-    submitted_at: null,
-  },
-  {
-    id: "5",
-    reference_number: "BOCRA-2026-0005",
-    licence_type: "Type Approval Licence",
-    status: "rejected",
-    created_at: "2026-01-05",
-    submitted_at: "2026-01-06",
-  },
-];
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ElementType }> = {
   draft: { label: "Draft", color: "text-gray-600", bg: "bg-gray-100", icon: FileText },
@@ -76,11 +25,36 @@ const FILTER_TABS: { value: AppStatus; label: string }[] = [
 
 const Applications = () => {
   const [filter, setFilter] = useState<AppStatus>("all");
+  const [applications, setApplications] = useState<ApplicationListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const filtered = filter === "all"
-    ? MOCK_APPLICATIONS
-    : MOCK_APPLICATIONS.filter((a) => a.status === filter);
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const items = await listApplications();
+        if (!mounted) return;
+        setApplications(items);
+        setError(null);
+      } catch (loadError) {
+        if (!mounted) return;
+        setError(loadError instanceof Error ? loadError.message : "Failed to load applications.");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    void load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const filtered = useMemo(
+    () => (filter === "all" ? applications : applications.filter((a) => a.status === filter)),
+    [applications, filter],
+  );
 
   return (
     <div className="space-y-6 max-w-6xl">
@@ -115,8 +89,18 @@ const Applications = () => {
         ))}
       </div>
 
+      {error && (
+        <div className="glass rounded-2xl p-4">
+          <p className="text-sm text-red-500">{error}</p>
+        </div>
+      )}
+
       {/* Applications Table */}
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="glass rounded-2xl p-8 text-center">
+          <p className="text-sm text-muted-foreground">Loading your applications...</p>
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="glass rounded-2xl p-8 text-center">
           <FileText className="h-10 w-10 text-muted-foreground/30 mx-auto" />
           <p className="text-sm text-muted-foreground mt-3">No applications found</p>
@@ -162,10 +146,12 @@ const Applications = () => {
                         </span>
                       </td>
                       <td className="px-5 py-3.5">
-                        <span className="text-sm text-muted-foreground">{app.created_at}</span>
+                        <span className="text-sm text-muted-foreground">{new Date(app.created_at).toLocaleDateString()}</span>
                       </td>
                       <td className="px-5 py-3.5">
-                        <span className="text-sm text-muted-foreground">{app.submitted_at || "—"}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {app.submitted_at ? new Date(app.submitted_at).toLocaleDateString() : "—"}
+                        </span>
                       </td>
                     </tr>
                   );

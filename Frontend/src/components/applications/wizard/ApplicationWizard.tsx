@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import type { BocraLicenceType } from "@/lib/constants";
 import { getWizardConfig, type StepConfig, type StepProps } from "@/lib/applicationStepConfig";
+import { createApplication, submitApplication } from "@/lib/applications";
 import WizardStepper from "./WizardStepper";
 import WizardNavigation from "./WizardNavigation";
 
@@ -63,6 +64,7 @@ export default function ApplicationWizard() {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<FormData>({ ...EMPTY_FORM_DATA });
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Steps only exist after licence type is selected
   const config = licenceType ? getWizardConfig(licenceType) : null;
@@ -110,11 +112,34 @@ export default function ApplicationWizard() {
     });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (!licenceType) {
+      return;
+    }
+    if (isSubmitting) {
+      return;
+    }
+    setIsSubmitting(true);
     setCompletedSteps((prev) => new Set([...prev, currentStep]));
-    toast.success("Application submitted", {
-      description: "Your application has been submitted for review. You'll receive a reference number shortly.",
-    });
+    try {
+      const created = await createApplication({
+        licence_type: licenceType,
+        form_data_a: formData.form_data_a,
+        form_data_b: formData.form_data_b,
+        form_data_c: formData.form_data_c,
+        form_data_d: formData.form_data_d,
+      });
+      const submitted = await submitApplication(created.id);
+      toast.success("Application submitted", {
+        description: `Acknowledged. Application number: ${submitted.reference_number}`,
+      });
+    } catch (error) {
+      toast.error("Submission failed", {
+        description: error instanceof Error ? error.message : "Could not submit application. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Resolve the current step component
@@ -188,6 +213,7 @@ export default function ApplicationWizard() {
           onSubmit={handleSubmit}
           isFirstStep={currentStep === 0}
           isLastStep={isReviewStep}
+          submitting={isSubmitting}
         />
       </div>
     </div>

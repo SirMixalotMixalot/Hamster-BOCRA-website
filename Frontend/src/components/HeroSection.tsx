@@ -1,7 +1,9 @@
-import { MessageSquare, Shield, BarChart3, ArrowRight, Newspaper, Calendar, ArrowUpRight, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
+import { MessageSquare, Shield, BarChart3, ArrowRight, Newspaper, Calendar, ArrowUpRight, ShieldCheck, FileText, Gavel, Megaphone, ScrollText } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
+import { getHomePublishPayload, type HomeNewsItem, type HomePublishPayload, type HomeResourceItem, type HomeStatItem } from "@/lib/homePublishing";
 
-const newsItems = [
+const defaultNewsItems: HomeNewsItem[] = [
   {
     tag: "Press Release",
     tagColor: "bg-bocra-blue/10 text-bocra-blue",
@@ -86,11 +88,31 @@ const typeApprovalSteps = [
   },
 ];
 
-const statsHighlights = [
+const defaultStatsHighlights: HomeStatItem[] = [
   { value: "4+", label: "Licensed Mobile Operators" },
   { value: "87%", label: "Mobile Penetration Rate" },
   { value: "60%+", label: "Internet Penetration" },
   { value: "200+", label: "Licensed Service Providers" },
+];
+
+const defaultTenders: HomeResourceItem[] = [
+  { title: "Procurement: National QOS Monitoring", description: "Closes 18 Apr 2026" },
+  { title: "Courier Performance Audit Services", description: "Closes 24 Apr 2026" },
+];
+
+const defaultForms: HomeResourceItem[] = [
+  { title: "Application Form A", description: "Radio licensing" },
+  { title: "Complaint Escalation Form", description: "Consumer affairs" },
+];
+
+const defaultPublications: HomeResourceItem[] = [
+  { title: "Market Performance Bulletin", description: "Q1 2026 edition" },
+  { title: "Broadband Quality Review", description: "National summary" },
+];
+
+const defaultLegislation: HomeResourceItem[] = [
+  { title: "Communications Regulatory Authority Act", description: "Current version" },
+  { title: "Spectrum Regulations", description: "Licensing obligations" },
 ];
 
 const heroQuickActions = [
@@ -101,6 +123,40 @@ const heroQuickActions = [
 ];
 
 const HeroSection = () => {
+  const [publishedHomeData, setPublishedHomeData] = useState<HomePublishPayload | null>(null);
+
+  useEffect(() => {
+    setPublishedHomeData(getHomePublishPayload());
+    const onStorage = () => {
+      setPublishedHomeData(getHomePublishPayload());
+    };
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("focus", onStorage);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focus", onStorage);
+    };
+  }, []);
+
+  const displayedStats = publishedHomeData?.statsHighlights?.length
+    ? publishedHomeData.statsHighlights
+    : defaultStatsHighlights;
+  const displayedNews = publishedHomeData?.newsItems?.length
+    ? publishedHomeData.newsItems
+    : defaultNewsItems;
+  const displayedTenders = publishedHomeData?.tenders?.length
+    ? publishedHomeData.tenders
+    : defaultTenders;
+  const displayedForms = publishedHomeData?.forms?.length
+    ? publishedHomeData.forms
+    : defaultForms;
+  const displayedPublications = publishedHomeData?.publications?.length
+    ? publishedHomeData.publications
+    : defaultPublications;
+  const displayedLegislation = publishedHomeData?.legislationAndRegulations?.length
+    ? publishedHomeData.legislationAndRegulations
+    : defaultLegislation;
+
   return (
     <>
       {/* ─── HERO ─────────────────────────────────────────────── */}
@@ -295,7 +351,7 @@ const HeroSection = () => {
                 BOCRA publishes regular statistics and market indicators to promote transparency and informed decision-making across the communications sector.
               </p>
               <div className="grid grid-cols-2 gap-4 mb-8">
-                {statsHighlights.map((stat) => (
+                {displayedStats.map((stat) => (
                   <div
                     key={stat.label}
                     className="bg-card rounded-2xl p-5 border border-border text-center hover:border-primary/30 hover:shadow-md transition-all duration-300"
@@ -327,7 +383,7 @@ const HeroSection = () => {
                 </a>
               </div>
               <div className="space-y-4">
-                {newsItems.map((item) => (
+                {displayedNews.map((item) => (
                   <a
                     key={item.title}
                     href="#"
@@ -353,6 +409,73 @@ const HeroSection = () => {
                 <a href="#" className="inline-flex items-center gap-1 text-sm text-primary font-medium hover:underline">
                   View all news <ArrowUpRight className="h-3.5 w-3.5" />
                 </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── PUBLISHED RESOURCES ──────────────────────────────── */}
+      <section className="pb-20 bg-background">
+        <div className="container max-w-6xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="bg-card rounded-2xl border border-border p-5">
+              <div className="inline-flex items-center gap-2 text-bocra-rose font-semibold text-sm mb-3">
+                <Megaphone className="h-4 w-4" />
+                Tenders
+              </div>
+              <div className="space-y-2">
+                {displayedTenders.map((item) => (
+                  <div key={item.title} className="rounded-lg border border-border/70 p-3">
+                    <div className="text-sm font-medium text-foreground">{item.title}</div>
+                    <div className="text-xs text-muted-foreground mt-1">{item.description}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-card rounded-2xl border border-border p-5">
+              <div className="inline-flex items-center gap-2 text-bocra-blue font-semibold text-sm mb-3">
+                <FileText className="h-4 w-4" />
+                Forms
+              </div>
+              <div className="space-y-2">
+                {displayedForms.map((item) => (
+                  <div key={item.title} className="rounded-lg border border-border/70 p-3">
+                    <div className="text-sm font-medium text-foreground">{item.title}</div>
+                    <div className="text-xs text-muted-foreground mt-1">{item.description}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-card rounded-2xl border border-border p-5">
+              <div className="inline-flex items-center gap-2 text-bocra-teal font-semibold text-sm mb-3">
+                <ScrollText className="h-4 w-4" />
+                Publications
+              </div>
+              <div className="space-y-2">
+                {displayedPublications.map((item) => (
+                  <div key={item.title} className="rounded-lg border border-border/70 p-3">
+                    <div className="text-sm font-medium text-foreground">{item.title}</div>
+                    <div className="text-xs text-muted-foreground mt-1">{item.description}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-card rounded-2xl border border-border p-5">
+              <div className="inline-flex items-center gap-2 text-foreground font-semibold text-sm mb-3">
+                <Gavel className="h-4 w-4" />
+                Legislation & Regulations
+              </div>
+              <div className="space-y-2">
+                {displayedLegislation.map((item) => (
+                  <div key={item.title} className="rounded-lg border border-border/70 p-3">
+                    <div className="text-sm font-medium text-foreground">{item.title}</div>
+                    <div className="text-xs text-muted-foreground mt-1">{item.description}</div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

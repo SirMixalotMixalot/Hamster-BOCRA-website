@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from collections import Counter
+from datetime import datetime, timedelta, timezone
 import logging
 from typing import Any
 from uuid import UUID
@@ -8,6 +9,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 
 from app.db.client import get_supabase_admin
+from app.core.email import send_email
 from app.dependencies.auth import get_current_profile, require_admin
 from app.models.complaints import (
     COMPLAINT_STATUSES,
@@ -20,6 +22,9 @@ from app.models.complaints import (
 
 router = APIRouter(prefix="/api/complaints", tags=["complaints"])
 logger = logging.getLogger("app.complaints")
+
+SECTORS = ("telecom", "broadcasting", "postal", "internet")
+KNOWN_COMPANIES = ("BTC", "MASCOM", "ORANGE", "BOFINET")
 
 
 def _parse_dt(value: str | None) -> datetime:
@@ -188,6 +193,188 @@ def _insert_status_log(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Complaint updated but failed to write status log",
         ) from exc
+
+
+def _derive_sector(category: str | None, subject: str | None, description: str | None) -> str:
+    text = " ".join([category or "", subject or "", description or ""]).lower()
+    if "broadcast" in text or "radio" in text or "tv" in text:
+        return "broadcasting"
+    if "postal" in text or "courier" in text or "parcel" in text:
+        return "postal"
+    if "internet" in text or "isp" in text or "data" in text or "broadband" in text:
+        return "internet"
+    return "telecom"
+
+
+def _derive_company(subject: str | None, description: str | None) -> str:
+    text = " ".join([subject or "", description or ""]).upper()
+    for company in KNOWN_COMPANIES:
+        if company in text:
+            return company
+    return "OTHER"
+
+
+def _get_profile_full_name(supabase, user_id: str) -> str | None:
+    result = (
+        supabase.table("profiles")
+        .select("full_name")
+        .eq("id", user_id)
+        .limit(1)
+        .execute()
+    )
+    rows = result.data or []
+    first = rows[0] if rows else None
+    if isinstance(first, dict):
+        full_name = str(first.get("full_name") or "").strip()
+        return full_name or None
+    return None
+
+
+def _get_auth_email(supabase, user_id: str) -> str | None:
+    try:
+        admin_client = getattr(supabase.auth, "admin", None)
+        if admin_client is None:
+            return None
+        response = admin_client.get_user_by_id(user_id)
+        user = getattr(response, "user", None)
+        email = getattr(user, "email", None)
+        return str(email).strip() if email else None
+    except Exception as exc:
+        logger.warning("complaint_notification_lookup_failed user_id=%s error=%s", user_id, exc)
+        return None
+
+
+def _send_complaint_status_email(
+    supabase,
+    *,
+    complainant_id: str,
+    reference_number: str | None,
+    subject: str,
+    new_status: str,
+) -> None:
+    email = _get_auth_email(supabase, complainant_id)
+    if not email:
+        return
+    full_name = _get_profile_full_name(supabase, complainant_id) or "Customer"
+    complaint_ref = reference_number or "N/A"
+    email_subject = f"BOCRA Complaint Status Update - {complaint_ref}"
+    body = (
+        f"Dear {full_name},\n\n"
+        "Your complaint status has been updated.\n"
+        f"Complaint Reference: {complaint_ref}\n"
+        f"Subject: {subject}\n"
+        f"New Status: {new_status}\n\n"
+        "Please log in to the BOCRA portal to view details.\n\n"
+        "Regards,\nBOCRA"
+    )
+    send_email(to_email=email, subject=email_subject, body=body)
+
+
+@router.get("/analytics")
+async def complaints_analytics(
+    current_profile: dict[str, Any] = Depends(require_admin),
+) -> dict[str, Any]:
+    """
+    Admin analytics for dashboard:
+    - totals by sector and company
+    - 7-day trend (4-sector lines)
+    - normal baseline and spike alerts (>25% over normal)
+    """
+    _ = current_profile
+    supabase = get_supabase_admin()
+    result = supabase.table("complaints").select(
+        "subject,category,description,status,created_at"
+    ).execute()
+
+    rows = [row for row in (result.data or []) if isinstance(row, dict)]
+    now = datetime.now(timezone.utc)
+    today = now.date()
+    # Build explicit rolling 7-day window oldest->newest.
+    trend_days = [today - timedelta(days=offset) for offset in range(6, -1, -1)]
+    trend_map: dict[str, dict[str, int]] = {
+        day.isoformat(): {sector: 0 for sector in SECTORS} for day in trend_days
+    }
+
+    sector_totals: Counter[str] = Counter()
+    company_totals: Counter[str] = Counter()
+    company_totals_by_sector: dict[str, Counter[str]] = {sector: Counter() for sector in SECTORS}
+    open_count = 0
+
+    for row in rows:
+        created_at = _parse_dt(str(row.get("created_at") or ""))
+        sector = _derive_sector(
+            str(row.get("category") or ""),
+            str(row.get("subject") or ""),
+            str(row.get("description") or ""),
+        )
+        company = _derive_company(
+            str(row.get("subject") or ""),
+            str(row.get("description") or ""),
+        )
+
+        sector_totals[sector] += 1
+        company_totals[company] += 1
+        company_totals_by_sector[sector][company] += 1
+
+        status_value = str(row.get("status") or "").lower()
+        if status_value in {"open", "investigating"}:
+            open_count += 1
+
+        day_key = created_at.date().isoformat()
+        if day_key in trend_map:
+            trend_map[day_key][sector] += 1
+
+    trend_items = [
+        {"date": day_key, **counts}
+        for day_key, counts in sorted(trend_map.items(), key=lambda item: item[0])
+    ]
+
+    sector_alerts: list[dict[str, Any]] = []
+    for sector in SECTORS:
+        historical = [item[sector] for item in trend_items[:-1]]
+        normal = (sum(historical) / len(historical)) if historical else 0.0
+        if normal <= 0:
+            normal = float(trend_items[-1][sector]) if trend_items else 0.0
+        threshold = normal * 1.25
+        today_count = float(trend_items[-1][sector]) if trend_items else 0.0
+        sector_alerts.append(
+            {
+                "sector": sector,
+                "total": int(sector_totals.get(sector, 0)),
+                "normal": round(normal, 2),
+                "threshold": round(threshold, 2),
+                "today": int(today_count),
+                "is_alert": today_count > threshold and threshold > 0,
+            }
+        )
+
+    sector_breakdown = [
+        {"sector": sector, "total": int(sector_totals.get(sector, 0))}
+        for sector in SECTORS
+    ]
+    company_breakdown = [
+        {"company": company, "total": int(total)}
+        for company, total in company_totals.most_common()
+    ]
+    company_breakdown_by_sector = {
+        sector: [
+            {"company": company, "total": int(total)}
+            for company, total in company_totals_by_sector[sector].most_common()
+        ]
+        for sector in SECTORS
+    }
+
+    return {
+        "total_complaints": len(rows),
+        "open_complaints": open_count,
+        "trend_days": len(trend_items),
+        "trend": trend_items,
+        "sector_breakdown": sector_breakdown,
+        "company_breakdown": company_breakdown,
+        "company_breakdown_by_sector": company_breakdown_by_sector,
+        "sector_alerts": sector_alerts,
+        "alert_count": sum(1 for item in sector_alerts if item["is_alert"]),
+    }
 
 
 @router.get("", response_model=ComplaintsListResponse)
@@ -454,6 +641,15 @@ async def update_complaint(
             changed_by=admin_id,
             note=payload.admin_response,
         )
+        complainant_id = str(existing_row.get("complainant_id") or "")
+        if complainant_id:
+            _send_complaint_status_email(
+                supabase,
+                complainant_id=complainant_id,
+                reference_number=existing_row.get("reference_number"),
+                subject=str(existing_row.get("subject") or "Complaint"),
+                new_status=new_status,
+            )
 
     # TODO: hook audit helper once centralized audit module is available.
     return _to_detail_item(updated_row, include_complainant_id=True)

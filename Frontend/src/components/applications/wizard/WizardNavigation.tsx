@@ -6,9 +6,10 @@ interface WizardNavigationProps {
   onBack: () => void;
   onNext: () => void;
   onSaveDraft: () => void;
-  onSubmit: () => void;
+  onSubmit: () => void | Promise<void>;
   isFirstStep: boolean;
   isLastStep: boolean;
+  submitting?: boolean;
 }
 
 export default function WizardNavigation({
@@ -18,6 +19,7 @@ export default function WizardNavigation({
   onSubmit,
   isFirstStep,
   isLastStep,
+  submitting = false,
 }: WizardNavigationProps) {
   return (
     <div className="flex items-center justify-between pt-4 border-t border-[hsl(var(--glass-border))]">
@@ -40,6 +42,7 @@ export default function WizardNavigation({
         <button
           type="button"
           onClick={onSaveDraft}
+          disabled={submitting}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-primary/20 bg-primary/5 text-sm font-medium text-primary hover:bg-primary/10 hover:border-primary/40 transition-all duration-200"
         >
           <Save className="h-4 w-4" />
@@ -50,10 +53,11 @@ export default function WizardNavigation({
           <button
             type="button"
             onClick={onSubmit}
+            disabled={submitting}
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-primary to-[hsl(210_85%_35%)] text-primary-foreground text-sm font-semibold shadow-glow-primary hover:opacity-90 transition-all duration-200"
           >
             <Send className="h-4 w-4" />
-            Submit Application
+            {submitting ? "Submitting..." : "Submit Application"}
           </button>
         ) : (
           <button

@@ -18,8 +18,8 @@ import AdminLayout from "./layouts/AdminLayout.tsx";
 import AdminDashboard from "./pages/admin/Dashboard.tsx";
 import AdminUsers from "./pages/admin/Users.tsx";
 import AdminApplications from "./pages/admin/Applications.tsx";
-import Licences from "./pages/admin/Licences.tsx";
 import Complaints from "./pages/admin/Complaints.tsx";
+import Tickets from "./pages/admin/Tickets.tsx";
 import Reports from "./pages/admin/Reports.tsx";
 import AdminSettings from "./pages/admin/Settings.tsx";
 import Careers from "./pages/Careers.tsx";
@@ -125,8 +125,8 @@ const App = () => (
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="applications" element={<AdminApplications />} />
-            <Route path="licences" element={<Licences />} />
             <Route path="complaints" element={<Complaints />} />
+            <Route path="tickets" element={<Tickets />} />
             <Route path="reports" element={<Reports />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>

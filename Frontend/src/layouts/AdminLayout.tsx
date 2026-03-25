@@ -4,15 +4,13 @@ import {
   LayoutDashboard,
   Users,
   FileText,
-  ShieldCheck,
   MessageSquareWarning,
+  LifeBuoy,
   BarChart3,
   Settings,
   LogOut,
   Menu,
   X,
-  Sparkles,
-  UserCog,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
@@ -24,9 +22,9 @@ const sidebarLinks = [
   { to: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/admin/users", icon: Users, label: "Users" },
   { to: "/admin/applications", icon: FileText, label: "Applications" },
-  { to: "/admin/licences", icon: ShieldCheck, label: "Licences" },
   { to: "/admin/complaints", icon: MessageSquareWarning, label: "Complaints" },
-  { to: "/admin/reports", icon: BarChart3, label: "Reports" },
+  { to: "/admin/tickets", icon: LifeBuoy, label: "Tickets" },
+  { to: "/admin/reports", icon: BarChart3, label: "Documents Management" },
   { to: "/admin/settings", icon: Settings, label: "Settings" },
 ];
 
@@ -50,13 +48,7 @@ const AdminLayout = () => {
       >
         {/* Logo – solid navy */}
         <div className="flex items-center gap-2.5 px-5 h-16 shrink-0 bg-bocra-navy border-b border-white/10">
-          <img src={bocraLogo} alt="BOCRA" className="h-8 w-8 object-contain brightness-200 shrink-0" />
-          {!collapsed && (
-            <div>
-              <div className="font-heading font-bold text-white text-sm leading-tight">BOCRA</div>
-              <div className="text-[10px] text-white/50 leading-tight">Admin Panel</div>
-            </div>
-          )}
+          <img src={bocraLogo} alt="BOCRA" className="h-16 w-auto object-contain brightness-200 shrink-0" />
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden ml-auto p-1 text-white/50 hover:text-white">
             <X className="h-5 w-5" />
           </button>
@@ -128,14 +120,10 @@ const AdminLayout = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => window.dispatchEvent(new CustomEvent("toggle-ai-chatbot"))}
-              className="flex items-center gap-2 px-3 py-1.5 bg-bocra-gold/20 text-bocra-gold rounded-md text-sm font-medium hover:bg-bocra-gold/30 transition-colors"
+              className="hidden md:inline-flex items-center gap-2 px-3 py-2 bg-bocra-gold text-bocra-navy rounded-md text-sm font-semibold hover:opacity-90 transition-opacity shadow-sm"
             >
-              <Sparkles className="h-3.5 w-3.5" />
-              AI Help
+              AI Assistant
             </button>
-            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-              <UserCog className="h-4 w-4 text-white" />
-            </div>
           </div>
         </header>
 
