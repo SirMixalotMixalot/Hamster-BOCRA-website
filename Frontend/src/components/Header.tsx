@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, Menu, X, ChevronDown, FileText, Shield, BookOpen, HelpCircle, Users, Briefcase, Scale, Wifi, Tv, Package, Globe2, BarChart3, ExternalLink, Award, ClipboardList, FileCheck, Newspaper } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import bocraLogo from "@/assets/bocra-logo.png";
 import MegaMenuDrawer from "./MegaMenuDrawer";
+import { SearchResultAction, SearchResultItem, searchContent } from "@/lib/search";
 
 const navItems = [
   {
@@ -97,9 +99,172 @@ const navItems = [
 ];
 
 const Header = () => {
+  const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const groupedResults = useMemo(() => {
+    const grouped: Record<SearchResultItem["type"], SearchResultItem[]> = {
+      news: [],
+      decision: [],
+      document: [],
+      service: [],
+    };
+
+    for (const result of searchResults) {
+      grouped[result.type].push(result);
+    }
+
+    return grouped;
+  }, [searchResults]);
+
+  const resultGroups = [
+    { key: "news" as const, label: "News" },
+    { key: "decision" as const, label: "Decisions" },
+    { key: "document" as const, label: "Documents" },
+    { key: "service" as const, label: "Services" },
+  ];
+
+  useEffect(() => {
+    if (!searchOpen) {
+      setShowSearchResults(false);
+      setSearchError(null);
+      setHasSubmittedSearch(false);
+    }
+  }, [searchOpen]);
+
+  useEffect(() => {
+    if (!showSearchResults) {
+      return;
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setShowSearchResults(false);
+      }
+    };
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!searchContainerRef.current) {
+        return;
+      }
+      if (!searchContainerRef.current.contains(event.target as Node)) {
+        setShowSearchResults(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showSearchResults]);
+
+  const submitSearch = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const trimmedQuery = searchQuery.trim();
+
+    if (!trimmedQuery) {
+      setSearchError("Enter a search term to continue.");
+      setSearchResults([]);
+      setHasSubmittedSearch(true);
+      setShowSearchResults(true);
+      return;
+    }
+
+    setIsSearching(true);
+    setSearchError(null);
+    setHasSubmittedSearch(true);
+    setShowSearchResults(true);
+
+    try {
+      const response = await searchContent(trimmedQuery);
+      setSearchResults(response.results);
+    } catch (error) {
+      setSearchResults([]);
+      setSearchError(error instanceof Error ? error.message : "Search failed. Please try again.");
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSearchAction = (action?: SearchResultAction) => {
+    if (!action) {
+      return false;
+    }
+
+    switch (action) {
+      case "open_signin_modal":
+        window.dispatchEvent(new CustomEvent("toggle-signin-modal", { detail: { step: "sign-in" } }));
+        return true;
+      case "open_contact_modal":
+        window.dispatchEvent(new CustomEvent("toggle-contact-modal"));
+        return true;
+      case "open_ai_chatbot":
+        window.dispatchEvent(new CustomEvent("toggle-ai-chatbot"));
+        return true;
+      case "open_complaint_modal":
+        window.dispatchEvent(new CustomEvent("toggle-complaint-modal"));
+        return true;
+      case "open_verify_licence_modal":
+        window.dispatchEvent(new CustomEvent("toggle-verify-licence-modal"));
+        return true;
+      case "open_services_overlay":
+        setActiveMenu("quicklinks");
+        setMobileOpen(false);
+        return true;
+      default:
+        return false;
+    }
+  };
+
+  const handleServiceFallback = (result: SearchResultItem): boolean => {
+    const title = result.title.toLowerCase();
+    if (title.includes("complaint")) {
+      window.dispatchEvent(new CustomEvent("toggle-complaint-modal"));
+      return true;
+    }
+    if (title.includes("verify")) {
+      window.dispatchEvent(new CustomEvent("toggle-verify-licence-modal"));
+      return true;
+    }
+    return false;
+  };
+
+  const handleResultClick = (result: SearchResultItem) => {
+    setShowSearchResults(false);
+    setSearchOpen(false);
+
+    if (result.type === "service" && handleServiceFallback(result)) {
+      return;
+    }
+
+    const actionHandled = handleSearchAction(result.action);
+
+    if (actionHandled && (!result.url || result.url === "#" || result.url === "/")) {
+      return;
+    }
+
+    if (!result.url || result.url === "#") {
+      return;
+    }
+
+    if (result.url.startsWith("http://") || result.url.startsWith("https://")) {
+      window.location.href = result.url;
+      return;
+    }
+
+    navigate(result.url);
+  };
 
   return (
     <>
@@ -132,7 +297,11 @@ const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            <button onClick={() => setSearchOpen(!searchOpen)} className="p-2 rounded-md hover:bg-white/10 transition-colors">
+            <button
+              onClick={() => setSearchOpen(!searchOpen)}
+              className="p-2 rounded-md hover:bg-white/10 transition-colors"
+              aria-label="Toggle search"
+            >
               <Search className="h-5 w-5 text-white/70" />
             </button>
             <button
@@ -160,14 +329,69 @@ const Header = () => {
         {searchOpen && (
           <div className="border-t border-white/10 animate-fade-in">
             <div className="container py-4">
-              <div className="relative max-w-2xl mx-auto">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/50" />
-                <input
-                  type="text"
-                  placeholder="Search BOCRA services, documents, regulations..."
-                  className="w-full pl-12 pr-4 py-3 rounded-lg border border-white/20 bg-white/10 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-bocra-gold/30 focus:border-bocra-gold text-sm"
-                  autoFocus
-                />
+              <div className="relative max-w-2xl mx-auto" ref={searchContainerRef}>
+                <form onSubmit={submitSearch}>
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/50" />
+                  <input
+                    type="text"
+                    placeholder="Search BOCRA services, documents, regulations..."
+                    className="w-full pl-12 pr-4 py-3 rounded-lg border border-white/20 bg-white/10 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-bocra-gold/30 focus:border-bocra-gold text-sm"
+                    autoFocus
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    onFocus={() => {
+                      if (hasSubmittedSearch) {
+                        setShowSearchResults(true);
+                      }
+                    }}
+                  />
+                </form>
+
+                {showSearchResults && (
+                  <div className="absolute mt-2 w-full rounded-lg border border-white/15 bg-bocra-navy/95 backdrop-blur p-3 shadow-xl z-50">
+                    {isSearching && (
+                      <p className="text-sm text-white/80 px-2 py-1">Searching...</p>
+                    )}
+
+                    {!isSearching && searchError && (
+                      <p className="text-sm text-red-200 px-2 py-1">{searchError}</p>
+                    )}
+
+                    {!isSearching && !searchError && hasSubmittedSearch && searchResults.length === 0 && (
+                      <p className="text-sm text-white/70 px-2 py-1">No results found.</p>
+                    )}
+
+                    {!isSearching && !searchError && searchResults.length > 0 && (
+                      <div className="max-h-96 overflow-y-auto space-y-3">
+                        {resultGroups.map((group) => {
+                          const items = groupedResults[group.key];
+                          if (items.length === 0) {
+                            return null;
+                          }
+
+                          return (
+                            <section key={group.key} className="space-y-1">
+                              <h4 className="px-2 text-xs font-semibold uppercase tracking-wide text-bocra-gold/90">
+                                {group.label}
+                              </h4>
+                              {items.map((result, index) => (
+                                <button
+                                  key={`${result.type}-${result.url}-${index}`}
+                                  type="button"
+                                  onClick={() => handleResultClick(result)}
+                                  className="w-full text-left px-2 py-2 rounded-md hover:bg-white/10 transition-colors"
+                                >
+                                  <p className="text-sm font-medium text-white">{result.title}</p>
+                                  <p className="text-xs text-white/70 line-clamp-2">{result.snippet}</p>
+                                </button>
+                              ))}
+                            </section>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
