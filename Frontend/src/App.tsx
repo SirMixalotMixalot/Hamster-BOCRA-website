@@ -49,6 +49,7 @@ import Publications from "./pages/resources/Publications.tsx";
 import Tenders from "./pages/resources/Tenders.tsx";
 import Statistics from "./pages/resources/Statistics.tsx";
 import FormsDocuments from "./pages/resources/FormsDocuments.tsx";
+import News from "./pages/resources/News.tsx";
 import JobDetail from "./pages/careers/JobDetail.tsx";
 import JobApplication from "./pages/careers/JobApplication.tsx";
 import AdminCareers from "./pages/admin/AdminCareers.tsx";
@@ -167,6 +168,7 @@ const App = () => (
           <Route path="/resources/tenders" element={<Tenders />} />
           <Route path="/resources/statistics" element={<Statistics />} />
           <Route path="/resources/consumer-education" element={<ConsumerEducation />} />
+          <Route path="/resources/news" element={<News />} />
 
           {/* Customer Portal */}
           <Route path="/customer" element={<CustomerLayout />}>

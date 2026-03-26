@@ -113,7 +113,7 @@ const navItems = [
       {
         title: "Information",
         items: [
-          { icon: Newspaper, label: "News", description: "Latest announcements and media updates" },
+          { icon: Newspaper, label: "News", description: "Latest announcements and media updates", action: "navigate:/resources/news" },
           { icon: BarChart3, label: "Statistics", description: "Market data and sector indicators", action: "navigate:/resources/statistics" },
           { icon: Briefcase, label: "Tenders", description: "View current procurement opportunities", action: "navigate:/resources/tenders" },
         ],
