@@ -1,4 +1,4 @@
-import { FileText, Loader2, Search } from "lucide-react";
+import { AlertTriangle, FileText, Loader2, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
   getApplication,
@@ -10,8 +10,24 @@ import {
   type ApplicationStatus,
 } from "@/lib/applications";
 import { useToast } from "@/hooks/use-toast";
-import { BOCRA_LICENCE_TYPES } from "@/lib/constants";
+import { BOCRA_LICENCE_TYPES, type BocraLicenceType } from "@/lib/constants";
 import { LoadingDots } from "@/components/ui/loading-dots";
+import { getEditableSteps, type StepConfig, type StepProps } from "@/lib/applicationStepConfig";
+import ApplicantParticularsStep from "@/components/applications/steps/ApplicantParticularsStep";
+import RadioStationDetailsStep from "@/components/applications/steps/RadioStationDetailsStep";
+import RadioEquipmentAntennaStep from "@/components/applications/steps/RadioEquipmentAntennaStep";
+import NetworkSiteDetailsStep from "@/components/applications/steps/NetworkSiteDetailsStep";
+import NetworkEquipmentStep from "@/components/applications/steps/NetworkEquipmentStep";
+import BroadcastStationStep from "@/components/applications/steps/BroadcastStationStep";
+import BroadcastEquipmentStep from "@/components/applications/steps/BroadcastEquipmentStep";
+import SatelliteSiteStep from "@/components/applications/steps/SatelliteSiteStep";
+import SatelliteEquipmentStep from "@/components/applications/steps/SatelliteEquipmentStep";
+import FrequencyTechnicalStep from "@/components/applications/steps/FrequencyTechnicalStep";
+import TypeApprovalApplicantStep from "@/components/applications/steps/TypeApprovalApplicantStep";
+import TypeApprovalDetailsStep from "@/components/applications/steps/TypeApprovalDetailsStep";
+import TypeApprovalEquipmentStep from "@/components/applications/steps/TypeApprovalEquipmentStep";
+import GenericBusinessStep from "@/components/applications/steps/GenericBusinessStep";
+import DocumentsSignatureStep from "@/components/applications/steps/DocumentsSignatureStep";
 
 const MOCK_RECEIVED_APPLICATIONS: ApplicationListItem[] = [
   {
@@ -60,148 +76,69 @@ const STATUS_OPTIONS: Array<{ key: "under_review" | "waiting_for_payment" | "app
   { key: "requires_action", label: "Request Info" },
 ];
 
-const BASE64_PATTERN = /^[A-Za-z0-9+/]+={0,2}$/;
-const DATA_URL_PATTERN = /^data:([^;,]+)?(?:;charset=[^;,]+)?(;base64)?,([\s\S]*)$/i;
-
-const isLikelyBase64 = (value: string) => {
-  const trimmed = value.trim();
-  if (!trimmed || trimmed.length < 12 || trimmed.length % 4 !== 0) return false;
-  return BASE64_PATTERN.test(trimmed.replace(/[-_]/g, "A"));
+const STEP_COMPONENTS: Record<string, React.ComponentType<StepProps>> = {
+  ApplicantParticularsStep,
+  RadioStationDetailsStep,
+  RadioEquipmentAntennaStep,
+  NetworkSiteDetailsStep,
+  NetworkEquipmentStep,
+  BroadcastStationStep,
+  BroadcastEquipmentStep,
+  SatelliteSiteStep,
+  SatelliteEquipmentStep,
+  FrequencyTechnicalStep,
+  TypeApprovalApplicantStep,
+  TypeApprovalDetailsStep,
+  TypeApprovalEquipmentStep,
+  GenericBusinessStep,
+  DocumentsSignatureStep,
 };
 
-const decodeBase64ToText = (value: string) => {
-  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
-  const binary = atob(normalized);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return new TextDecoder("utf-8").decode(bytes);
+const getStepData = (application: ApplicationDetail, key: StepConfig["formDataKey"]) => {
+  if (key === "a") return (application.form_data_a as Record<string, unknown>) || {};
+  if (key === "b") return (application.form_data_b as Record<string, unknown>) || {};
+  if (key === "c") return (application.form_data_c as Record<string, unknown>) || {};
+  if (key === "d") return (application.form_data_d as Record<string, unknown>) || {};
+  return {};
 };
 
-const estimateBase64Bytes = (value: string) => {
-  const trimmed = value.trim();
-  const padding = trimmed.endsWith("==") ? 2 : trimmed.endsWith("=") ? 1 : 0;
-  return Math.max(0, Math.floor((trimmed.length * 3) / 4) - padding);
-};
+const canRenderLicenceType = (licenceType: string): licenceType is BocraLicenceType =>
+  BOCRA_LICENCE_TYPES.includes(licenceType as BocraLicenceType);
 
-const summarizeDataUrl = (value: string) => {
-  const match = value.match(DATA_URL_PATTERN);
-  if (!match) return null;
-
-  const mimeType = (match[1] || "application/octet-stream").toLowerCase();
-  const isBase64 = Boolean(match[2]);
-  const payload = match[3] || "";
-
-  const summary: Record<string, unknown> = {
-    kind: "data_url",
-    mime_type: mimeType,
-    encoding: isBase64 ? "base64" : "url-encoded",
-  };
-
-  if (isBase64) {
-    summary.byte_length = estimateBase64Bytes(payload);
-    if (mimeType.startsWith("image/")) {
-      summary.preview = `[binary ${mimeType} omitted]`;
-      return summary;
-    }
-
-    try {
-      const decodedText = decodeBase64ToText(payload);
-      if (isMostlyReadableText(decodedText)) {
-        const parsedDecoded = tryParseJsonText(decodedText);
-        summary.decoded = parsedDecoded !== decodedText ? decodeForDisplay(parsedDecoded, 0) : decodedText;
-      } else {
-        summary.preview = "[binary payload omitted]";
-      }
-      return summary;
-    } catch {
-      summary.preview = "[invalid base64 payload]";
-      return summary;
-    }
-  }
-
-  const decodedUri = decodeURIComponent(payload);
-  summary.decoded = tryParseJsonText(decodedUri);
-  return summary;
-};
-
-const isMostlyReadableText = (value: string) => {
-  if (!value) return false;
-  let readable = 0;
-  for (const char of value) {
-    const code = char.charCodeAt(0);
-    if ((code >= 32 && code <= 126) || code === 10 || code === 13 || code === 9) {
-      readable += 1;
-    }
-  }
-  return readable / value.length > 0.9;
-};
-
-const tryParseJsonText = (value: string): unknown => {
-  const trimmed = value.trim();
-  if (!(trimmed.startsWith("{") || trimmed.startsWith("["))) {
-    return value;
-  }
-  try {
-    return JSON.parse(trimmed);
-  } catch {
-    return value;
-  }
-};
-
-const decodeForDisplay = (value: unknown, depth = 0): unknown => {
-  if (depth > 8) return value;
-
-  if (typeof value === "string") {
-    const dataUrlSummary = summarizeDataUrl(value);
-    if (dataUrlSummary) {
-      return dataUrlSummary;
-    }
-
-    const parsed = tryParseJsonText(value);
-    if (parsed !== value) {
-      return decodeForDisplay(parsed, depth + 1);
-    }
-
-    if (isLikelyBase64(value)) {
-      try {
-        const decodedText = decodeBase64ToText(value);
-        if (isMostlyReadableText(decodedText)) {
-          const parsedDecoded = tryParseJsonText(decodedText);
-          if (parsedDecoded !== decodedText) {
-            return decodeForDisplay(parsedDecoded, depth + 1);
-          }
-          return decodedText;
-        }
-      } catch {
-        return value;
-      }
-    }
-    return value;
-  }
-
-  if (Array.isArray(value)) {
-    return value.map((item) => decodeForDisplay(item, depth + 1));
-  }
-
-  if (value && typeof value === "object") {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, entryValue]) => [key, decodeForDisplay(entryValue, depth + 1)]),
+function ApplicationReviewSections({ application }: { application: ApplicationDetail }) {
+  if (!canRenderLicenceType(application.licence_type)) {
+    return (
+      <div className="rounded-lg border border-border p-3">
+        <p className="text-xs text-muted-foreground">This licence type does not have a structured admin review layout yet.</p>
+      </div>
     );
   }
 
-  return value;
-};
+  const steps = getEditableSteps(application.licence_type).filter((step) => step.id !== "review");
 
-const formatDataBlock = (value: unknown) => {
-  const decoded = decodeForDisplay(value ?? {});
-  try {
-    return JSON.stringify(decoded, null, 2);
-  } catch {
-    return String(decoded);
-  }
-};
+  return (
+    <div className="space-y-4">
+      {steps.map((step, index) => {
+        const StepComponent = STEP_COMPONENTS[step.componentName];
+        if (!StepComponent) {
+          return null;
+        }
+
+        return (
+          <div key={`${step.id}-${index}`} className="rounded-xl border border-border/80 bg-background/40 p-1">
+            <StepComponent
+              data={getStepData(application, step.formDataKey)}
+              onChange={() => {}}
+              licenceType={application.licence_type}
+              errors={{}}
+              readOnly
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 const AdminApplications = () => {
   const { toast } = useToast();
@@ -320,6 +257,10 @@ const AdminApplications = () => {
 
   const statusLabel = (status: string) =>
     status === "under_review" ? "In Progress" : status.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+  const hasSignature = Boolean(
+    (selectedApplication?.form_data_d as Record<string, unknown> | null)?.signature,
+  );
 
   const requestMoreInfo = async () => {
     if (!selectedApplication) return;
@@ -570,6 +511,20 @@ const AdminApplications = () => {
             )}
           </div>
 
+          {!hasSignature && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 p-3">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-700 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold text-amber-900">Signature missing</p>
+                  <p className="text-xs text-amber-800 mt-1">
+                    No customer signature was found in the submitted application data.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="rounded-lg border border-border p-3">
             <p className="text-xs text-muted-foreground mb-2">Customer Additional Information Responses</p>
             {Array.isArray((selectedApplication.form_data_d as Record<string, unknown> | null)?.additional_info_responses) &&
@@ -603,31 +558,14 @@ const AdminApplications = () => {
             )}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <div className="rounded-lg border border-border p-3">
-              <p className="text-xs text-muted-foreground mb-2">Form Data A</p>
-              <pre className="text-xs text-foreground whitespace-pre-wrap break-words">
-                {formatDataBlock(selectedApplication.form_data_a)}
-              </pre>
+          <div className="rounded-lg border border-border p-3 space-y-3">
+            <div>
+              <p className="text-xs text-muted-foreground">Application Details</p>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Review the application in the same section order used by the customer form.
+              </p>
             </div>
-            <div className="rounded-lg border border-border p-3">
-              <p className="text-xs text-muted-foreground mb-2">Form Data B</p>
-              <pre className="text-xs text-foreground whitespace-pre-wrap break-words">
-                {formatDataBlock(selectedApplication.form_data_b)}
-              </pre>
-            </div>
-            <div className="rounded-lg border border-border p-3">
-              <p className="text-xs text-muted-foreground mb-2">Form Data C</p>
-              <pre className="text-xs text-foreground whitespace-pre-wrap break-words">
-                {formatDataBlock(selectedApplication.form_data_c)}
-              </pre>
-            </div>
-            <div className="rounded-lg border border-border p-3">
-              <p className="text-xs text-muted-foreground mb-2">Form Data D</p>
-              <pre className="text-xs text-foreground whitespace-pre-wrap break-words">
-                {formatDataBlock(selectedApplication.form_data_d)}
-              </pre>
-            </div>
+            <ApplicationReviewSections application={selectedApplication} />
           </div>
         </div>
       )}
