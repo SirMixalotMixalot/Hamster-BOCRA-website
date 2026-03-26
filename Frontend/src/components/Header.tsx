@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Search, Menu, X, ChevronDown, FileText, Shield, BookOpen, HelpCircle, Users, Briefcase, Scale, Wifi, Tv, Package, Globe2, BarChart3, ExternalLink, Award, ClipboardList, FileCheck, Newspaper, LogIn } from "lucide-react";
+import { Search, Menu, X, ChevronDown, FileText, Shield, BookOpen, HelpCircle, Users, Briefcase, Scale, Wifi, Tv, Package, Globe2, BarChart3, ExternalLink, Award, ClipboardList, FileCheck, Newspaper, LogIn, Building2, ClipboardCheck, DollarSign, ShieldCheck, ScrollText, Megaphone, GraduationCap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import bocraLogo from "@/assets/bocra-logo.png";
 import MegaMenuDrawer from "./MegaMenuDrawer";
@@ -12,11 +12,22 @@ const navItems = [
     id: "about",
     sections: [
       {
-        title: "Organization",
+        title: "About",
         items: [
-          { icon: Scale, label: "Our Mandate", description: "Learn about our regulatory responsibilities" },
-          { icon: Users, label: "Leadership", description: "Meet our Board and Executive team" },
-          { icon: Award, label: "Strategic Plan", description: "Our vision for Botswana's digital future" },
+          { icon: Globe2, label: "Overview", description: "Our history, mission, vision and values", action: "navigate:/about/who-we-are" },
+          { icon: Scale, label: "Our Mandate", description: "Learn about our regulatory responsibilities", action: "navigate:/about/mandate" },
+          { icon: Award, label: "Strategic Plan", description: "Our vision for Botswana's digital future", action: "navigate:/about/strategic-plan" },
+        ],
+      },
+      {
+        title: "People",
+        items: [
+          { icon: Building2, label: "Organisational Structure", description: "Board, executive team and departments", action: "navigate:/about/structure" },
+        ],
+      },
+      {
+        title: "Join Us",
+        items: [
           { icon: Briefcase, label: "Careers", description: "Join our team of professionals", action: "navigate:/careers" },
         ],
       },
@@ -36,7 +47,15 @@ const navItems = [
         ],
       },
       {
-        title: "Regulatory Functions",
+        title: "Licensing Process",
+        items: [
+          { icon: ClipboardCheck, label: "How Licensing Works", description: "Application, renewal and timelines", action: "navigate:/licensing/how-it-works" },
+          { icon: DollarSign, label: "Licence Fees", description: "Fee schedule for all licence types", action: "navigate:/licensing/fees" },
+          { icon: ShieldCheck, label: "Licence Verification", description: "Verify operator and equipment licences", action: "navigate:/licensing/verification" },
+        ],
+      },
+      {
+        title: "Spectrum & Interconnection",
         items: [
           { icon: Wifi, label: "Spectrum Management", description: "Frequency allocation and management" },
           { icon: ExternalLink, label: "Interconnection", description: "Network interconnection guidelines" },
@@ -49,12 +68,20 @@ const navItems = [
     id: "resources",
     sections: [
       {
-        title: "Documents",
+        title: "Legal & Consumer",
         items: [
           { icon: BookOpen, label: "Legislation & Regulations", description: "Acts, policies, and guidelines" },
-          { icon: FileText, label: "Publications", description: "Reports, studies, and papers" },
+          { icon: ScrollText, label: "Policies & Frameworks", description: "Regulatory frameworks and guidelines", action: "navigate:/resources/policies" },
+          { icon: GraduationCap, label: "Consumer Education", description: "Know your rights and responsibilities", action: "navigate:/resources/consumer-education" },
+          { icon: Megaphone, label: "Public Consultations", description: "Stakeholder feedback on proposed policies", action: "navigate:/resources/consultations" },
+        ],
+      },
+      {
+        title: "Publications & Forms",
+        items: [
           { icon: FileCheck, label: "Forms & Downloads", description: "Application forms and templates" },
-          { icon: BarChart3, label: "Statistics", description: "Market data and sector indicators", action: "toggle-telecom-stats-modal" },
+          { icon: FileText, label: "Publications", description: "Reports, studies, and papers" },
+          { icon: FileText, label: "Annual Reports", description: "Yearly performance and sector reports", action: "navigate:/about/annual-reports" },
         ],
       },
       {
@@ -71,28 +98,28 @@ const navItems = [
     id: "quicklinks",
     sections: [
       {
-        title: "column-1",
+        title: "For Customers",
         items: [
           { icon: FileCheck, label: "Apply for License", description: "Start a new license application", action: "toggle-signin-modal" },
           { icon: ClipboardList, label: "Renew License", description: "Renew an existing license", action: "toggle-signin-modal" },
-          { icon: ClipboardList, label: "Type Approval", description: "Get equipment approved for use", action: "toggle-signin-modal" },
-        ],
-      },
-      {
-        title: "column-2",
-        items: [
           { icon: Shield, label: "Verify License", description: "Check license status and validity", action: "toggle-signin-modal" },
           { icon: Scale, label: "Fee Schedule", description: "View licensing fees", action: "toggle-signin-modal" },
-          { icon: BarChart3, label: "Track Application", description: "Check your application status", action: "toggle-signin-modal" },
-          { icon: Search, label: "Track Complaint", description: "Check your complaint status", action: "toggle-track-complaint-modal" },
         ],
       },
       {
-        title: "column-3",
+        title: "For General Public",
+        items: [
+          { icon: ClipboardList, label: "Type Approval", description: "Get equipment approved for use", action: "toggle-signin-modal" },
+          { icon: Search, label: "Track Complaint", description: "Check your complaint status", action: "toggle-track-complaint-modal" },
+          { icon: Briefcase, label: "Tenders", description: "View current procurement opportunities" },
+        ],
+      },
+      {
+        title: "Information",
         items: [
           { icon: Newspaper, label: "News", description: "Latest announcements and media updates" },
+          { icon: BarChart3, label: "Statistics", description: "Market data and sector indicators", action: "toggle-telecom-stats-modal" },
           { icon: BarChart3, label: "QOS Monitoring", description: "Quality of service metrics and performance" },
-          { icon: Briefcase, label: "Tenders", description: "View current procurement opportunities" },
         ],
       },
     ],

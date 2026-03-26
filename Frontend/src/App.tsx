@@ -28,6 +28,17 @@ import Careers from "./pages/Careers.tsx";
 import NewApplication from "./pages/customer/applications/NewApplication.tsx";
 import { bootstrapAuth, getAccessToken, subscribeToSupabaseAuthChanges } from "@/lib/auth";
 import Faqs from "./pages/Faqs.tsx";
+import WhoWeAre from "./pages/about/WhoWeAre.tsx";
+import OurMandate from "./pages/about/OurMandate.tsx";
+import StrategicPlan from "./pages/about/StrategicPlan.tsx";
+import OrgStructure from "./pages/about/OrgStructure.tsx";
+import AnnualReports from "./pages/about/AnnualReports.tsx";
+import HowLicensingWorks from "./pages/licensing/HowLicensingWorks.tsx";
+import LicenceFees from "./pages/licensing/LicenceFees.tsx";
+import LicenceVerification from "./pages/licensing/LicenceVerification.tsx";
+import PoliciesFrameworks from "./pages/resources/PoliciesFrameworks.tsx";
+import PublicConsultations from "./pages/resources/PublicConsultations.tsx";
+import ConsumerEducation from "./pages/resources/ConsumerEducation.tsx";
 
 const queryClient = new QueryClient();
 
@@ -111,6 +122,17 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/careers" element={<Careers />} />
           <Route path="/faqs" element={<Faqs />} />
+          <Route path="/about/who-we-are" element={<WhoWeAre />} />
+          <Route path="/about/mandate" element={<OurMandate />} />
+          <Route path="/about/strategic-plan" element={<StrategicPlan />} />
+          <Route path="/about/structure" element={<OrgStructure />} />
+          <Route path="/about/annual-reports" element={<AnnualReports />} />
+          <Route path="/licensing/how-it-works" element={<HowLicensingWorks />} />
+          <Route path="/licensing/fees" element={<LicenceFees />} />
+          <Route path="/licensing/verification" element={<LicenceVerification />} />
+          <Route path="/resources/policies" element={<PoliciesFrameworks />} />
+          <Route path="/resources/consultations" element={<PublicConsultations />} />
+          <Route path="/resources/consumer-education" element={<ConsumerEducation />} />
 
           {/* Customer Portal */}
           <Route path="/customer" element={<CustomerLayout />}>
