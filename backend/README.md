@@ -90,6 +90,16 @@ FRONTEND_ORIGIN=http://localhost:8080
 - If you have an older project using `SUPABASE_SERVICE_ROLE_KEY`, it will still work as a fallback
 - New projects should use `SUPABASE_SECRET_KEY` (the modern naming)
 
+## Complaint Email Verification
+
+Complaint verification codes are sent via SMTP.
+
+Endpoints:
+- `POST /api/complaints/verification/send`
+- `POST /api/complaints/verification/verify`
+
+Both endpoints are email-based and can be called without authentication.
+
 ## Auth Endpoints
 
 All auth is handled through Supabase Auth and exposed via FastAPI:

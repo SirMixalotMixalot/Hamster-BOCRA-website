@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { mergeHomePublishPayload, type HomeResourceItem, type HomeStatItem } from "@/lib/homePublishing";
 import { getApiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth";
+import { uploadDocument } from "@/lib/documents";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const MOCK_STATS = [
@@ -72,6 +73,7 @@ const Reports = () => {
   });
   const [statsPreview, setStatsPreview] = useState<HomeStatItem[]>(MOCK_STATS);
   const [statsLoading, setStatsLoading] = useState(false);
+  const [uploadingSection, setUploadingSection] = useState<Exclude<SectionKey, "stats"> | null>(null);
 
   const publish = (
     section: "stats" | "news" | "tenders" | "forms" | "publications" | "legislation",
@@ -173,7 +175,35 @@ const Reports = () => {
     );
   };
 
-  const publishFromModal = (section: SectionKey) => {
+  const publishFromModal = async (section: SectionKey) => {
+    if (section !== "stats") {
+      const files = uploadFiles[section];
+      if (files.length === 0) {
+        toast({
+          title: "No files selected",
+          description: "Please choose at least one file before publishing.",
+        });
+        return;
+      }
+
+      try {
+        setUploadingSection(section);
+        for (const file of files) {
+          await uploadDocument({ file, category: "public" });
+        }
+      } catch (error) {
+        toast({
+          title: "Upload failed",
+          description: error instanceof Error ? error.message : "Could not upload selected files.",
+          variant: "destructive",
+        });
+        setUploadingSection(null);
+        return;
+      } finally {
+        setUploadingSection(null);
+      }
+    }
+
     publish(section);
     setActiveModal(null);
   };
@@ -323,10 +353,11 @@ const Reports = () => {
 
             <div className="flex justify-end pt-2">
               <button
-                onClick={() => publishFromModal(section)}
+                onClick={() => void publishFromModal(section)}
+                disabled={uploadingSection === section}
                 className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold"
               >
-                Publish
+                {uploadingSection === section ? "Uploading..." : "Publish"}
               </button>
             </div>
           </DialogContent>

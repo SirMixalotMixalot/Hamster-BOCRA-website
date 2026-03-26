@@ -5,6 +5,8 @@ import os
 import smtplib
 from email.message import EmailMessage
 
+from app.core.config import get_settings
+
 logger = logging.getLogger("app.email")
 
 
@@ -13,12 +15,13 @@ def send_email(*, to_email: str, subject: str, body: str) -> bool:
     Send a plaintext email. Returns True on send success, False otherwise.
     Uses SMTP_* environment variables; logs and no-ops when unconfigured.
     """
-    smtp_host = (os.getenv("SMTP_HOST") or "").strip()
-    smtp_port = int((os.getenv("SMTP_PORT") or "587").strip() or "587")
-    smtp_user = (os.getenv("SMTP_USERNAME") or "").strip()
-    smtp_password = (os.getenv("SMTP_PASSWORD") or "").strip()
-    smtp_from = (os.getenv("SMTP_FROM") or smtp_user).strip()
-    smtp_use_tls = (os.getenv("SMTP_USE_TLS") or "true").strip().lower() not in {"0", "false", "no"}
+    settings = get_settings()
+    smtp_host = str(settings.smtp_host or os.getenv("SMTP_HOST") or "").strip()
+    smtp_port = int(str(settings.smtp_port or os.getenv("SMTP_PORT") or "587").strip() or "587")
+    smtp_user = str(settings.smtp_username or os.getenv("SMTP_USERNAME") or "").strip()
+    smtp_password = str(settings.smtp_password or os.getenv("SMTP_PASSWORD") or "").strip()
+    smtp_from = str(settings.smtp_from or os.getenv("SMTP_FROM") or "").strip()
+    smtp_use_tls = bool(settings.smtp_use_tls)
 
     if not smtp_host or not smtp_from:
         logger.info(

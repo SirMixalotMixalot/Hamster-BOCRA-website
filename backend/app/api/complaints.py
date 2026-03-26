@@ -16,9 +16,14 @@ from app.models.complaints import (
     ComplaintCreateRequest,
     ComplaintDetailResponse,
     ComplaintListItem,
+    ComplaintVerificationResponse,
+    ComplaintVerificationSendRequest,
+    ComplaintVerificationVerifyRequest,
     ComplaintUpdateRequest,
     ComplaintsListResponse,
 )
+from app.services.email_verification import create_or_refresh_code, verify_code
+from app.services.email_verification import is_recently_verified
 
 router = APIRouter(prefix="/api/complaints", tags=["complaints"])
 logger = logging.getLogger("app.complaints")
@@ -270,6 +275,55 @@ def _send_complaint_status_email(
     send_email(to_email=email, subject=email_subject, body=body)
 
 
+def _build_verification_key(email: str) -> str:
+    return email.lower()
+
+
+@router.post("/verification/send", response_model=ComplaintVerificationResponse)
+async def send_complaint_verification_code(
+    payload: ComplaintVerificationSendRequest,
+) -> ComplaintVerificationResponse:
+    verification_key = _build_verification_key(payload.email)
+    code, retry_after = create_or_refresh_code(verification_key)
+    if retry_after > 0:
+        return ComplaintVerificationResponse(
+            message="Please wait before requesting another verification code",
+            retry_after_seconds=retry_after,
+        )
+
+    subject = "BOCRA Complaint Verification Code"
+    body = (
+        "Use this code to verify your complaint submission:\n\n"
+        f"{code}\n\n"
+        "The code expires in 10 minutes.\n"
+        "If you did not request this code, you can ignore this email."
+    )
+
+    sent = send_email(to_email=payload.email, subject=subject, body=body)
+    if not sent:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Verification email service is not configured",
+        )
+
+    return ComplaintVerificationResponse(message="Verification code sent")
+
+
+@router.post("/verification/verify", response_model=ComplaintVerificationResponse)
+async def verify_complaint_verification_code(
+    payload: ComplaintVerificationVerifyRequest,
+) -> ComplaintVerificationResponse:
+    verification_key = _build_verification_key(payload.email)
+    is_valid, message = verify_code(verification_key, payload.code)
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=message,
+        )
+
+    return ComplaintVerificationResponse(message=message)
+
+
 @router.get("/analytics")
 async def complaints_analytics(
     current_profile: dict[str, Any] = Depends(require_admin),
@@ -381,6 +435,7 @@ async def complaints_analytics(
 async def list_complaints(
     status_filter: str | None = Query(None, alias="status"),
     category: str | None = Query(None),
+    q: str | None = Query(None, description="Search by complaint reference number"),
     complainant_id: str | None = Query(None),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
@@ -405,6 +460,7 @@ async def list_complaints(
             )
 
     normalized_category = _normalize_filter(category)
+    normalized_query = _normalize_filter(q)
     normalized_complainant = _normalize_filter(complainant_id)
     if normalized_complainant and not is_admin:
         raise HTTPException(
@@ -427,6 +483,9 @@ async def list_complaints(
 
     if normalized_category:
         query = query.eq("category", normalized_category)
+
+    if normalized_query:
+        query = query.ilike("reference_number", f"%{normalized_query}%")
 
     count_result = query.execute()
     total_count = len(count_result.data or [])
@@ -453,22 +512,23 @@ async def list_complaints(
 @router.post("", response_model=ComplaintDetailResponse, status_code=status.HTTP_201_CREATED)
 async def create_complaint(
     payload: ComplaintCreateRequest,
-    current_profile: dict[str, Any] = Depends(get_current_profile),
 ) -> ComplaintDetailResponse:
-    """Create complaint for authenticated user profile."""
-    current_user_id = str(current_profile.get("id") or "")
-    if not current_user_id:
+    """Create complaint after email verification. Supports guest submission."""
+
+    verification_key = _build_verification_key(payload.email)
+    if not is_recently_verified(verification_key):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User ID not found in profile",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email verification is required before submitting a complaint",
         )
 
     supabase = get_supabase_admin()
-    evidence_ids = await _validate_evidence_documents(
-        supabase,
-        evidence_file_ids=payload.evidence_file_ids,
-        current_profile=current_profile,
-    )
+    evidence_ids = None
+    if payload.evidence_file_ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Evidence uploads require an authenticated account",
+        )
 
     now = datetime.now(timezone.utc)
     current_year = now.year
@@ -478,7 +538,7 @@ async def create_complaint(
     for attempt in range(max_retries):
         reference_number = _generate_reference_number(supabase, current_year)
         complaint_data = {
-            "complainant_id": current_user_id,
+            "complainant_id": None,
             "reference_number": reference_number,
             "subject": payload.subject,
             "category": payload.category,
@@ -519,6 +579,31 @@ async def create_complaint(
 
     # TODO: hook audit helper once centralized audit module is available.
     return _to_detail_item(created_row, include_complainant_id=False)
+
+
+@router.get("/track/{reference_number}", response_model=ComplaintDetailResponse)
+async def track_complaint(reference_number: str = Path(..., min_length=8, max_length=80)) -> ComplaintDetailResponse:
+    """Public tracking by complaint reference number."""
+    normalized_reference = reference_number.strip().upper()
+    supabase = get_supabase_admin()
+
+    result = (
+        supabase.table("complaints")
+        .select("*")
+        .ilike("reference_number", normalized_reference)
+        .limit(1)
+        .execute()
+    )
+
+    rows = result.data or []
+    first_row = rows[0] if rows else None
+    if not isinstance(first_row, dict):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Complaint not found",
+        )
+
+    return _to_detail_item(first_row, include_complainant_id=False)
 
 
 @router.get("/{complaint_id}", response_model=ComplaintDetailResponse)
@@ -643,10 +728,11 @@ async def update_complaint(
         )
         complainant_id = str(existing_row.get("complainant_id") or "")
         if complainant_id:
+            reference_number_raw = existing_row.get("reference_number")
             _send_complaint_status_email(
                 supabase,
                 complainant_id=complainant_id,
-                reference_number=existing_row.get("reference_number"),
+                reference_number=str(reference_number_raw) if reference_number_raw else None,
                 subject=str(existing_row.get("subject") or "Complaint"),
                 new_status=new_status,
             )

@@ -7,6 +7,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { trackComplaintByReference } from "@/lib/complaints";
 
 type Status = "received" | "under-review" | "resolved" | "rejected";
 
@@ -17,6 +18,7 @@ type ComplaintResult = {
   company: string;
   status: Status;
   description: string;
+  adminResponse: string | null;
 };
 
 const STATUS_STEPS: { key: Status; label: string }[] = [
@@ -30,25 +32,30 @@ function getStatusIndex(status: Status): number {
   return STATUS_STEPS.findIndex((s) => s.key === status);
 }
 
-// Placeholder: simulates a lookup. Replace with real API call.
-const MOCK_COMPLAINTS: Record<string, ComplaintResult> = {
-  "BOCRA-CMP-2026-0001": {
-    reference: "BOCRA-CMP-2026-0001",
-    date: "2026-03-20",
-    sector: "Telecommunications",
-    company: "Mascom",
-    status: "under-review",
-    description: "Network outage in Gaborone area lasting over 48 hours without notice.",
-  },
-  "BOCRA-CMP-2026-0002": {
-    reference: "BOCRA-CMP-2026-0002",
-    date: "2026-03-15",
-    sector: "Internet Service Providers (ISPs)",
-    company: "BOFINET",
-    status: "resolved",
-    description: "Billing discrepancy on fibre internet subscription.",
-  },
-};
+function mapApiStatus(status: string): Status {
+  if (status === "open") return "received";
+  if (status === "investigating") return "under-review";
+  if (status === "resolved") return "resolved";
+  if (status === "closed") return "resolved";
+  return "rejected";
+}
+
+function deriveSector(category: string | null): string {
+  const text = (category || "").toLowerCase();
+  if (text.includes("broadcast")) return "Broadcasting";
+  if (text.includes("postal") || text.includes("courier")) return "Postal Services";
+  if (text.includes("internet") || text.includes("isp") || text.includes("data")) return "Internet Service Providers (ISPs)";
+  return "Telecommunications";
+}
+
+function deriveCompany(category: string | null, subject: string): string {
+  const text = `${category || ""} ${subject}`.toUpperCase();
+  if (text.includes("MASCOM")) return "Mascom";
+  if (text.includes("ORANGE")) return "Orange";
+  if (text.includes("BTC")) return "BTC";
+  if (text.includes("BOFINET")) return "BOFINET";
+  return "Not specified";
+}
 
 const TrackComplaintModal = () => {
   const [open, setOpen] = useState(false);
@@ -73,22 +80,29 @@ const TrackComplaintModal = () => {
     }
   };
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!trackingNumber.trim()) return;
     setSearching(true);
     setNotFound(false);
     setResult(null);
-    // TODO: replace with real API call
-    setTimeout(() => {
-      const found = MOCK_COMPLAINTS[trackingNumber.trim().toUpperCase()];
-      if (found) {
-        setResult(found);
-      } else {
-        setNotFound(true);
-      }
+    try {
+      const reference = trackingNumber.trim().toUpperCase();
+      const detail = await trackComplaintByReference(reference);
+      setResult({
+        reference: detail.reference_number || reference,
+        date: detail.created_at,
+        sector: deriveSector(detail.category),
+        company: deriveCompany(detail.category, detail.subject),
+        status: mapApiStatus(detail.status),
+        description: detail.description,
+        adminResponse: detail.admin_response,
+      });
+    } catch {
+      setNotFound(true);
+    } finally {
       setSearching(false);
-    }, 1000);
+    }
   };
 
   const inputClass =
@@ -214,6 +228,12 @@ const TrackComplaintModal = () => {
               <div>
                 <span className="text-muted-foreground text-xs">Description</span>
                 <p className="text-sm text-foreground mt-0.5">{result.description}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground text-xs">BOCRA Response</span>
+                <p className="text-sm text-foreground mt-0.5 whitespace-pre-wrap">
+                  {result.adminResponse?.trim() || "No response yet. Our team will update this once review is complete."}
+                </p>
               </div>
             </div>
           </div>

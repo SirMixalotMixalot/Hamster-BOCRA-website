@@ -1,4 +1,4 @@
-import { MessageSquareWarning, Search } from "lucide-react";
+import { Loader2, MessageSquareWarning, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { getComplaint, listComplaints, updateComplaint, type ComplaintDetailResponse, type ComplaintListItem } from "@/lib/complaints";
 import { useToast } from "@/hooks/use-toast";
@@ -6,53 +6,6 @@ import { useToast } from "@/hooks/use-toast";
 type ComplaintWithCompany = ComplaintListItem & { company: string };
 
 const KNOWN_COMPANIES = ["BTC", "MASCOM", "ORANGE", "BOFINET"] as const;
-
-const MOCK_COMPLAINTS: ComplaintWithCompany[] = [
-  {
-    id: "mock-cmp-001",
-    reference_number: "BOCRA-CMP-2026-0001",
-    subject: "Billing dispute with BTC data bundle",
-    category: "billing",
-    status: "open",
-    company: "BTC",
-    created_at: "2026-03-18T10:20:00Z",
-    updated_at: "2026-03-18T10:20:00Z",
-    resolved_at: null,
-  },
-  {
-    id: "mock-cmp-002",
-    reference_number: "BOCRA-CMP-2026-0002",
-    subject: "Orange service outage in Gaborone",
-    category: "service quality",
-    status: "investigating",
-    company: "ORANGE",
-    created_at: "2026-03-19T09:15:00Z",
-    updated_at: "2026-03-20T08:00:00Z",
-    resolved_at: null,
-  },
-  {
-    id: "mock-cmp-003",
-    reference_number: "BOCRA-CMP-2026-0003",
-    subject: "Mascom delayed SIM replacement",
-    category: "customer care",
-    status: "resolved",
-    company: "MASCOM",
-    created_at: "2026-03-15T12:00:00Z",
-    updated_at: "2026-03-17T14:30:00Z",
-    resolved_at: "2026-03-17T14:30:00Z",
-  },
-  {
-    id: "mock-cmp-004",
-    reference_number: "BOCRA-CMP-2026-0004",
-    subject: "General internet speed complaint",
-    category: "internet",
-    status: "open",
-    company: "OTHER",
-    created_at: "2026-03-22T11:40:00Z",
-    updated_at: "2026-03-22T11:40:00Z",
-    resolved_at: null,
-  },
-];
 
 const getCompanyFromText = (subject: string, category: string | null) => {
   const text = `${subject} ${category ?? ""}`.toUpperCase();
@@ -74,6 +27,12 @@ const statusLabel = (status: string) => {
   return status.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
 };
 
+const STATUS_OPTIONS: Array<{ key: "open" | "investigating" | "resolved"; label: string }> = [
+  { key: "open", label: "Open" },
+  { key: "investigating", label: "In Progress" },
+  { key: "resolved", label: "Resolved" },
+];
+
 const Complaints = () => {
   const { toast } = useToast();
   const [complaints, setComplaints] = useState<ComplaintWithCompany[]>([]);
@@ -84,13 +43,24 @@ const Complaints = () => {
   const [sectorFilter, setSectorFilter] = useState<"all" | "telecom" | "broadcasting" | "postal" | "internet">("all");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [openingId, setOpeningId] = useState<string | null>(null);
+  const [savingResponse, setSavingResponse] = useState(false);
+  const [adminResponseDraft, setAdminResponseDraft] = useState("");
   const [selectedComplaint, setSelectedComplaint] = useState<ComplaintDetailResponse | null>(null);
 
   useEffect(() => {
     let mounted = true;
+    const searchQuery = search.trim();
+    const statusQuery = statusFilter === "all" ? undefined : statusFilter;
+
     const load = async () => {
+      if (mounted) {
+        setLoading(true);
+      }
       try {
-        const response = await listComplaints();
+        const response = await listComplaints({
+          status: statusQuery,
+          q: searchQuery || undefined,
+        });
         if (!mounted) return;
         const mapped: ComplaintWithCompany[] = response.items.map((item) => ({
           ...item,
@@ -109,38 +79,29 @@ const Complaints = () => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [search, statusFilter]);
 
-  const displayComplaints = complaints.length > 0 ? complaints : MOCK_COMPLAINTS;
+  useEffect(() => {
+    setAdminResponseDraft(selectedComplaint?.admin_response ?? "");
+  }, [selectedComplaint]);
+
+  const displayComplaints = complaints;
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
     return displayComplaints.filter((item) => {
-      const matchesSearch = !q || (item.reference_number ?? "").toLowerCase().includes(q);
-      const matchesStatus = statusFilter === "all" || item.status === statusFilter;
       const sector = getSectorFromText(item.subject, item.category);
       const matchesSector = sectorFilter === "all" || sector === sectorFilter;
-      return matchesSearch && matchesStatus && matchesSector;
+      return matchesSector;
     });
-  }, [displayComplaints, search, statusFilter, sectorFilter]);
+  }, [displayComplaints, sectorFilter]);
 
   const openComplaint = async (complaintId: string) => {
     const match = displayComplaints.find((item) => item.id === complaintId);
     if (!match) return;
 
-    if (complaintId.startsWith("mock-")) {
-      setSelectedComplaint({
-        ...match,
-        description: "Mock complaint details for admin review panel.",
-        admin_response: null,
-        evidence_file_ids: null,
-        resolved_by: null,
-      });
-      return;
-    }
-
     try {
       setOpeningId(complaintId);
+      setSelectedComplaint(null);
       const detail = await getComplaint(complaintId);
       setSelectedComplaint(detail);
     } catch (openError) {
@@ -185,6 +146,41 @@ const Complaints = () => {
       });
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const saveAdminResponse = async () => {
+    if (!selectedComplaint) return;
+    try {
+      setSavingResponse(true);
+      const updated = await updateComplaint(selectedComplaint.id, {
+        admin_response: adminResponseDraft.trim() || null,
+      });
+      setSelectedComplaint(updated);
+      setComplaints((current) =>
+        current.map((item) =>
+          item.id === updated.id
+            ? {
+                ...item,
+                status: updated.status,
+                updated_at: updated.updated_at,
+                resolved_at: updated.resolved_at,
+              }
+            : item,
+        ),
+      );
+      toast({
+        title: "Review response saved",
+        description: `${updated.reference_number ?? "Complaint"} response has been updated.`,
+      });
+    } catch (saveError) {
+      toast({
+        title: "Save failed",
+        description: saveError instanceof Error ? saveError.message : "Could not save admin response.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingResponse(false);
     }
   };
 
@@ -234,13 +230,24 @@ const Complaints = () => {
       {error && (
         <div className="bg-card rounded-xl border border-border p-4">
           <p className="text-sm text-red-500">{error}</p>
-          <p className="text-xs text-muted-foreground mt-1">Showing mock complaints data.</p>
         </div>
       )}
 
       {loading ? (
-        <div className="bg-card rounded-xl border border-border p-8 text-center">
-          <p className="text-sm text-muted-foreground">Loading complaints...</p>
+        <div className="bg-card rounded-xl border border-border p-8">
+          <div className="flex flex-col items-center justify-center gap-4">
+            <div className="relative h-10 w-10">
+              <span className="absolute inset-0 rounded-full border-2 border-muted animate-ping" />
+              <span className="absolute inset-0 rounded-full border-2 border-primary/50" />
+              <span className="absolute inset-2 rounded-full bg-primary/20" />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-primary/70 animate-bounce [animation-delay:-0.2s]" />
+              <span className="h-2 w-2 rounded-full bg-primary/70 animate-bounce [animation-delay:-0.1s]" />
+              <span className="h-2 w-2 rounded-full bg-primary/70 animate-bounce" />
+            </div>
+            <p className="text-sm text-muted-foreground">Loading complaints...</p>
+          </div>
         </div>
       ) : filtered.length === 0 ? (
         <div className="bg-card rounded-xl border border-border p-8 text-center">
@@ -265,7 +272,16 @@ const Complaints = () => {
               <tbody>
                 {filtered.map((item) => (
                   <tr key={item.id} className="border-b border-border/70">
-                    <td className="px-2 py-2 font-semibold text-foreground whitespace-nowrap">{item.reference_number ?? "—"}</td>
+                    <td className="px-2 py-2 font-semibold text-foreground whitespace-nowrap">
+                      <button
+                        type="button"
+                        disabled={openingId === item.id}
+                        onClick={() => void openComplaint(item.id)}
+                        className="text-left hover:underline disabled:opacity-70"
+                      >
+                        {item.reference_number ?? "—"}
+                      </button>
+                    </td>
                     <td className="px-2 py-2 text-muted-foreground whitespace-nowrap">{item.company}</td>
                     <td className="px-2 py-2 text-muted-foreground whitespace-nowrap">{item.subject}</td>
                     <td className="px-2 py-2 text-foreground whitespace-nowrap">{statusLabel(item.status)}</td>
@@ -280,31 +296,27 @@ const Complaints = () => {
                       </button>
                     </td>
                     <td className="px-2 py-2">
-                      <div className="flex flex-nowrap gap-1">
-                        <button
-                          type="button"
-                          disabled={updatingId === item.id}
-                          onClick={() => void setStatus(item.id, "open")}
-                          className="px-2 py-1 rounded-md text-[11px] font-medium border border-border bg-background hover:bg-muted transition-colors whitespace-nowrap"
-                        >
-                          Open
-                        </button>
-                        <button
-                          type="button"
-                          disabled={updatingId === item.id}
-                          onClick={() => void setStatus(item.id, "investigating")}
-                          className="px-2 py-1 rounded-md text-[11px] font-medium border border-border bg-background hover:bg-muted transition-colors whitespace-nowrap"
-                        >
-                          In Progress
-                        </button>
-                        <button
-                          type="button"
-                          disabled={updatingId === item.id}
-                          onClick={() => void setStatus(item.id, "resolved")}
-                          className="px-2 py-1 rounded-md text-[11px] font-semibold bg-bocra-teal text-white hover:bg-bocra-teal/90 transition-colors whitespace-nowrap"
-                        >
-                          Resolved
-                        </button>
+                      <div className="flex flex-nowrap gap-1 items-center">
+                        {STATUS_OPTIONS.map((option) => {
+                          const isActive = item.status === option.key;
+                          const isUpdatingRow = updatingId === item.id;
+                          return (
+                            <button
+                              key={option.key}
+                              type="button"
+                              disabled={isUpdatingRow || isActive}
+                              onClick={() => void setStatus(item.id, option.key)}
+                              className={`px-2 py-1 rounded-md text-[11px] transition-colors whitespace-nowrap ${
+                                isActive
+                                  ? "font-semibold bg-bocra-teal text-white"
+                                  : "font-medium border border-border bg-background hover:bg-muted"
+                              } ${isUpdatingRow ? "opacity-70" : ""}`}
+                            >
+                              {option.label}
+                            </button>
+                          );
+                        })}
+                        {updatingId === item.id && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
                       </div>
                     </td>
                   </tr>
@@ -312,6 +324,13 @@ const Complaints = () => {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {openingId && !selectedComplaint && (
+        <div className="bg-card rounded-xl border border-border p-6 flex items-center justify-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Loading complaint details...</p>
         </div>
       )}
 
@@ -344,6 +363,26 @@ const Complaints = () => {
           <div className="rounded-lg border border-border p-3">
             <p className="text-xs text-muted-foreground mb-1">Description</p>
             <p className="text-sm text-foreground whitespace-pre-wrap">{selectedComplaint.description}</p>
+          </div>
+          <div className="rounded-lg border border-border p-3 space-y-2">
+            <p className="text-xs text-muted-foreground">Admin Response</p>
+            <textarea
+              rows={4}
+              value={adminResponseDraft}
+              onChange={(event) => setAdminResponseDraft(event.target.value)}
+              placeholder="Write your investigation outcome or guidance for the complainant..."
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-y"
+            />
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => void saveAdminResponse()}
+                disabled={savingResponse}
+                className="px-3 py-1.5 rounded-md text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-60"
+              >
+                {savingResponse ? "Saving..." : "Save Response"}
+              </button>
+            </div>
           </div>
         </div>
       )}

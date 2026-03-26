@@ -1,15 +1,9 @@
 import { Upload, X, FileText } from "lucide-react";
 import { useRef } from "react";
 
-interface UploadedFile {
-  name: string;
-  size: number;
-  type: string;
-}
-
 interface FileUploadZoneProps {
-  files: UploadedFile[];
-  onChange: (files: UploadedFile[]) => void;
+  files: File[];
+  onChange: (files: File[]) => void;
   readOnly?: boolean;
   accept?: string;
   maxSizeMB?: number;
@@ -31,9 +25,7 @@ export default function FileUploadZone({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFiles = (fileList: FileList) => {
-    const newFiles: UploadedFile[] = Array.from(fileList)
-      .filter((f) => f.size <= maxSizeMB * 1024 * 1024)
-      .map((f) => ({ name: f.name, size: f.size, type: f.type }));
+    const newFiles: File[] = Array.from(fileList).filter((f) => f.size <= maxSizeMB * 1024 * 1024);
     onChange([...files, ...newFiles]);
   };
 
