@@ -79,7 +79,7 @@ const navItems = [
       {
         title: "Publications & Forms",
         items: [
-          { icon: FileCheck, label: "Forms & Downloads", description: "Application forms and templates" },
+          { icon: FileCheck, label: "Forms & Documents", description: "Application forms, templates, and downloadable documents", action: "navigate:/resources/forms-documents" },
           { icon: FileText, label: "Publications", description: "Reports, studies, and papers" },
           { icon: FileText, label: "Annual Reports", description: "Yearly performance and sector reports", action: "navigate:/about/annual-reports" },
         ],
@@ -300,14 +300,27 @@ const Header = () => {
     navigate(result.url);
   };
 
+  const handleMenuAction = (action?: string) => {
+    if (!action) {
+      return;
+    }
+
+    if (action.startsWith("navigate:")) {
+      navigate(action.replace("navigate:", ""));
+      return;
+    }
+
+    window.dispatchEvent(new CustomEvent(action));
+  };
+
   return (
     <>
       <header className="sticky top-0 z-50 bg-bocra-navy shadow-sm">
         <div className="container flex items-center justify-between h-16 md:h-[72px]">
           {/* Logo */}
-          <a href="#" className="shrink-0">
+          <button type="button" onClick={() => navigate("/")} className="shrink-0">
             <img src={bocraLogo} alt="BOCRA" className="h-16 w-auto object-contain brightness-200 md:h-[72px]" />
-          </a>
+          </button>
 
           {/* Desktop Nav */}
           <nav className="hidden lg:flex items-center gap-1">
@@ -479,11 +492,7 @@ const Header = () => {
                               if ("action" in subItem && subItem.action) {
                                 setMobileOpen(false);
                                 setActiveMenu(null);
-                                if (subItem.action.startsWith("navigate:")) {
-                                  window.location.href = subItem.action.replace("navigate:", "");
-                                } else {
-                                  window.dispatchEvent(new CustomEvent(subItem.action));
-                                }
+                                handleMenuAction(subItem.action);
                               }
                             }}
                             className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-white/60 hover:text-white hover:bg-white/10"

@@ -23,6 +23,8 @@ EXEMPT_API_PATHS = {
     "/api/decisions/",
     "/api/news",
     "/api/news/",
+    "/api/documents/public",
+    "/api/documents/public/",
     "/api/search",
     "/api/stats",
     "/api/stats/",

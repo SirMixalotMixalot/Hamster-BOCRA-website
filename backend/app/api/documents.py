@@ -14,6 +14,7 @@ from app.dependencies.auth import get_current_profile
 from app.models.documents import (
     DocumentResponse,
     DocumentUploadResponse,
+    PublicDocumentListItem,
 )
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
@@ -52,6 +53,8 @@ CATEGORY_VALIDATION = {
         "max_size_bytes": 20 * 1024 * 1024,  # 20 MB
     },
 }
+
+PUBLIC_DOCUMENT_SECTIONS = {"news", "tenders", "forms", "publications", "legislation"}
 
 
 # ===== HELPER FUNCTIONS =====
@@ -139,6 +142,35 @@ def _get_upload_path(user_id: str, category: str, filename: str) -> str:
         return f"public/{safe_filename}"
     else:
         return f"{user_id}/{safe_filename}"
+
+
+def _extract_public_section_and_name(file_name: str) -> tuple[str, str]:
+    if "::" not in file_name:
+        return "uncategorized", file_name
+
+    section, display_name = file_name.split("::", 1)
+    normalized_section = section.strip().lower()
+    cleaned_name = display_name.strip() or file_name
+
+    if normalized_section not in PUBLIC_DOCUMENT_SECTIONS:
+        return "uncategorized", file_name
+
+    return normalized_section, cleaned_name
+
+
+def _get_public_download_url(supabase, *, bucket_name: str, file_path: str) -> str | None:
+    try:
+        public_url = supabase.storage.from_(bucket_name).get_public_url(path=file_path)
+        if isinstance(public_url, dict):
+            return public_url.get("publicUrl")
+        if isinstance(public_url, str):
+            return public_url
+    except (AttributeError, TypeError):
+        return f"{supabase.storage.url}/object/public/{bucket_name}/{file_path}"
+    except Exception as exc:
+        logger.warning("Failed to build public download URL for path '%s': %s", file_path, exc)
+
+    return None
 
 
 def _check_application_ownership(
@@ -339,6 +371,55 @@ async def upload_document(
         category=doc_row["category"],
         created_at=datetime.fromisoformat(doc_row["created_at"]),
     )
+
+
+@router.get("/public", response_model=list[PublicDocumentListItem])
+async def list_public_documents() -> list[PublicDocumentListItem]:
+    """List public documents grouped for website downloads."""
+    supabase = get_supabase_admin()
+
+    try:
+        result = (
+            supabase.table("documents")
+            .select("id,file_name,file_path,file_type,file_size,category,created_at")
+            .eq("category", "public")
+            .order("created_at", desc=True)
+            .execute()
+        )
+    except Exception as exc:
+        logger.error("Failed to list public documents: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to load public documents",
+        )
+
+    items: list[PublicDocumentListItem] = []
+    for row in result.data or []:
+        file_name = str(row.get("file_name") or "").strip()
+        if not file_name:
+            continue
+
+        section, display_name = _extract_public_section_and_name(file_name)
+        file_path = str(row.get("file_path") or "").strip()
+
+        items.append(
+            PublicDocumentListItem(
+                id=row["id"],
+                file_name=display_name,
+                section=section,
+                category="public",
+                file_type=str(row.get("file_type") or "application/pdf"),
+                file_size=int(row.get("file_size") or 0),
+                created_at=datetime.fromisoformat(row["created_at"]),
+                download_url=_get_public_download_url(
+                    supabase,
+                    bucket_name=CATEGORY_BUCKET_MAPPING["public"],
+                    file_path=file_path,
+                ) if file_path else None,
+            )
+        )
+
+    return items
 
 
 @router.get("/{document_id}", response_model=DocumentResponse)

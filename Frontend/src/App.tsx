@@ -45,9 +45,11 @@ import Interconnection from "./pages/licensing/Interconnection";
 import PoliciesFrameworks from "./pages/resources/PoliciesFrameworks.tsx";
 import PublicConsultations from "./pages/resources/PublicConsultations.tsx";
 import ConsumerEducation from "./pages/resources/ConsumerEducation.tsx";
+import FormsDocuments from "./pages/resources/FormsDocuments.tsx";
 import JobDetail from "./pages/careers/JobDetail.tsx";
 import JobApplication from "./pages/careers/JobApplication.tsx";
 import AdminCareers from "./pages/admin/AdminCareers.tsx";
+import SignInModal from "./components/SignInModal.tsx";
 
 const queryClient = new QueryClient();
 
@@ -134,6 +136,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthBootstrapper />
+        <SignInModal />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/careers" element={<Careers />} />
@@ -155,6 +158,7 @@ const App = () => (
           <Route path="/licensing/spectrum-management" element={<SpectrumManagement />} />
           <Route path="/licensing/interconnection" element={<Interconnection />} />
           <Route path="/resources/policies" element={<PoliciesFrameworks />} />
+          <Route path="/resources/forms-documents" element={<FormsDocuments />} />
           <Route path="/resources/consultations" element={<PublicConsultations />} />
           <Route path="/resources/consumer-education" element={<ConsumerEducation />} />
 
