@@ -88,7 +88,6 @@ const navItems = [
         title: "Support",
         items: [
           { icon: HelpCircle, label: "FAQs", description: "Frequently asked questions", action: "navigate:/faqs" },
-          { icon: BookOpen, label: "Glossary", description: "Telecommunications terms explained" },
         ],
       },
     ],
