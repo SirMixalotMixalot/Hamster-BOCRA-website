@@ -57,14 +57,14 @@ const CustomerLayout = () => {
         </div>
 
         {/* Nav area */}
-        <div className="flex-1 flex flex-col glass-strong border-r border-[hsl(var(--glass-border-strong))]">
+        <div className="flex-1 flex flex-col bg-gray-300 border-r border-gray-400/30">
           {/* Nav links */}
           <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
             <NavLink
               to="/"
               onClick={() => setSidebarOpen(false)}
               title={collapsed ? "Home" : undefined}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-foreground/60 hover:bg-primary/5 hover:text-primary ${collapsed ? "justify-center" : ""}`}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-bocra-navy/60 hover:bg-white/30 hover:text-bocra-navy ${collapsed ? "justify-center" : ""}`}
             >
               <Home className="h-4 w-4 shrink-0" />
               {!collapsed && "Home"}
@@ -78,8 +78,8 @@ const CustomerLayout = () => {
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${collapsed ? "justify-center" : ""} ${
                     isActive
-                      ? "bg-primary/10 text-primary border-l-2 border-primary shadow-[0_0_12px_hsl(210_85%_50%/0.15)] font-semibold"
-                      : "text-foreground/60 hover:bg-primary/5 hover:text-primary"
+                      ? "bg-white/40 text-bocra-navy shadow-sm"
+                      : "text-bocra-navy/60 hover:bg-white/30 hover:text-bocra-navy"
                   }`
                 }
               >
@@ -90,7 +90,7 @@ const CustomerLayout = () => {
           </nav>
 
           {/* Profile & Logout */}
-          <div className="px-2 pb-3 space-y-1 border-t border-[hsl(var(--glass-border))] pt-3">
+          <div className="px-2 pb-3 space-y-1 border-t border-gray-400/30 pt-3">
             <NavLink
               to="/customer/profile"
               onClick={() => setSidebarOpen(false)}
@@ -109,7 +109,7 @@ const CustomerLayout = () => {
             <button
               onClick={handleLogout}
               title={collapsed ? "Sign Out" : undefined}
-              className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-foreground/40 hover:bg-primary/5 hover:text-foreground transition-all ${collapsed ? "justify-center" : ""}`}
+              className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-bocra-navy/40 hover:bg-white/30 hover:text-bocra-navy transition-all ${collapsed ? "justify-center" : ""}`}
             >
               <LogOut className="h-4 w-4" />
               {!collapsed && "Sign Out"}
@@ -117,7 +117,7 @@ const CustomerLayout = () => {
             {/* Collapse toggle */}
             <button
               onClick={() => setCollapsed(!collapsed)}
-              className={`hidden lg:flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-foreground/40 hover:bg-primary/5 hover:text-foreground transition-all ${collapsed ? "justify-center" : ""}`}
+              className={`hidden lg:flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-bocra-navy/40 hover:bg-white/30 hover:text-bocra-navy transition-all ${collapsed ? "justify-center" : ""}`}
             >
               {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
               {!collapsed && "Collapse"}
