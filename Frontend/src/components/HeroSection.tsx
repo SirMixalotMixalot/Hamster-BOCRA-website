@@ -185,7 +185,7 @@ const HeroSection = () => {
         </div>
 
         <div className="relative z-10 w-full min-w-0 container text-center px-4 mx-auto">
-          <h1 className="mx-auto w-full whitespace-nowrap text-center text-[clamp(1.35rem,3vw,3.25rem)] font-extrabold text-white leading-tight mb-6">
+          <h1 className="mx-auto w-full text-center text-[clamp(1.35rem,3vw,3.25rem)] font-extrabold text-white leading-tight mb-6">
             Botswana Communications Regulatory Authority
           </h1>
           <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-10">
