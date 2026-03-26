@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { BrowserRouter, Route, Routes, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,7 +26,7 @@ import Reports from "./pages/admin/Reports.tsx";
 import AdminSettings from "./pages/admin/Settings.tsx";
 import Careers from "./pages/Careers.tsx";
 import NewApplication from "./pages/customer/applications/NewApplication.tsx";
-import { bootstrapAuth, getAccessToken, getStoredRole, subscribeToSupabaseAuthChanges } from "@/lib/auth";
+import { bootstrapAuth, getAccessToken, subscribeToSupabaseAuthChanges } from "@/lib/auth";
 import Faqs from "./pages/Faqs.tsx";
 
 const queryClient = new QueryClient();
@@ -33,29 +34,24 @@ const queryClient = new QueryClient();
 const AuthBootstrapper = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isBootstrapping, setIsBootstrapping] = useState(false);
 
   useEffect(() => {
     let active = true;
 
     const run = async () => {
       const token = getAccessToken();
-      const storedRole = getStoredRole();
-
-      // Only auto-redirect admins from landing page; customers can stay
-      if (location.pathname === "/" && token && storedRole === "admin") {
-        navigate("/admin/dashboard", { replace: true });
-      }
-
-      // First OAuth login has no cached role yet. Don't redirect yet —
-      // let bootstrap determine the role first.
-      if (location.pathname === "/" && token && !storedRole) {
-        // Will be handled after bootstrapAuth() below
+      const onLandingPage = location.pathname === "/";
+      if (token && onLandingPage) {
+        setIsBootstrapping(true);
       }
 
       const me = await bootstrapAuth();
       if (!active) {
         return;
       }
+
+      setIsBootstrapping(false);
 
       const path = location.pathname;
       const isProtected = path.startsWith("/admin") || path.startsWith("/customer");
@@ -69,9 +65,8 @@ const AuthBootstrapper = () => {
 
       const isAdmin = me.profile.role === "admin";
 
-      // Only auto-redirect admins; customers can browse the landing page
-      if (path === "/" && isAdmin) {
-        navigate("/admin/dashboard", { replace: true });
+      if (path === "/") {
+        navigate(isAdmin ? "/admin/dashboard" : "/customer/dashboard", { replace: true });
         return;
       }
 
@@ -92,7 +87,18 @@ const AuthBootstrapper = () => {
     };
   }, [location.pathname, navigate]);
 
-  return null;
+  if (!isBootstrapping) {
+    return null;
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm">
+      <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-lg">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        <p className="text-sm text-foreground">Signing you in and loading your portal...</p>
+      </div>
+    </div>
+  );
 };
 
 const App = () => (

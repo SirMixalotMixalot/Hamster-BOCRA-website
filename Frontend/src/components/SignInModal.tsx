@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Dialog,
@@ -24,6 +24,7 @@ const SignInModal = () => {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>("sign-in");
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("Signing you in...");
 
   const [signInEmail, setSignInEmail] = useState("");
   const [signInPassword, setSignInPassword] = useState("");
@@ -65,12 +66,14 @@ const SignInModal = () => {
 
   const handleCustomerLogin = async () => {
     setLoading(true);
+    setLoadingMessage("Signing you in...");
     try {
       await login({ email: signInEmail, password: signInPassword });
+      setLoadingMessage("Loading your profile...");
       const me = await getMe();
       setOpen(false);
       setStep("sign-in");
-      navigate(me.profile.role === "admin" ? "/admin/dashboard" : "/customer/dashboard");
+      navigate(me.profile.role === "admin" ? "/admin/dashboard" : "/customer/dashboard", { replace: true });
     } catch (error) {
       toast({
         title: "Sign in failed",
@@ -93,6 +96,7 @@ const SignInModal = () => {
     }
 
     setLoading(true);
+    setLoadingMessage("Creating your account...");
     try {
       const response = await signup({
         email: signUpEmail,
@@ -101,10 +105,11 @@ const SignInModal = () => {
       });
 
       if (response.session?.access_token) {
+        setLoadingMessage("Loading your profile...");
         const me = await getMe();
         setOpen(false);
         setStep("sign-in");
-        navigate(me.profile.role === "admin" ? "/admin/dashboard" : "/customer/dashboard");
+        navigate(me.profile.role === "admin" ? "/admin/dashboard" : "/customer/dashboard", { replace: true });
         return;
       }
 
@@ -126,8 +131,10 @@ const SignInModal = () => {
 
   const handleAdminLogin = async () => {
     setLoading(true);
+    setLoadingMessage("Signing you in...");
     try {
       await login({ email: adminEmail, password: adminPassword });
+      setLoadingMessage("Verifying admin access...");
       const me = await getMe();
 
       if (me.profile.role !== "admin") {
@@ -142,7 +149,7 @@ const SignInModal = () => {
 
       setOpen(false);
       setStep("sign-in");
-      navigate("/admin/dashboard");
+      navigate("/admin/dashboard", { replace: true });
     } catch (error) {
       toast({
         title: "Admin sign in failed",
@@ -156,6 +163,7 @@ const SignInModal = () => {
 
   const handleGoogleOAuth = async () => {
     setLoading(true);
+    setLoadingMessage("Redirecting to Google...");
     try {
       await signInWithGoogle();
     } catch (error) {
@@ -236,6 +244,12 @@ const SignInModal = () => {
               <Button type="submit" className="w-full rounded-full" disabled={loading}>
                 {loading ? "Signing In..." : "Sign In"}
               </Button>
+              {loading && (
+                <div className="flex items-center justify-center gap-2 text-xs text-gray-300">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>{loadingMessage}</span>
+                </div>
+              )}
             </form>
 
             {/* Divider */}
@@ -371,6 +385,12 @@ const SignInModal = () => {
               <Button type="submit" className="w-full rounded-full" disabled={loading}>
                 {loading ? "Creating Account..." : "Create Account"}
               </Button>
+              {loading && (
+                <div className="flex items-center justify-center gap-2 text-xs text-gray-300">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>{loadingMessage}</span>
+                </div>
+              )}
             </form>
 
             {/* Divider */}
@@ -478,6 +498,12 @@ const SignInModal = () => {
               <Button type="submit" className="w-full rounded-full bg-bocra-navy hover:bg-bocra-navy/90" disabled={loading}>
                 {loading ? "Signing In..." : "Sign In"}
               </Button>
+              {loading && (
+                <div className="flex items-center justify-center gap-2 text-xs text-gray-300">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>{loadingMessage}</span>
+                </div>
+              )}
             </form>
           </>
         )}

@@ -9,7 +9,7 @@ import {
   ShieldCheck,
   LifeBuoy,
 } from "lucide-react";
-import { getMe } from "@/lib/auth";
+import { getCachedMe, getMe } from "@/lib/auth";
 
 const stats = [
   { label: "Active Licences", value: 0, icon: CheckCircle2, color: "text-bocra-teal bg-bocra-teal/10" },
@@ -25,9 +25,20 @@ const quickActions = [
 ];
 
 const Dashboard = () => {
-  const [userName, setUserName] = useState("");
+  const [userName, setUserName] = useState(() => {
+    const me = getCachedMe();
+    if (!me) return "";
+    const fullName = me.profile.full_name || me.user.email?.split("@")[0] || "";
+    return fullName.split(" ")[0];
+  });
 
   useEffect(() => {
+    const cachedMe = getCachedMe();
+    if (cachedMe) {
+      const fullName = cachedMe.profile.full_name || cachedMe.user.email?.split("@")[0] || "";
+      setUserName(fullName.split(" ")[0]);
+    }
+
     getMe()
       .then((me) => {
         const fullName = me.profile.full_name || me.user.email?.split("@")[0] || "";

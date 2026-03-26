@@ -41,6 +41,7 @@ interface AuthResponse {
 
 const ACCESS_TOKEN_KEY = "bocra_access_token";
 const PROFILE_ROLE_KEY = "bocra_profile_role";
+const ME_CACHE_KEY = "bocra_me_cache";
 const AUTH_LOG_PREFIX = "[auth]";
 
 function logAuthInfo(event: string, meta?: Record<string, unknown>): void {
@@ -108,6 +109,7 @@ export function getAccessToken(): string | null {
 export function clearAccessToken(): void {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(PROFILE_ROLE_KEY);
+  localStorage.removeItem(ME_CACHE_KEY);
 }
 
 export function getStoredRole(): AppRole | null {
@@ -121,6 +123,24 @@ function storeProfileRole(role?: AppRole): void {
   }
 
   localStorage.setItem(PROFILE_ROLE_KEY, role);
+}
+
+function storeCachedMe(me: MeResponse): void {
+  localStorage.setItem(ME_CACHE_KEY, JSON.stringify(me));
+}
+
+export function getCachedMe(): MeResponse | null {
+  const raw = localStorage.getItem(ME_CACHE_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw) as MeResponse;
+  } catch {
+    localStorage.removeItem(ME_CACHE_KEY);
+    return null;
+  }
 }
 
 function maybeStoreToken(response: AuthResponse): void {
@@ -223,6 +243,7 @@ export async function signInWithGoogle(): Promise<void> {
 export async function getMe(): Promise<MeResponse> {
   const response = await request<MeResponse>("/api/auth/me", { method: "GET" });
   storeProfileRole(response.profile.role);
+  storeCachedMe(response);
   return response;
 }
 

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { User as UserIcon, Camera, Loader2, Lock, Bell, Mail, MessageSquare, Pencil } from "lucide-react";
-import { getMe } from "@/lib/auth";
+import { getCachedMe, getMe } from "@/lib/auth";
 
 const inputBase =
   "w-full px-5 py-2.5 rounded-full border text-sm focus:outline-none transition-all duration-200";
@@ -34,17 +34,27 @@ const Profile = () => {
   const [country] = useState("Botswana");
   const [postalCode, setPostalCode] = useState("");
 
+  const applyProfile = (me: Awaited<ReturnType<typeof getMe>>) => {
+    setFullName(me.profile.full_name || "");
+    setEmail(me.user.email || "");
+    setGender(me.profile.gender || "");
+    setDob(me.profile.date_of_birth || "");
+    setPhone(me.profile.phone || "");
+    setStreet(me.profile.address || "");
+    setPhotoUrl(me.profile.profile_photo_url || null);
+  };
+
   // Fetch profile data on mount
   useEffect(() => {
+    const cachedMe = getCachedMe();
+    if (cachedMe) {
+      applyProfile(cachedMe);
+      setLoading(false);
+    }
+
     getMe()
       .then((me) => {
-        setFullName(me.profile.full_name || "");
-        setEmail(me.user.email || "");
-        setGender(me.profile.gender || "");
-        setDob(me.profile.date_of_birth || "");
-        setPhone(me.profile.phone || "");
-        setStreet(me.profile.address || "");
-        setPhotoUrl(me.profile.profile_photo_url || null);
+        applyProfile(me);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
