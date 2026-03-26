@@ -41,8 +41,7 @@ const AuthBootstrapper = () => {
 
     const run = async () => {
       const token = getAccessToken();
-      const onLandingPage = location.pathname === "/";
-      if (token && onLandingPage) {
+      if (token) {
         setIsBootstrapping(true);
       }
 
@@ -65,13 +64,13 @@ const AuthBootstrapper = () => {
 
       const isAdmin = me.profile.role === "admin";
 
-      if (path === "/") {
-        navigate(isAdmin ? "/admin/dashboard" : "/customer/dashboard", { replace: true });
+      if (path.startsWith("/admin") && !isAdmin) {
+        navigate("/customer/dashboard", { replace: true });
         return;
       }
 
-      if (path.startsWith("/admin") && !isAdmin) {
-        navigate("/customer/dashboard", { replace: true });
+      if (path.startsWith("/customer") && isAdmin) {
+        navigate("/admin/dashboard", { replace: true });
       }
     };
 

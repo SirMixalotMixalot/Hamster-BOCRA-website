@@ -44,7 +44,17 @@ const CustomerLayout = () => {
       >
         {/* Logo – solid navy */}
         <div className="flex items-center gap-2.5 px-5 h-16 shrink-0 bg-bocra-navy border-b border-white/10">
-          <img src={bocraLogo} alt="BOCRA" className="h-16 w-auto object-contain brightness-200 shrink-0" />
+          <button
+            type="button"
+            onClick={() => {
+              setSidebarOpen(false);
+              navigate("/");
+            }}
+            className="shrink-0"
+            aria-label="Go to home"
+          >
+            <img src={bocraLogo} alt="BOCRA" className="h-16 w-auto object-contain brightness-200" />
+          </button>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden ml-auto p-1 text-white/50 hover:text-white">
             <X className="h-5 w-5" />
           </button>
