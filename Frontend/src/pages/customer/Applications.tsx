@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { FileText, Plus, Clock, CheckCircle, XCircle, AlertCircle, Eye, Award } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
   getApplication,
@@ -50,6 +50,7 @@ const Applications = () => {
   const [submittingAdditional, setSubmittingAdditional] = useState(false);
   const [statusTimeline, setStatusTimeline] = useState<ApplicationStatusLogItem[]>([]);
   const [loadingTimeline, setLoadingTimeline] = useState(false);
+  const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const focusRef = searchParams.get("ref")?.trim() || "";
@@ -74,6 +75,21 @@ const Applications = () => {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    const navigationState = location.state as { justSubmitted?: boolean; referenceNumber?: string } | null;
+    if (!navigationState?.justSubmitted) {
+      return;
+    }
+
+    toast.success("Application submitted successfully", {
+      description: navigationState.referenceNumber
+        ? `${navigationState.referenceNumber} has been submitted. You can now track its status from here.`
+        : "Your application has been submitted. You can now track its status from here.",
+    });
+
+    navigate(`${location.pathname}${location.search}`, { replace: true });
+  }, [location.pathname, location.search, location.state, navigate]);
 
   const filtered = useMemo(
     () => {

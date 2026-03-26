@@ -1,8 +1,10 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import type { BocraLicenceType } from "@/lib/constants";
+import { LoadingDots } from "@/components/ui/loading-dots";
 import { getWizardConfig, type StepConfig, type StepProps } from "@/lib/applicationStepConfig";
-import { createApplication, getApplication, listApplications, submitApplication, updateApplication } from "@/lib/applications";
+import { createApplication, getApplication, listApplications, submitApplication, updateApplication, type ApplicationDetail, type ApplicationStatus } from "@/lib/applications";
 import { uploadDocument } from "@/lib/documents";
 import WizardStepper from "./WizardStepper";
 import WizardNavigation from "./WizardNavigation";
@@ -68,6 +70,10 @@ const EMPTY_FORM_DATA: FormData = {
 };
 
 const DRAFT_ID_STORAGE_KEY = "bocra_draft_application_id";
+const REDIRECT_STATUSES = new Set<ApplicationStatus>(["submitted", "under_review", "waiting_for_payment", "approved", "rejected", "requires_action"]);
+
+const getDraftStorageKey = (type: BocraLicenceType) => `${DRAFT_ID_STORAGE_KEY}:${type}`;
+const isRedirectStatus = (status: ApplicationStatus) => REDIRECT_STATUSES.has(status);
 
 const serializeValue = (value: unknown): unknown => {
   if (value instanceof File) {
@@ -100,6 +106,7 @@ const buildPersistableFormData = (formData: FormData): FormData => ({
 });
 
 export default function ApplicationWizard() {
+  const navigate = useNavigate();
   const [licenceType, setLicenceType] = useState<BocraLicenceType | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<FormData>({ ...EMPTY_FORM_DATA });
@@ -108,11 +115,45 @@ export default function ApplicationWizard() {
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isLoadingDraft, setIsLoadingDraft] = useState(false);
   const [draftApplicationId, setDraftApplicationId] = useState<string | null>(null);
+  const submitInFlightRef = useRef(false);
 
   // Steps only exist after licence type is selected
   const config = licenceType ? getWizardConfig(licenceType) : null;
   const steps: StepConfig[] = config ? config.steps : [];
   const currentStepConfig = steps[currentStep] ?? null;
+
+  const resetWizardState = useCallback(() => {
+    setLicenceType(null);
+    setCurrentStep(0);
+    setFormData({ ...EMPTY_FORM_DATA });
+    setCompletedSteps(new Set());
+    setDraftApplicationId(null);
+  }, []);
+
+  const clearDraftState = useCallback((type?: BocraLicenceType | null) => {
+    if (type) {
+      localStorage.removeItem(getDraftStorageKey(type));
+    }
+    resetWizardState();
+  }, [resetWizardState]);
+
+  const redirectToSafeDestination = useCallback((application?: Pick<ApplicationDetail, "id" | "reference_number"> | null, state?: Record<string, unknown>) => {
+    const search = application?.reference_number
+      ? `?ref=${encodeURIComponent(application.reference_number)}`
+      : "";
+
+    navigate(`/customer/applications${search}`, {
+      replace: true,
+      state: application
+        ? {
+            ...state,
+            applicationId: application.id,
+            justSubmitted: Boolean(state?.justSubmitted),
+            referenceNumber: application.reference_number,
+          }
+        : state,
+    });
+  }, [navigate]);
 
   const handleLicenceTypeSelect = (type: BocraLicenceType) => {
     setLicenceType(type);
@@ -129,14 +170,18 @@ export default function ApplicationWizard() {
     const loadDraft = async () => {
       setIsLoadingDraft(true);
       try {
-        const rememberedDraftId = localStorage.getItem(`${DRAFT_ID_STORAGE_KEY}:${licenceType}`);
+        const rememberedDraftId = localStorage.getItem(getDraftStorageKey(licenceType));
         if (rememberedDraftId) {
           const remembered = await getApplication(rememberedDraftId);
-          if (
-            !cancelled
-            && remembered.status === "draft"
-            && remembered.licence_type === licenceType
-          ) {
+          if (cancelled) return;
+
+          if (remembered.licence_type === licenceType && isRedirectStatus(remembered.status)) {
+            clearDraftState(licenceType);
+            redirectToSafeDestination(remembered);
+            return;
+          }
+
+          if (remembered.status === "draft" && remembered.licence_type === licenceType) {
             setDraftApplicationId(remembered.id);
             setFormData({
               form_data_a: (remembered.form_data_a as Record<string, any>) || {},
@@ -158,7 +203,7 @@ export default function ApplicationWizard() {
         const draft = await getApplication(latestDraft.id);
         if (cancelled || draft.status !== "draft") return;
 
-        localStorage.setItem(`${DRAFT_ID_STORAGE_KEY}:${licenceType}`, draft.id);
+        localStorage.setItem(getDraftStorageKey(licenceType), draft.id);
         setDraftApplicationId(draft.id);
         setFormData({
           form_data_a: (draft.form_data_a as Record<string, any>) || {},
@@ -181,7 +226,7 @@ export default function ApplicationWizard() {
     return () => {
       cancelled = true;
     };
-  }, [licenceType]);
+  }, [clearDraftState, licenceType, redirectToSafeDestination]);
 
   const handleStepDataChange = useCallback(
     (data: Record<string, any>) => {
@@ -241,7 +286,7 @@ export default function ApplicationWizard() {
         });
       }
 
-      localStorage.setItem(`${DRAFT_ID_STORAGE_KEY}:${licenceType}`, draftId);
+      localStorage.setItem(getDraftStorageKey(licenceType), draftId);
 
       toast.success("Draft saved", {
         description: "Your application progress has been saved. You can continue later.",
@@ -259,9 +304,10 @@ export default function ApplicationWizard() {
     if (!licenceType) {
       return;
     }
-    if (isSubmitting) {
+    if (isSubmitting || submitInFlightRef.current) {
       return;
     }
+    submitInFlightRef.current = true;
     setIsSubmitting(true);
     setCompletedSteps((prev) => new Set([...prev, currentStep]));
     try {
@@ -317,15 +363,34 @@ export default function ApplicationWizard() {
       }
 
       const submitted = await submitApplication(applicationId);
-      localStorage.removeItem(`${DRAFT_ID_STORAGE_KEY}:${licenceType}`);
-      toast.success("Application submitted", {
-        description: `Acknowledged. Application number: ${submitted.reference_number}`,
+      clearDraftState(licenceType);
+      redirectToSafeDestination(submitted, {
+        justSubmitted: true,
       });
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not submit application. Please try again.";
+      const shouldCheckCurrentStatus = Boolean(draftApplicationId) && /draft applications|current status|already submitted/i.test(message);
+
+      if (shouldCheckCurrentStatus && draftApplicationId) {
+        try {
+          const currentApplication = await getApplication(draftApplicationId);
+          if (isRedirectStatus(currentApplication.status)) {
+            clearDraftState(licenceType);
+            redirectToSafeDestination(currentApplication, {
+              redirectReason: "not_draft",
+            });
+            return;
+          }
+        } catch {
+          // Fall back to the original error toast below.
+        }
+      }
+
       toast.error("Submission failed", {
-        description: error instanceof Error ? error.message : "Could not submit application. Please try again.",
+        description: message,
       });
     } finally {
+      submitInFlightRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -381,6 +446,14 @@ export default function ApplicationWizard() {
 
   const isReviewStep = currentStepConfig?.id === "review";
   const isBusy = isSubmitting || isSavingDraft || isLoadingDraft;
+
+  if (isLoadingDraft) {
+    return (
+      <div className="glass rounded-2xl p-8 text-center">
+        <LoadingDots label="Loading your application draft..." />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 max-w-6xl">
