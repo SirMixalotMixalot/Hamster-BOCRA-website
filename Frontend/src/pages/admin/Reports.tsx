@@ -52,7 +52,7 @@ const MOCK_LEGISLATION = [
   { title: "Spectrum Regulations 2026", description: "Updated licensing obligations" },
 ];
 
-type SectionKey = "stats" | "news" | "tenders" | "forms" | "publications" | "legislation";
+type SectionKey = "stats" | "news" | "tenders" | "forms" | "publications" | "legislation" | "annual-reports";
 
 const SECTION_UPLOAD_TITLES: Record<Exclude<SectionKey, "stats">, string> = {
   news: "news content",
@@ -60,6 +60,7 @@ const SECTION_UPLOAD_TITLES: Record<Exclude<SectionKey, "stats">, string> = {
   forms: "forms and templates",
   publications: "publication files",
   legislation: "legislation and regulation files",
+  "annual-reports": "annual report files",
 };
 
 const formatFileSize = (bytes: number) => {
@@ -85,13 +86,14 @@ const Reports = () => {
     forms: [],
     publications: [],
     legislation: [],
+    "annual-reports": [],
   });
   const [statsPreview, setStatsPreview] = useState<HomeStatItem[]>(MOCK_STATS);
   const [statsLoading, setStatsLoading] = useState(false);
   const [uploadingSection, setUploadingSection] = useState<Exclude<SectionKey, "stats"> | null>(null);
 
   const publish = (
-    section: "stats" | "news" | "tenders" | "forms" | "publications" | "legislation",
+    section: "stats" | "news" | "tenders" | "forms" | "publications" | "legislation" | "annual-reports",
   ) => {
     switch (section) {
       case "stats":
@@ -284,6 +286,19 @@ const Reports = () => {
             Open
           </button>
         </div>
+
+        <div className="bg-card rounded-xl border border-border p-4 space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-bocra-blue/15 text-bocra-blue">
+              <FileText className="h-5 w-5" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground">Annual Reports</h3>
+          </div>
+          <p className="text-xs text-muted-foreground">Upload annual reports for public download.</p>
+          <button onClick={() => openUploadModal("annual-reports")} className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold">
+            Open
+          </button>
+        </div>
       </div>
 
       <Dialog open={activeModal === "stats"} onOpenChange={(open) => !open && setActiveModal(null)}>
@@ -315,7 +330,7 @@ const Reports = () => {
         </DialogContent>
       </Dialog>
 
-      {(["news", "tenders", "forms", "publications", "legislation"] as const).map((section) => (
+      {(["news", "tenders", "forms", "publications", "legislation", "annual-reports"] as const).map((section) => (
         <Dialog key={section} open={activeModal === section} onOpenChange={(open) => !open && setActiveModal(null)}>
           <DialogContent className="max-w-lg">
             <DialogHeader>

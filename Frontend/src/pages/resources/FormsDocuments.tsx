@@ -1,43 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
-import { Download, FileCheck, FileText, Newspaper, Briefcase, ScrollText } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Download, ArrowLeft } from "lucide-react";
 import Header from "@/components/Header";
 import BottomBar from "@/components/BottomBar";
 import { listPublicDocuments, type PublicDocumentListItem } from "@/lib/documents";
-
-const SECTION_ORDER = ["forms", "publications", "legislation", "tenders", "news", "uncategorized"] as const;
-
-const SECTION_META = {
-  forms: {
-    title: "Forms",
-    description: "Application forms, templates, and standard downloadable forms.",
-    icon: FileCheck,
-  },
-  publications: {
-    title: "Publications",
-    description: "Reports, bulletins, and other published BOCRA documents.",
-    icon: FileText,
-  },
-  legislation: {
-    title: "Legislation & Regulations",
-    description: "Acts, regulations, and regulatory reference documents.",
-    icon: ScrollText,
-  },
-  tenders: {
-    title: "Tenders",
-    description: "Public tender notices and procurement-related documents.",
-    icon: Briefcase,
-  },
-  news: {
-    title: "News Downloads",
-    description: "News-linked downloadable documents and notices.",
-    icon: Newspaper,
-  },
-  uncategorized: {
-    title: "Other Documents",
-    description: "Public documents that have not been assigned to a section yet.",
-    icon: FileText,
-  },
-} as const;
 
 const formatFileSize = (bytes: number) => {
   if (bytes < 1024) return `${bytes} B`;
@@ -46,6 +12,7 @@ const formatFileSize = (bytes: number) => {
 };
 
 const FormsDocuments = () => {
+  const navigate = useNavigate();
   const [documents, setDocuments] = useState<PublicDocumentListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,11 +24,11 @@ const FormsDocuments = () => {
       try {
         const items = await listPublicDocuments();
         if (!mounted) return;
-        setDocuments(items.filter((item) => Boolean(item.download_url)));
+        setDocuments(items.filter((item) => Boolean(item.download_url) && (item.section === "forms" || item.section === "uncategorized")));
         setError(null);
       } catch (loadError) {
         if (!mounted) return;
-        setError(loadError instanceof Error ? loadError.message : "Failed to load public documents.");
+        setError(loadError instanceof Error ? loadError.message : "Failed to load documents.");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -74,90 +41,53 @@ const FormsDocuments = () => {
     };
   }, []);
 
-  const groupedSections = useMemo(() => {
-    const grouped = documents.reduce<Record<string, PublicDocumentListItem[]>>((acc, document) => {
-      const key = document.section || "uncategorized";
-      acc[key] = [...(acc[key] || []), document];
-      return acc;
-    }, {});
-
-    return SECTION_ORDER
-      .filter((section) => grouped[section]?.length)
-      .map((section) => ({
-        key: section,
-        meta: SECTION_META[section],
-        items: grouped[section],
-      }));
-  }, [documents]);
-
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-gray-100">
       <Header />
-      <main className="min-w-0 flex-1">
-        <div className="bg-bocra-navy text-white py-12">
-          <div className="container text-center">
-            <h1 className="text-3xl md:text-4xl font-heading font-extrabold">Forms & Documents</h1>
-            <p className="text-white/70 mt-2 text-sm max-w-2xl mx-auto">
-              Browse BOCRA public forms, publications, legislation, tenders, and downloadable reference documents.
+      <main className="min-w-0 flex-1 py-12 md:py-16">
+        <section className="container max-w-5xl mx-auto px-4">
+          <div className="mb-3 md:mb-4">
+            <button
+              onClick={() => navigate(-1)}
+              className="inline-flex items-center gap-1.5 text-sm text-blue-700 hover:text-blue-900 transition-colors mb-4"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </button>
+            <h1 className="text-3xl md:text-4xl font-extrabold text-foreground">Forms & Documents</h1>
+            <p className="mt-2 text-sm md:text-base leading-relaxed text-muted-foreground">
+              Application forms, templates, and standard downloadable forms published by BOCRA.
             </p>
           </div>
-        </div>
 
-        <section className="container max-w-6xl mx-auto px-4 py-12 space-y-8">
           {loading ? (
-            <div className="rounded-2xl border border-border bg-card p-8 text-center">
-              <p className="text-sm text-muted-foreground">Loading documents...</p>
-            </div>
+            <p className="text-sm text-muted-foreground">Loading documents...</p>
           ) : error ? (
-            <div className="rounded-2xl border border-border bg-card p-8 text-center">
-              <p className="text-sm text-red-500">{error}</p>
-            </div>
-          ) : groupedSections.length === 0 ? (
-            <div className="rounded-2xl border border-border bg-card p-8 text-center">
-              <p className="text-sm text-muted-foreground">No public documents are available yet.</p>
-            </div>
+            <p className="text-sm text-red-500">{error}</p>
+          ) : documents.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No forms or documents are available yet. Check back later.</p>
           ) : (
-            groupedSections.map((section) => {
-              const Icon = section.meta.icon;
-
-              return (
-                <section key={section.key} className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-heading font-bold text-foreground">{section.meta.title}</h2>
-                      <p className="text-sm text-muted-foreground mt-1">{section.meta.description}</p>
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {documents.map((doc) => (
+                <a
+                  key={doc.id}
+                  href={doc.download_url || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 bg-white p-4 hover:border-blue-300 hover:bg-blue-50/30 transition-colors"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-foreground break-words">{doc.file_name}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {doc.file_type?.toUpperCase() || "PDF"} &bull; {formatFileSize(doc.file_size)} &bull; {new Date(doc.created_at).toLocaleDateString()}
+                    </p>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {section.items.map((document) => (
-                      <a
-                        key={document.id}
-                        href={document.download_url || "#"}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="rounded-xl border border-border bg-card p-4 hover:border-primary/30 hover:bg-primary/5 transition-colors"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold text-foreground break-words">{document.file_name}</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              PDF • {formatFileSize(document.file_size)} • {new Date(document.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                            <Download className="h-4 w-4" />
-                          </div>
-                        </div>
-                      </a>
-                    ))}
+                  <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700">
+                    <Download className="h-4 w-4" />
                   </div>
-                </section>
-              );
-            })
+                </a>
+              ))}
+            </div>
           )}
         </section>
       </main>

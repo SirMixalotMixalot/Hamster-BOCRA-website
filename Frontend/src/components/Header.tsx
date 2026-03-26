@@ -70,7 +70,7 @@ const navItems = [
       {
         title: "Legal & Consumer",
         items: [
-          { icon: BookOpen, label: "Legislation & Regulations", description: "Acts, policies, and guidelines" },
+          { icon: BookOpen, label: "Legislation & Regulations", description: "Acts, policies, and guidelines", action: "navigate:/resources/legislation" },
           { icon: ScrollText, label: "Policies & Frameworks", description: "Regulatory frameworks and guidelines", action: "navigate:/resources/policies" },
           { icon: GraduationCap, label: "Consumer Education", description: "Know your rights and responsibilities", action: "navigate:/resources/consumer-education" },
         ],
@@ -79,7 +79,7 @@ const navItems = [
         title: "Publications & Forms",
         items: [
           { icon: FileCheck, label: "Forms & Documents", description: "Application forms, templates, and downloadable documents", action: "navigate:/resources/forms-documents" },
-          { icon: FileText, label: "Publications", description: "Reports, studies, and papers" },
+          { icon: FileText, label: "Publications", description: "Reports, studies, and papers", action: "navigate:/resources/publications" },
           { icon: FileText, label: "Annual Reports", description: "Yearly performance and sector reports", action: "navigate:/about/annual-reports" },
         ],
       },

@@ -54,7 +54,7 @@ CATEGORY_VALIDATION = {
     },
 }
 
-PUBLIC_DOCUMENT_SECTIONS = {"news", "tenders", "forms", "publications", "legislation"}
+PUBLIC_DOCUMENT_SECTIONS = {"news", "tenders", "forms", "publications", "legislation", "annual-reports"}
 
 
 # ===== HELPER FUNCTIONS =====

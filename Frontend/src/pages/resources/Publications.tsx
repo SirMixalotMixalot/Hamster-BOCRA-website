@@ -11,7 +11,7 @@ const formatFileSize = (bytes: number) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-const AnnualReports = () => {
+const Publications = () => {
   const navigate = useNavigate();
   const [documents, setDocuments] = useState<PublicDocumentListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,11 +24,11 @@ const AnnualReports = () => {
       try {
         const items = await listPublicDocuments();
         if (!mounted) return;
-        setDocuments(items.filter((item) => Boolean(item.download_url) && item.section === "annual-reports"));
+        setDocuments(items.filter((item) => Boolean(item.download_url) && item.section === "publications"));
         setError(null);
       } catch (loadError) {
         if (!mounted) return;
-        setError(loadError instanceof Error ? loadError.message : "Failed to load annual reports.");
+        setError(loadError instanceof Error ? loadError.message : "Failed to load publications.");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -54,18 +54,18 @@ const AnnualReports = () => {
               <ArrowLeft className="h-4 w-4" />
               Back
             </button>
-            <h1 className="text-3xl md:text-4xl font-extrabold text-foreground">Annual Reports</h1>
+            <h1 className="text-3xl md:text-4xl font-extrabold text-foreground">Publications</h1>
             <p className="mt-2 text-sm md:text-base leading-relaxed text-muted-foreground">
-              BOCRA publishes annual reports covering the performance and growth of Botswana's communications sector.
+              Reports, bulletins, studies, and other published BOCRA documents available for download.
             </p>
           </div>
 
           {loading ? (
-            <p className="text-sm text-muted-foreground">Loading annual reports...</p>
+            <p className="text-sm text-muted-foreground">Loading publications...</p>
           ) : error ? (
             <p className="text-sm text-red-500">{error}</p>
           ) : documents.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No annual reports are available yet. Check back later.</p>
+            <p className="text-sm text-muted-foreground">No publications are available yet. Check back later.</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {documents.map((doc) => (
@@ -96,4 +96,4 @@ const AnnualReports = () => {
   );
 };
 
-export default AnnualReports;
+export default Publications;

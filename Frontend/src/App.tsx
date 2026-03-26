@@ -43,7 +43,9 @@ import PostalServices from "./pages/licensing/PostalServices";
 import SpectrumManagement from "./pages/licensing/SpectrumManagement";
 import Interconnection from "./pages/licensing/Interconnection";
 import PoliciesFrameworks from "./pages/resources/PoliciesFrameworks.tsx";
+import LegislationRegulations from "./pages/resources/LegislationRegulations.tsx";
 import ConsumerEducation from "./pages/resources/ConsumerEducation.tsx";
+import Publications from "./pages/resources/Publications.tsx";
 import FormsDocuments from "./pages/resources/FormsDocuments.tsx";
 import JobDetail from "./pages/careers/JobDetail.tsx";
 import JobApplication from "./pages/careers/JobApplication.tsx";
@@ -157,7 +159,9 @@ const App = () => (
           <Route path="/licensing/spectrum-management" element={<SpectrumManagement />} />
           <Route path="/licensing/interconnection" element={<Interconnection />} />
           <Route path="/resources/policies" element={<PoliciesFrameworks />} />
+          <Route path="/resources/legislation" element={<LegislationRegulations />} />
           <Route path="/resources/forms-documents" element={<FormsDocuments />} />
+          <Route path="/resources/publications" element={<Publications />} />
           <Route path="/resources/consumer-education" element={<ConsumerEducation />} />
 
           {/* Customer Portal */}
