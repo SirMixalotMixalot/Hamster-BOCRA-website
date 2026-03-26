@@ -187,10 +187,12 @@ const Reports = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         <div className="bg-card rounded-xl border border-border p-4 space-y-3">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <TrendingUp className="h-5 w-5" />
+          <div className="flex items-center gap-3">
+            <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <TrendingUp className="h-5 w-5" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground">Summarized Stats</h3>
           </div>
-          <h3 className="text-sm font-semibold text-foreground">Summarized Stats</h3>
           <p className="text-xs text-muted-foreground">Push highlighted market indicators to the home page.</p>
           <button onClick={() => void openStatsModal()} className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold">
             View
@@ -198,10 +200,12 @@ const Reports = () => {
         </div>
 
         <div className="bg-card rounded-xl border border-border p-4 space-y-3">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-bocra-rose/15 text-bocra-rose">
-            <Newspaper className="h-5 w-5" />
+          <div className="flex items-center gap-3">
+            <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-bocra-rose/15 text-bocra-rose">
+              <Newspaper className="h-5 w-5" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground">News</h3>
           </div>
-          <h3 className="text-sm font-semibold text-foreground">News</h3>
           <p className="text-xs text-muted-foreground">Push latest news cards to home page updates.</p>
           <button onClick={() => openUploadModal("news")} className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold">
             Open
@@ -209,10 +213,12 @@ const Reports = () => {
         </div>
 
         <div className="bg-card rounded-xl border border-border p-4 space-y-3">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-bocra-gold/20 text-bocra-gold">
-            <Megaphone className="h-5 w-5" />
+          <div className="flex items-center gap-3">
+            <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-bocra-gold/20 text-bocra-gold">
+              <Megaphone className="h-5 w-5" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground">Tenders</h3>
           </div>
-          <h3 className="text-sm font-semibold text-foreground">Tenders</h3>
           <p className="text-xs text-muted-foreground">Push active tender notices to home page resources.</p>
           <button onClick={() => openUploadModal("tenders")} className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold">
             Open
@@ -220,10 +226,12 @@ const Reports = () => {
         </div>
 
         <div className="bg-card rounded-xl border border-border p-4 space-y-3">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-bocra-blue/15 text-bocra-blue">
-            <FileText className="h-5 w-5" />
+          <div className="flex items-center gap-3">
+            <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-bocra-blue/15 text-bocra-blue">
+              <FileText className="h-5 w-5" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground">Forms</h3>
           </div>
-          <h3 className="text-sm font-semibold text-foreground">Forms</h3>
           <p className="text-xs text-muted-foreground">Push forms and templates to home page resources.</p>
           <button onClick={() => openUploadModal("forms")} className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold">
             Open
@@ -231,10 +239,12 @@ const Reports = () => {
         </div>
 
         <div className="bg-card rounded-xl border border-border p-4 space-y-3">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-bocra-teal/15 text-bocra-teal">
-            <ScrollText className="h-5 w-5" />
+          <div className="flex items-center gap-3">
+            <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-bocra-teal/15 text-bocra-teal">
+              <ScrollText className="h-5 w-5" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground">Publications</h3>
           </div>
-          <h3 className="text-sm font-semibold text-foreground">Publications</h3>
           <p className="text-xs text-muted-foreground">Push published reports and bulletins to home page.</p>
           <button onClick={() => openUploadModal("publications")} className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold">
             Open
@@ -242,10 +252,12 @@ const Reports = () => {
         </div>
 
         <div className="bg-card rounded-xl border border-border p-4 space-y-3">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-foreground">
-            <Gavel className="h-5 w-5" />
+          <div className="flex items-center gap-3">
+            <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
+              <Gavel className="h-5 w-5" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground">Legislation & Regulations</h3>
           </div>
-          <h3 className="text-sm font-semibold text-foreground">Legislation & Regulations</h3>
           <p className="text-xs text-muted-foreground">Push key legal references to home page resources.</p>
           <button onClick={() => openUploadModal("legislation")} className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold">
             Open

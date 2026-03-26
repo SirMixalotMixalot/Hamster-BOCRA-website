@@ -466,43 +466,51 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-card rounded-xl border border-border p-4">
           <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-bocra-blue bg-bocra-blue/10">
-              <PieChartIcon className="h-5 w-5" />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 shrink-0 rounded-lg flex items-center justify-center text-bocra-blue bg-bocra-blue/10">
+                <PieChartIcon className="h-5 w-5" />
+              </div>
+              <p className="text-xs text-muted-foreground">Eligible Licences</p>
             </div>
             <span className="text-2xl font-heading font-bold text-foreground">
               {displayApplicationsAnalytics.total_eligible_licences}
             </span>
           </div>
-          <p className="text-xs text-muted-foreground mt-3">Eligible Licences</p>
         </div>
         <div className="bg-card rounded-xl border border-border p-4">
           <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-bocra-teal bg-bocra-teal/10">
-              <MapPinned className="h-5 w-5" />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 shrink-0 rounded-lg flex items-center justify-center text-bocra-teal bg-bocra-teal/10">
+                <MapPinned className="h-5 w-5" />
+              </div>
+              <p className="text-xs text-muted-foreground">Districts Covered</p>
             </div>
             <span className="text-2xl font-heading font-bold text-foreground">
               {displayApplicationsAnalytics.regional_coverage.length}
             </span>
           </div>
-          <p className="text-xs text-muted-foreground mt-3">Districts Covered</p>
         </div>
         <div className="bg-card rounded-xl border border-border p-4">
           <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-bocra-rose bg-bocra-rose/10">
-              <Activity className="h-5 w-5" />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 shrink-0 rounded-lg flex items-center justify-center text-bocra-rose bg-bocra-rose/10">
+                <Activity className="h-5 w-5" />
+              </div>
+              <p className="text-xs text-muted-foreground">Total Complaints</p>
             </div>
             <span className="text-2xl font-heading font-bold text-foreground">{displayComplaintsAnalytics.total_complaints}</span>
           </div>
-          <p className="text-xs text-muted-foreground mt-3">Total Complaints</p>
         </div>
         <div className="bg-card rounded-xl border border-border p-4">
           <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-bocra-gold bg-bocra-gold/15">
-              <AlertTriangle className="h-5 w-5" />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 shrink-0 rounded-lg flex items-center justify-center text-bocra-gold bg-bocra-gold/15">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <p className="text-xs text-muted-foreground">Spike Alerts (&gt;25%)</p>
             </div>
             <span className="text-2xl font-heading font-bold text-foreground">{displayComplaintsAnalytics.alert_count}</span>
           </div>
-          <p className="text-xs text-muted-foreground mt-3">Spike Alerts (&gt;25%)</p>
         </div>
       </div>
 
