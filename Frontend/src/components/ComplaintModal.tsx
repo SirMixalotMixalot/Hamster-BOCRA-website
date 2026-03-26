@@ -1,5 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { Send, ShieldCheck, CheckCircle2, Loader2, Copy, Check } from "lucide-react";
+import { toast } from "sonner";
+import { createComplaint, sendComplaintVerificationCode, verifyComplaintVerificationCode } from "@/lib/complaints";
 import {
   Dialog,
   DialogContent,
@@ -74,14 +76,36 @@ const ComplaintModal = () => {
     setCompany("");
   };
 
-  const handleSendCode = (e: React.FormEvent) => {
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.trim()) {
+      toast.error("Email is required", {
+        description: "Enter your account email to receive a verification code.",
+      });
+      return;
+    }
+
     setSending(true);
-    // TODO: integrate with backend to send actual verification code
-    setTimeout(() => {
-      setSending(false);
+    try {
+      const response = await sendComplaintVerificationCode(email.trim().toLowerCase());
+      if (response.retry_after_seconds) {
+        toast.info("Please wait before requesting another code", {
+          description: `Try again in ${response.retry_after_seconds}s.`,
+        });
+        return;
+      }
+
+      toast.success("Verification code sent", {
+        description: `A 6-digit code was sent to ${email.trim()}.`,
+      });
       setStep("verify");
-    }, 1200);
+    } catch (error) {
+      toast.error("Could not send verification code", {
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleCodeChange = (index: number, value: string) => {
@@ -100,18 +124,33 @@ const ComplaintModal = () => {
     }
   };
 
-  const handleVerify = (e: React.FormEvent) => {
+  const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (code.join("").length < 6) return;
+    const joinedCode = code.join("");
+    if (joinedCode.length < 6) return;
+
     setSending(true);
-    // TODO: verify code via backend then submit complaint
-    setTimeout(() => {
-      // TODO: get real reference number from backend
-      const seq = String(Math.floor(Math.random() * 9999) + 1).padStart(4, "0");
-      setReferenceNumber(`BOCRA-CMP-${new Date().getFullYear()}-${seq}`);
-      setSending(false);
+    try {
+      await verifyComplaintVerificationCode(email.trim().toLowerCase(), joinedCode);
+
+      const category = `${sector}:${company}`;
+      const subject = `${company} complaint`;
+      const created = await createComplaint({
+        email: email.trim().toLowerCase(),
+        subject,
+        category,
+        description,
+      });
+
+      setReferenceNumber(created.reference_number || "");
       setStep("submitted");
-    }, 1200);
+    } catch (error) {
+      toast.error("Complaint submission failed", {
+        description: error instanceof Error ? error.message : "Please sign in and try again.",
+      });
+    } finally {
+      setSending(false);
+    }
   };
 
   const inputClass =
@@ -233,7 +272,7 @@ const ComplaintModal = () => {
             <DialogHeader>
               <DialogTitle className="text-xl">Enter Verification Code</DialogTitle>
               <DialogDescription>
-                A 6-digit code has been sent to your email ({email}). Enter it below to submit your complaint.
+                Enter the 6-digit verification code to submit your complaint.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleVerify} className="space-y-6 mt-4">
@@ -263,8 +302,27 @@ const ComplaintModal = () => {
                 Didn't receive a code?{" "}
                 <button
                   type="button"
-                  onClick={() => {
-                    // TODO: resend code via backend
+                  onClick={async () => {
+                    if (sending) return;
+                    try {
+                      setSending(true);
+                      const response = await sendComplaintVerificationCode(email.trim().toLowerCase());
+                      if (response.retry_after_seconds) {
+                        toast.info("Please wait before requesting another code", {
+                          description: `Try again in ${response.retry_after_seconds}s.`,
+                        });
+                      } else {
+                        toast.success("Code re-sent", {
+                          description: `A new verification code was sent to ${email.trim()}.`,
+                        });
+                      }
+                    } catch (error) {
+                      toast.error("Could not resend code", {
+                        description: error instanceof Error ? error.message : "Please try again.",
+                      });
+                    } finally {
+                      setSending(false);
+                    }
                   }}
                   className="text-primary font-medium hover:underline"
                 >
@@ -307,7 +365,7 @@ const ComplaintModal = () => {
             <div>
               <h3 className="text-lg font-heading font-bold text-foreground">Complaint Submitted</h3>
               <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
-                Thank you, {firstName}. Your complaint has been received and will be reviewed by BOCRA. You'll receive updates via email.
+                Thank you, {firstName}. Your complaint has been received and will be reviewed by BOCRA.
               </p>
             </div>
 

@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import type { BocraLicenceType } from "@/lib/constants";
 import { getWizardConfig, type StepConfig, type StepProps } from "@/lib/applicationStepConfig";
 import { createApplication, submitApplication } from "@/lib/applications";
+import { uploadDocument } from "@/lib/documents";
 import WizardStepper from "./WizardStepper";
 import WizardNavigation from "./WizardNavigation";
 
@@ -129,6 +130,16 @@ export default function ApplicationWizard() {
         form_data_c: formData.form_data_c,
         form_data_d: formData.form_data_d,
       });
+
+      const files = (formData.form_data_d.files || []) as File[];
+      for (const file of files) {
+        await uploadDocument({
+          file,
+          category: "application",
+          applicationId: created.id,
+        });
+      }
+
       const submitted = await submitApplication(created.id);
       toast.success("Application submitted", {
         description: `Acknowledged. Application number: ${submitted.reference_number}`,

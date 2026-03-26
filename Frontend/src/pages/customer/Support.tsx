@@ -1,35 +1,68 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LifeBuoy, Send, Loader2, Plus, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
+import { createSupportTicket, listSupportTickets, type SupportCategory, type SupportTicketItem } from "@/lib/support";
 
-type TicketStatus = "Open" | "In Progress" | "Resolved";
+const CATEGORIES: { label: string; value: SupportCategory }[] = [
+  { label: "Technical", value: "technical" },
+  { label: "Billing", value: "billing" },
+  { label: "Complaint", value: "complaint" },
+  { label: "General Inquiry", value: "general_inquiry" },
+  { label: "License Renewal", value: "license_renewal" },
+  { label: "Other", value: "other" },
+];
 
-type Ticket = {
-  id: string;
-  category: string;
-  subject: string;
-  description: string;
-  date: string;
-  status: TicketStatus;
+const STATUS_STYLES: Record<string, string> = {
+  open: "bg-blue-50 text-blue-600",
+  replied: "bg-green-50 text-green-600",
+  closed: "bg-gray-100 text-gray-700",
 };
 
-const CATEGORIES = ["Payment", "Application", "Account", "Other"];
+const STATUS_LABELS: Record<string, string> = {
+  open: "Open",
+  replied: "Replied",
+  closed: "Closed",
+};
 
-const STATUS_STYLES: Record<TicketStatus, string> = {
-  "Open": "bg-blue-50 text-blue-600",
-  "In Progress": "bg-yellow-50 text-yellow-600",
-  "Resolved": "bg-green-50 text-green-600",
+const categoryLabel = (value: string | null): string => {
+  if (!value) return "Uncategorized";
+  const match = CATEGORIES.find((item) => item.value === value);
+  if (match) return match.label;
+  return value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 const Support = () => {
-  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [tickets, setTickets] = useState<SupportTicketItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Form fields
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState<SupportCategory | "">("");
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const response = await listSupportTickets();
+        if (!mounted) return;
+        setTickets(response.items || []);
+      } catch (error) {
+        if (!mounted) return;
+        toast.error("Failed to load support tickets", {
+          description: error instanceof Error ? error.message : "Please try again.",
+        });
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    void load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const inputClass =
     "w-full px-5 py-2.5 rounded-full border border-[hsl(215_20%_50%/0.25)] bg-[hsl(215_25%_15%/0.06)] text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary focus:shadow-[0_0_0_3px_hsl(210_85%_50%/0.1)] transition-all duration-200";
@@ -40,29 +73,29 @@ const Support = () => {
     setDescription("");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
 
-    // TODO: replace with real API call
-    setTimeout(() => {
-      const seq = String(tickets.length + 1).padStart(4, "0");
-      const newTicket: Ticket = {
-        id: `BOCRA-TKT-${new Date().getFullYear()}-${seq}`,
-        category,
+    try {
+      const created = await createSupportTicket({
+        category: category || undefined,
         subject,
-        description,
-        date: new Date().toISOString().split("T")[0],
-        status: "Open",
-      };
-      setTickets((prev) => [newTicket, ...prev]);
+        message: description,
+      });
+      setTickets((prev) => [created, ...prev]);
       resetForm();
       setShowForm(false);
-      setSubmitting(false);
       toast.success("Ticket submitted", {
-        description: `Reference: ${newTicket.id}`,
+        description: `Reference: ${created.id}`,
       });
-    }, 800);
+    } catch (error) {
+      toast.error("Could not submit ticket", {
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -100,7 +133,7 @@ const Support = () => {
                   >
                     <option value="" disabled>Select category</option>
                     {CATEGORIES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                      <option key={c.value} value={c.value}>{c.label}</option>
                     ))}
                   </select>
                   <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -153,7 +186,12 @@ const Support = () => {
       )}
 
       {/* Tickets List */}
-      {tickets.length > 0 ? (
+      {loading ? (
+        <div className="glass rounded-2xl p-8 text-center">
+          <Loader2 className="h-10 w-10 text-primary/70 mx-auto animate-spin" />
+          <p className="text-sm text-muted-foreground mt-3">Loading support tickets...</p>
+        </div>
+      ) : tickets.length > 0 ? (
         <div className="glass rounded-2xl overflow-hidden">
           <div className="px-5 py-3 border-b border-[hsl(var(--glass-border))]">
             <h3 className="text-sm font-semibold text-foreground">Your Tickets</h3>
@@ -176,14 +214,14 @@ const Support = () => {
                     className={`border-b border-white/30 last:border-0 hover:bg-primary/5 transition-colors ${i % 2 === 1 ? "bg-white/30" : ""}`}
                   >
                     <td className="px-5 py-3.5 text-sm font-medium font-mono text-foreground">{ticket.id}</td>
-                    <td className="px-5 py-3.5 text-sm text-foreground">{ticket.category}</td>
+                    <td className="px-5 py-3.5 text-sm text-foreground">{categoryLabel(ticket.category)}</td>
                     <td className="px-5 py-3.5 text-sm text-foreground">{ticket.subject}</td>
                     <td className="px-5 py-3.5 text-sm text-muted-foreground">
-                      {new Date(ticket.date).toLocaleDateString("en-BW", { day: "numeric", month: "short", year: "numeric" })}
+                      {new Date(ticket.created_at).toLocaleDateString("en-BW", { day: "numeric", month: "short", year: "numeric" })}
                     </td>
                     <td className="px-5 py-3.5">
-                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLES[ticket.status]}`}>
-                        {ticket.status}
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLES[ticket.status] || "bg-muted text-foreground"}`}>
+                        {STATUS_LABELS[ticket.status] || ticket.status}
                       </span>
                     </td>
                   </tr>

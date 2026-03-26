@@ -1,8 +1,13 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+ENV_FILE_PATH = BASE_DIR / ".env"
 
 
 def _normalize_origin(origin: str) -> str:
@@ -18,12 +23,18 @@ class Settings(BaseSettings):
     - SUPABASE_SECRET_KEY: Backend-only secret key (formerly SUPABASE_SERVICE_ROLE_KEY)
     """
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=str(ENV_FILE_PATH), extra="ignore")
 
     supabase_url: str
     supabase_secret_key: str | None = None
     supabase_service_role_key: str | None = None  # Legacy fallback
     frontend_origin: str | None = None
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_from: str | None = None
+    smtp_use_tls: bool = True
 
     def __init__(self, **data):
         super().__init__(**data)

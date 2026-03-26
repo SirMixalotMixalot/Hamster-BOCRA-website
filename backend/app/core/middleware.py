@@ -11,6 +11,12 @@ from app.db.client import get_supabase_admin
 EXEMPT_API_PATHS = {
     "/api/auth/signup",
     "/api/auth/login",
+    "/api/complaints",
+    "/api/complaints/",
+    "/api/complaints/verification/send",
+    "/api/complaints/verification/send/",
+    "/api/complaints/verification/verify",
+    "/api/complaints/verification/verify/",
     "/api/decisions",
     "/api/decisions/",
     "/api/news",
@@ -19,6 +25,10 @@ EXEMPT_API_PATHS = {
     "/api/stats",
     "/api/stats/",
 }
+
+EXEMPT_API_PREFIXES = (
+    "/api/complaints/track/",
+)
 logger = logging.getLogger("app.auth.middleware")
 
 
@@ -38,7 +48,11 @@ async def auth_context_middleware(request: Request, call_next):
     if request.method == "OPTIONS":
         return await call_next(request)
 
-    if not path.startswith("/api") or path in EXEMPT_API_PATHS:
+    if (
+        not path.startswith("/api")
+        or path in EXEMPT_API_PATHS
+        or any(path.startswith(prefix) for prefix in EXEMPT_API_PREFIXES)
+    ):
         return await call_next(request)
 
     auth_header = request.headers.get("Authorization", "")

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { LifeBuoy, Search } from "lucide-react";
 import { getApiBaseUrl } from "@/lib/api";
+import { getAccessToken } from "@/lib/auth";
 
 type TicketStatus = "open" | "in_progress" | "replied" | "resolved" | string;
 
@@ -59,8 +60,12 @@ const Tickets = () => {
     let mounted = true;
     const load = async () => {
       try {
+        const token = getAccessToken();
         const response = await fetch(`${getApiBaseUrl()}/api/support/tickets`, {
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
         });
         if (!response.ok) {
           throw new Error("Failed to fetch tickets");

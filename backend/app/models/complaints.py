@@ -19,6 +19,7 @@ def _clean_optional_text(value: str | None) -> str | None:
 class ComplaintCreateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    email: str = Field(min_length=3, max_length=320)
     subject: str = Field(min_length=1, max_length=300)
     category: str | None = Field(default=None, max_length=120)
     description: str = Field(min_length=1, max_length=5000)
@@ -30,6 +31,14 @@ class ComplaintCreateRequest(BaseModel):
         cleaned = str(value or "").strip()
         if not cleaned:
             raise ValueError("Field cannot be blank")
+        return cleaned
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def validate_email(cls, value: Any) -> str:
+        cleaned = str(value or "").strip().lower()
+        if not cleaned or "@" not in cleaned:
+            raise ValueError("Valid email is required")
         return cleaned
 
     @field_validator("category", mode="before")
@@ -106,3 +115,49 @@ class ComplaintsListResponse(BaseModel):
     count: int
     limit: int
     offset: int
+
+
+class ComplaintVerificationSendRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: str = Field(min_length=3, max_length=320)
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def validate_email(cls, value: Any) -> str:
+        cleaned = str(value or "").strip().lower()
+        if not cleaned:
+            raise ValueError("Email is required")
+        if "@" not in cleaned:
+            raise ValueError("Invalid email format")
+        return cleaned
+
+
+class ComplaintVerificationVerifyRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: str = Field(min_length=3, max_length=320)
+    code: str = Field(min_length=6, max_length=6)
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def validate_email(cls, value: Any) -> str:
+        cleaned = str(value or "").strip().lower()
+        if not cleaned:
+            raise ValueError("Email is required")
+        if "@" not in cleaned:
+            raise ValueError("Invalid email format")
+        return cleaned
+
+    @field_validator("code", mode="before")
+    @classmethod
+    def validate_code(cls, value: Any) -> str:
+        cleaned = "".join(ch for ch in str(value or "") if ch.isdigit())
+        if len(cleaned) != 6:
+            raise ValueError("Verification code must be 6 digits")
+        return cleaned
+
+
+class ComplaintVerificationResponse(BaseModel):
+    message: str
+    retry_after_seconds: int | None = None
