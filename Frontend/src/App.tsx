@@ -43,7 +43,6 @@ import PostalServices from "./pages/licensing/PostalServices";
 import SpectrumManagement from "./pages/licensing/SpectrumManagement";
 import Interconnection from "./pages/licensing/Interconnection";
 import PoliciesFrameworks from "./pages/resources/PoliciesFrameworks.tsx";
-import PublicConsultations from "./pages/resources/PublicConsultations.tsx";
 import ConsumerEducation from "./pages/resources/ConsumerEducation.tsx";
 import FormsDocuments from "./pages/resources/FormsDocuments.tsx";
 import JobDetail from "./pages/careers/JobDetail.tsx";
@@ -159,7 +158,6 @@ const App = () => (
           <Route path="/licensing/interconnection" element={<Interconnection />} />
           <Route path="/resources/policies" element={<PoliciesFrameworks />} />
           <Route path="/resources/forms-documents" element={<FormsDocuments />} />
-          <Route path="/resources/consultations" element={<PublicConsultations />} />
           <Route path="/resources/consumer-education" element={<ConsumerEducation />} />
 
           {/* Customer Portal */}

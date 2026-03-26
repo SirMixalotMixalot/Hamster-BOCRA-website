@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Search, Menu, X, ChevronDown, FileText, Shield, BookOpen, HelpCircle, Users, Briefcase, Scale, Wifi, Tv, Package, Globe2, BarChart3, ExternalLink, Award, ClipboardList, FileCheck, Newspaper, LogIn, Building2, ClipboardCheck, DollarSign, ShieldCheck, ScrollText, Megaphone, GraduationCap } from "lucide-react";
+import { Search, Menu, X, ChevronDown, FileText, Shield, BookOpen, HelpCircle, Users, Briefcase, Scale, Wifi, Tv, Package, Globe2, BarChart3, ExternalLink, Award, ClipboardList, FileCheck, Newspaper, LogIn, Building2, ClipboardCheck, DollarSign, ShieldCheck, ScrollText, GraduationCap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import bocraLogo from "@/assets/bocra-logo.png";
 import MegaMenuDrawer from "./MegaMenuDrawer";
@@ -73,7 +73,6 @@ const navItems = [
           { icon: BookOpen, label: "Legislation & Regulations", description: "Acts, policies, and guidelines" },
           { icon: ScrollText, label: "Policies & Frameworks", description: "Regulatory frameworks and guidelines", action: "navigate:/resources/policies" },
           { icon: GraduationCap, label: "Consumer Education", description: "Know your rights and responsibilities", action: "navigate:/resources/consumer-education" },
-          { icon: Megaphone, label: "Public Consultations", description: "Stakeholder feedback on proposed policies", action: "navigate:/resources/consultations" },
         ],
       },
       {
