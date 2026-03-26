@@ -26,7 +26,7 @@ import Reports from "./pages/admin/Reports.tsx";
 import AdminSettings from "./pages/admin/Settings.tsx";
 import Careers from "./pages/Careers.tsx";
 import NewApplication from "./pages/customer/applications/NewApplication.tsx";
-import { bootstrapAuth, getAccessToken, subscribeToSupabaseAuthChanges } from "@/lib/auth";
+import { bootstrapAuth, getCachedMe, subscribeToSupabaseAuthChanges, type MeResponse } from "@/lib/auth";
 import Faqs from "./pages/Faqs.tsx";
 import WhoWeAre from "./pages/about/WhoWeAre.tsx";
 import OurMandate from "./pages/about/OurMandate.tsx";
@@ -45,57 +45,64 @@ const queryClient = new QueryClient();
 const AuthBootstrapper = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isBootstrapping, setIsBootstrapping] = useState(false);
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
+
+  const enforceRouteAccess = (path: string, me: MeResponse | null) => {
+    const isProtected = path.startsWith("/admin") || path.startsWith("/customer");
+
+    if (!me) {
+      if (isProtected) {
+        navigate("/", { replace: true });
+      }
+      return;
+    }
+
+    const isAdmin = me.profile.role === "admin";
+
+    if (path.startsWith("/admin") && !isAdmin) {
+      navigate("/customer/dashboard", { replace: true });
+      return;
+    }
+
+    if (path.startsWith("/customer") && isAdmin) {
+      navigate("/admin/dashboard", { replace: true });
+    }
+  };
 
   useEffect(() => {
     let active = true;
 
-    const run = async () => {
-      const token = getAccessToken();
-      if (token) {
-        setIsBootstrapping(true);
-      }
-
+    const bootstrap = async () => {
       const me = await bootstrapAuth();
       if (!active) {
         return;
       }
 
       setIsBootstrapping(false);
-
-      const path = location.pathname;
-      const isProtected = path.startsWith("/admin") || path.startsWith("/customer");
-
-      if (!me) {
-        if (isProtected) {
-          navigate("/", { replace: true });
-        }
-        return;
-      }
-
-      const isAdmin = me.profile.role === "admin";
-
-      if (path.startsWith("/admin") && !isAdmin) {
-        navigate("/customer/dashboard", { replace: true });
-        return;
-      }
-
-      if (path.startsWith("/customer") && isAdmin) {
-        navigate("/admin/dashboard", { replace: true });
-      }
+      enforceRouteAccess(location.pathname, me);
     };
 
-    run();
+    void bootstrap();
 
     const unsubscribe = subscribeToSupabaseAuthChanges(() => {
-      void run();
+      void bootstrapAuth().then((me) => {
+        if (!active) return;
+        enforceRouteAccess(window.location.pathname, me);
+      });
     });
 
     return () => {
       active = false;
       unsubscribe();
     };
-  }, [location.pathname, navigate]);
+  }, [navigate]);
+
+  useEffect(() => {
+    if (isBootstrapping) {
+      return;
+    }
+    enforceRouteAccess(location.pathname, getCachedMe());
+  }, [isBootstrapping, location.pathname]);
 
   if (!isBootstrapping) {
     return null;

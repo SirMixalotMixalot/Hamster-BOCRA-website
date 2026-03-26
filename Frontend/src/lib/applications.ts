@@ -26,6 +26,14 @@ export interface ApplicationDetail extends ApplicationListItem {
   form_data_b: Record<string, unknown> | null;
   form_data_c: Record<string, unknown> | null;
   form_data_d: Record<string, unknown> | null;
+  documents: Array<{
+    id: string;
+    file_name: string;
+    file_type: string | null;
+    file_size: number | null;
+    category: string | null;
+    created_at: string;
+  }>;
   admin_notes: string | null;
   decision_reason: string | null;
   decided_by: string | null;
@@ -76,6 +84,22 @@ export async function createApplication(payload: {
 
 export async function getApplication(applicationId: string): Promise<ApplicationDetail> {
   return request<ApplicationDetail>(`/api/applications/${applicationId}`, { method: "GET" });
+}
+
+export async function updateApplication(
+  applicationId: string,
+  payload: {
+    licence_type?: BocraLicenceType;
+    form_data_a?: Record<string, unknown>;
+    form_data_b?: Record<string, unknown>;
+    form_data_c?: Record<string, unknown>;
+    form_data_d?: Record<string, unknown>;
+  },
+): Promise<ApplicationDetail> {
+  return request<ApplicationDetail>(`/api/applications/${applicationId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function submitApplication(applicationId: string): Promise<ApplicationDetail> {

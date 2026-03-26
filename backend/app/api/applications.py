@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter, defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import logging
 from typing import Any
 from uuid import UUID
@@ -13,6 +13,9 @@ from app.dependencies.auth import get_current_profile, require_admin
 from app.core.email import send_email
 from app.models.applications import (
     ApplicationCreateRequest,
+    LicenceVerificationItem,
+    LicenceVerificationResponse,
+    ApplicationDocumentSummary,
     ApplicationDecideRequest,
     ApplicationDetail,
     ApplicationListItem,
@@ -25,6 +28,22 @@ router = APIRouter(prefix="/api/applications", tags=["applications"])
 logger = logging.getLogger("app.applications")
 
 SECTOR_ORDER = ("telecom", "broadcasting", "postal", "internet")
+VERIFICATION_VALIDITY_DAYS = 365
+
+
+def _parse_db_datetime(value: Any) -> datetime | None:
+    if not value:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
+    return datetime.fromisoformat(text.replace("Z", "+00:00"))
+
+
+def _derive_verification_status(*, application_status: str, expiration_date: datetime) -> str:
+    if application_status == "approved":
+        return "Expired" if expiration_date < datetime.now(timezone.utc) else "Active"
+    return "Suspended"
 
 
 def _derive_sector_from_licence_type(licence_type: str | None) -> str:
@@ -189,6 +208,52 @@ def _log_status_change(
         logger.warning("Failed to log status change for application %s: %s", application_id, e)
 
 
+def _get_application_documents(supabase_admin, application_id: str) -> list[ApplicationDocumentSummary]:
+    result = (
+        supabase_admin.table("documents")
+        .select("id,file_name,file_type,file_size,category,created_at")
+        .eq("application_id", application_id)
+        .order("created_at", desc=False)
+        .execute()
+    )
+
+    documents: list[ApplicationDocumentSummary] = []
+    for row in result.data or []:
+        documents.append(
+            ApplicationDocumentSummary(
+                id=UUID(row["id"]),  # type: ignore
+                file_name=row.get("file_name") or "unknown",  # type: ignore
+                file_type=row.get("file_type"),  # type: ignore
+                file_size=row.get("file_size"),  # type: ignore
+                category=row.get("category"),  # type: ignore
+                created_at=datetime.fromisoformat(row["created_at"]),  # type: ignore
+            )
+        )
+    return documents
+
+
+def _build_application_detail(app_row: dict[str, Any], documents: list[ApplicationDocumentSummary] | None = None) -> ApplicationDetail:
+    return ApplicationDetail(
+        id=UUID(app_row["id"]),  # type: ignore
+        applicant_id=UUID(app_row["applicant_id"]),  # type: ignore
+        reference_number=app_row["reference_number"],  # type: ignore
+        licence_type=app_row["licence_type"],  # type: ignore
+        status=app_row["status"],  # type: ignore
+        form_data_a=app_row.get("form_data_a"),  # type: ignore
+        form_data_b=app_row.get("form_data_b"),  # type: ignore
+        form_data_c=app_row.get("form_data_c"),  # type: ignore
+        form_data_d=app_row.get("form_data_d"),  # type: ignore
+        admin_notes=app_row.get("admin_notes"),  # type: ignore
+        decision_reason=app_row.get("decision_reason"),  # type: ignore
+        decided_by=UUID(app_row["decided_by"]) if app_row.get("decided_by") else None,  # type: ignore
+        decided_at=datetime.fromisoformat(app_row["decided_at"]) if app_row.get("decided_at") else None,  # type: ignore
+        submitted_at=datetime.fromisoformat(app_row["submitted_at"]) if app_row.get("submitted_at") else None,  # type: ignore
+        documents=documents or [],
+        created_at=datetime.fromisoformat(app_row["created_at"]),  # type: ignore
+        updated_at=datetime.fromisoformat(app_row["updated_at"]),  # type: ignore
+    )
+
+
 @router.get("", response_model=list[ApplicationListItem])
 async def list_applications(
     current_profile: dict[str, Any] = Depends(get_current_profile),
@@ -233,6 +298,82 @@ async def list_applications(
 
     logger.info("list_applications user_id=%s count=%d is_admin=%s", current_user_id, len(items), is_admin)
     return items
+
+
+@router.get("/verify", response_model=LicenceVerificationResponse)
+async def verify_licence(
+    customer_name: str | None = Query(None),
+    licence_number: str | None = Query(None),
+    licence_type: str | None = Query(None),
+    limit: int = Query(100, ge=1, le=200),
+) -> LicenceVerificationResponse:
+    """Public licence verification endpoint for homepage and portal lookups."""
+    supabase = get_supabase_admin()
+
+    query = supabase.table("applications").select(
+        "applicant_id,reference_number,licence_type,status,decided_at,submitted_at,created_at,updated_at"
+    )
+
+    normalized_number = (licence_number or "").strip()
+    if normalized_number:
+        query = query.ilike("reference_number", f"%{normalized_number}%")
+
+    normalized_type = (licence_type or "").strip()
+    if normalized_type and normalized_type.upper() != "ALL":
+        query = query.ilike("licence_type", f"%{normalized_type}%")
+
+    result = query.order("updated_at", desc=True).limit(limit).execute()
+    rows = [row for row in (result.data or []) if isinstance(row, dict)]
+
+    applicant_ids = sorted({str(row.get("applicant_id") or "") for row in rows if row.get("applicant_id")})
+    profile_names: dict[str, str] = {}
+    if applicant_ids:
+        profile_result = (
+            supabase.table("profiles")
+            .select("id,full_name")
+            .in_("id", applicant_ids)
+            .execute()
+        )
+        for profile in profile_result.data or []:
+            if isinstance(profile, dict) and profile.get("id"):
+                profile_names[str(profile.get("id"))] = str(profile.get("full_name") or "").strip()
+
+    normalized_name = (customer_name or "").strip().lower()
+    items: list[LicenceVerificationItem] = []
+    for row in rows:
+        reference_number = str(row.get("reference_number") or "").strip()
+        if not reference_number:
+            continue
+
+        applicant_id = str(row.get("applicant_id") or "").strip()
+        full_name = profile_names.get(applicant_id) or "Unknown"
+        if normalized_name and normalized_name not in full_name.lower():
+            continue
+
+        issue_date = (
+            _parse_db_datetime(row.get("decided_at"))
+            or _parse_db_datetime(row.get("submitted_at"))
+            or _parse_db_datetime(row.get("created_at"))
+            or datetime.now(timezone.utc)
+        )
+        expiration_date = issue_date + timedelta(days=VERIFICATION_VALIDITY_DAYS)
+        app_status = str(row.get("status") or "").strip().lower()
+
+        items.append(
+            LicenceVerificationItem(
+                licence_number=reference_number,
+                customer_name=full_name,
+                licence_type=str(row.get("licence_type") or "Unknown"),
+                issue_date=issue_date,
+                expiration_date=expiration_date,
+                status=_derive_verification_status(
+                    application_status=app_status,
+                    expiration_date=expiration_date,
+                ),
+            )
+        )
+
+    return LicenceVerificationResponse(items=items, count=len(items))
 
 
 @router.get("/analytics")
@@ -367,24 +508,7 @@ async def create_application(
     if not app_row:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create application")
 
-    return ApplicationDetail(
-        id=UUID(app_row["id"]), # type: ignore
-        applicant_id=UUID(app_row["applicant_id"]), # type: ignore
-        reference_number=app_row["reference_number"], # type: ignore
-        licence_type=app_row["licence_type"], # type: ignore
-        status=app_row["status"], # type: ignore
-        form_data_a=app_row.get("form_data_a"), # type: ignore
-        form_data_b=app_row.get("form_data_b"), # type: ignore
-        form_data_c=app_row.get("form_data_c"), # type: ignore
-        form_data_d=app_row.get("form_data_d"), # type: ignore
-        admin_notes=app_row.get("admin_notes"), # type: ignore
-        decision_reason=app_row.get("decision_reason"), # type: ignore
-        decided_by=UUID(app_row["decided_by"]) if app_row.get("decided_by") else None, # type: ignore
-        decided_at=datetime.fromisoformat(app_row["decided_at"]) if app_row.get("decided_at") else None, # type: ignore
-        submitted_at=None, # type: ignore
-        created_at=datetime.fromisoformat(app_row["created_at"]), # type: ignore
-        updated_at=datetime.fromisoformat(app_row["updated_at"]), # type: ignore
-    )
+    return _build_application_detail(app_row)
 
 
 @router.get("/{application_id}", response_model=ApplicationDetail)
@@ -414,24 +538,8 @@ async def get_application(
 
     logger.info("get_application app_id=%s user_id=%s", application_id, current_user_id)
 
-    return ApplicationDetail(
-        id=UUID(app_row["id"]), # type: ignore
-        applicant_id=app_applicant_id, # type: ignore
-        reference_number=app_row["reference_number"], # type: ignore
-        licence_type=app_row["licence_type"], # type: ignore
-        status=app_row["status"], # type: ignore
-        form_data_a=app_row.get("form_data_a"), # type: ignore
-        form_data_b=app_row.get("form_data_b"), # type: ignore
-        form_data_c=app_row.get("form_data_c"), # type: ignore
-        form_data_d=app_row.get("form_data_d"), # type: ignore
-        admin_notes=app_row.get("admin_notes"), # type: ignore
-        decision_reason=app_row.get("decision_reason"), # type: ignore
-        decided_by=UUID(app_row["decided_by"]) if app_row.get("decided_by") else None, # type: ignore
-        decided_at=datetime.fromisoformat(app_row["decided_at"]) if app_row.get("decided_at") else None, # type: ignore
-        submitted_at=datetime.fromisoformat(app_row["submitted_at"]) if app_row.get("submitted_at") else None, # type: ignore
-        created_at=datetime.fromisoformat(app_row["created_at"]), # type: ignore
-        updated_at=datetime.fromisoformat(app_row["updated_at"]), # type: ignore
-    )
+    documents = _get_application_documents(supabase, str(application_id))
+    return _build_application_detail(app_row, documents)
 
 
 @router.patch("/{application_id}", response_model=ApplicationDetail)
@@ -526,24 +634,8 @@ async def patch_application(
 
     logger.info("patch_application app_id=%s user_id=%s is_admin=%s", application_id, current_user_id, is_admin)
 
-    return ApplicationDetail(
-        id=UUID(updated_row["id"]), # type: ignore
-        applicant_id=UUID(updated_row["applicant_id"]), # type: ignore
-        reference_number=updated_row["reference_number"], # type: ignore
-        licence_type=updated_row["licence_type"], # type: ignore
-        status=updated_row["status"], # type: ignore
-        form_data_a=updated_row.get("form_data_a"), # type: ignore
-        form_data_b=updated_row.get("form_data_b"), # type: ignore
-        form_data_c=updated_row.get("form_data_c"), # type: ignore
-        form_data_d=updated_row.get("form_data_d"), # type: ignore
-        admin_notes=updated_row.get("admin_notes"), # type: ignore
-        decision_reason=updated_row.get("decision_reason"), # type: ignore
-        decided_by=UUID(updated_row["decided_by"]) if updated_row.get("decided_by") else None, # type: ignore
-        decided_at=datetime.fromisoformat(updated_row["decided_at"]) if updated_row.get("decided_at") else None, # type: ignore
-        submitted_at=datetime.fromisoformat(updated_row["submitted_at"]) if updated_row.get("submitted_at") else None, # type: ignore
-        created_at=datetime.fromisoformat(updated_row["created_at"]), # type: ignore
-        updated_at=datetime.fromisoformat(updated_row["updated_at"]), # type: ignore
-    )
+    documents = _get_application_documents(supabase, str(application_id))
+    return _build_application_detail(updated_row, documents)
 
 
 @router.post("/{application_id}/submit", response_model=ApplicationDetail)
@@ -615,24 +707,8 @@ async def submit_application(
 
     logger.info("submit_application app_id=%s user_id=%s", application_id, current_user_id)
 
-    return ApplicationDetail(
-        id=UUID(updated_row["id"]), # type: ignore
-        applicant_id=UUID(updated_row["applicant_id"]), # type: ignore
-        reference_number=updated_row["reference_number"], # type: ignore
-        licence_type=updated_row["licence_type"], # type: ignore
-        status=updated_row["status"], # type: ignore
-        form_data_a=updated_row.get("form_data_a"), # type: ignore
-        form_data_b=updated_row.get("form_data_b"), # type: ignore
-        form_data_c=updated_row.get("form_data_c"), # type: ignore
-        form_data_d=updated_row.get("form_data_d"), # type: ignore
-        admin_notes=updated_row.get("admin_notes"), # type: ignore
-        decision_reason=updated_row.get("decision_reason"), # type: ignore
-        decided_by=UUID(updated_row["decided_by"]) if updated_row.get("decided_by") else None, # type: ignore
-        decided_at=datetime.fromisoformat(updated_row["decided_at"]) if updated_row.get("decided_at") else None, # type: ignore
-        submitted_at=datetime.fromisoformat(updated_row["submitted_at"]) if updated_row.get("submitted_at") else None, # type: ignore
-        created_at=datetime.fromisoformat(updated_row["created_at"]), # type: ignore
-        updated_at=datetime.fromisoformat(updated_row["updated_at"]), # type: ignore
-    )
+    documents = _get_application_documents(supabase, str(application_id))
+    return _build_application_detail(updated_row, documents)
 
 
 @router.post("/{application_id}/decide", response_model=ApplicationDetail)
@@ -720,24 +796,8 @@ async def decide_application(
         current_user_id,
     )
 
-    return ApplicationDetail(
-        id=UUID(updated_row["id"]),  # type: ignore
-        applicant_id=UUID(updated_row["applicant_id"]),  # type: ignore
-        reference_number=updated_row["reference_number"],  # type: ignore
-        licence_type=updated_row["licence_type"],  # type: ignore
-        status=updated_row["status"],  # type: ignore
-        form_data_a=updated_row.get("form_data_a"),  # type: ignore
-        form_data_b=updated_row.get("form_data_b"),  # type: ignore
-        form_data_c=updated_row.get("form_data_c"),  # type: ignore
-        form_data_d=updated_row.get("form_data_d"),  # type: ignore
-        admin_notes=updated_row.get("admin_notes"),  # type: ignore
-        decision_reason=updated_row.get("decision_reason"),  # type: ignore
-        decided_by=UUID(updated_row["decided_by"]) if updated_row.get("decided_by") else None,  # type: ignore
-        decided_at=datetime.fromisoformat(updated_row["decided_at"]) if updated_row.get("decided_at") else None,  # type: ignore
-        submitted_at=datetime.fromisoformat(updated_row["submitted_at"]) if updated_row.get("submitted_at") else None,  # type: ignore
-        created_at=datetime.fromisoformat(updated_row["created_at"]),  # type: ignore
-        updated_at=datetime.fromisoformat(updated_row["updated_at"]),  # type: ignore
-    )
+    documents = _get_application_documents(supabase, str(application_id))
+    return _build_application_detail(updated_row, documents)
 
 
 @router.get("/{application_id}/history", response_model=list[ApplicationStatusLog])

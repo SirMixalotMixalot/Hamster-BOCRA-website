@@ -1,4 +1,4 @@
-import { FileText, Search } from "lucide-react";
+import { FileText, Loader2, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
   getApplication,
@@ -10,6 +10,7 @@ import {
 } from "@/lib/applications";
 import { useToast } from "@/hooks/use-toast";
 import { BOCRA_LICENCE_TYPES } from "@/lib/constants";
+import { LoadingDots } from "@/components/ui/loading-dots";
 
 const MOCK_RECEIVED_APPLICATIONS: ApplicationListItem[] = [
   {
@@ -49,6 +50,155 @@ const MOCK_RECEIVED_APPLICATIONS: ApplicationListItem[] = [
     updated_at: "2026-03-22T13:05:00Z",
   },
 ];
+
+const STATUS_OPTIONS: Array<{ key: "under_review" | "approved" | "rejected"; label: string }> = [
+  { key: "under_review", label: "In Progress" },
+  { key: "approved", label: "Approve" },
+  { key: "rejected", label: "Reject" },
+];
+
+const BASE64_PATTERN = /^[A-Za-z0-9+/]+={0,2}$/;
+const DATA_URL_PATTERN = /^data:([^;,]+)?(?:;charset=[^;,]+)?(;base64)?,([\s\S]*)$/i;
+
+const isLikelyBase64 = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length < 12 || trimmed.length % 4 !== 0) return false;
+  return BASE64_PATTERN.test(trimmed.replace(/[-_]/g, "A"));
+};
+
+const decodeBase64ToText = (value: string) => {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const binary = atob(normalized);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new TextDecoder("utf-8").decode(bytes);
+};
+
+const estimateBase64Bytes = (value: string) => {
+  const trimmed = value.trim();
+  const padding = trimmed.endsWith("==") ? 2 : trimmed.endsWith("=") ? 1 : 0;
+  return Math.max(0, Math.floor((trimmed.length * 3) / 4) - padding);
+};
+
+const summarizeDataUrl = (value: string) => {
+  const match = value.match(DATA_URL_PATTERN);
+  if (!match) return null;
+
+  const mimeType = (match[1] || "application/octet-stream").toLowerCase();
+  const isBase64 = Boolean(match[2]);
+  const payload = match[3] || "";
+
+  const summary: Record<string, unknown> = {
+    kind: "data_url",
+    mime_type: mimeType,
+    encoding: isBase64 ? "base64" : "url-encoded",
+  };
+
+  if (isBase64) {
+    summary.byte_length = estimateBase64Bytes(payload);
+    if (mimeType.startsWith("image/")) {
+      summary.preview = `[binary ${mimeType} omitted]`;
+      return summary;
+    }
+
+    try {
+      const decodedText = decodeBase64ToText(payload);
+      if (isMostlyReadableText(decodedText)) {
+        const parsedDecoded = tryParseJsonText(decodedText);
+        summary.decoded = parsedDecoded !== decodedText ? decodeForDisplay(parsedDecoded, 0) : decodedText;
+      } else {
+        summary.preview = "[binary payload omitted]";
+      }
+      return summary;
+    } catch {
+      summary.preview = "[invalid base64 payload]";
+      return summary;
+    }
+  }
+
+  const decodedUri = decodeURIComponent(payload);
+  summary.decoded = tryParseJsonText(decodedUri);
+  return summary;
+};
+
+const isMostlyReadableText = (value: string) => {
+  if (!value) return false;
+  let readable = 0;
+  for (const char of value) {
+    const code = char.charCodeAt(0);
+    if ((code >= 32 && code <= 126) || code === 10 || code === 13 || code === 9) {
+      readable += 1;
+    }
+  }
+  return readable / value.length > 0.9;
+};
+
+const tryParseJsonText = (value: string): unknown => {
+  const trimmed = value.trim();
+  if (!(trimmed.startsWith("{") || trimmed.startsWith("["))) {
+    return value;
+  }
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return value;
+  }
+};
+
+const decodeForDisplay = (value: unknown, depth = 0): unknown => {
+  if (depth > 8) return value;
+
+  if (typeof value === "string") {
+    const dataUrlSummary = summarizeDataUrl(value);
+    if (dataUrlSummary) {
+      return dataUrlSummary;
+    }
+
+    const parsed = tryParseJsonText(value);
+    if (parsed !== value) {
+      return decodeForDisplay(parsed, depth + 1);
+    }
+
+    if (isLikelyBase64(value)) {
+      try {
+        const decodedText = decodeBase64ToText(value);
+        if (isMostlyReadableText(decodedText)) {
+          const parsedDecoded = tryParseJsonText(decodedText);
+          if (parsedDecoded !== decodedText) {
+            return decodeForDisplay(parsedDecoded, depth + 1);
+          }
+          return decodedText;
+        }
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => decodeForDisplay(item, depth + 1));
+  }
+
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entryValue]) => [key, decodeForDisplay(entryValue, depth + 1)]),
+    );
+  }
+
+  return value;
+};
+
+const formatDataBlock = (value: unknown) => {
+  const decoded = decodeForDisplay(value ?? {});
+  try {
+    return JSON.stringify(decoded, null, 2);
+  } catch {
+    return String(decoded);
+  }
+};
 
 const AdminApplications = () => {
   const { toast } = useToast();
@@ -105,6 +255,9 @@ const AdminApplications = () => {
       setUpdatingId(applicationId);
       const updated = await updateApplicationStatus(applicationId, status);
       setApplications((current) => current.map((item) => (item.id === applicationId ? { ...item, status: updated.status } : item)));
+      if (selectedApplication?.id === applicationId) {
+        setSelectedApplication(updated);
+      }
       toast({
         title: "Status updated",
         description: `${updated.reference_number} is now ${updated.status.replace("_", " ")}.`,
@@ -132,6 +285,7 @@ const AdminApplications = () => {
         form_data_b: { requested_spectrum: "800MHz", district: "Gaborone" },
         form_data_c: null,
         form_data_d: null,
+        documents: [],
         admin_notes: "Mock application for review preview.",
         decision_reason: null,
         decided_by: null,
@@ -142,6 +296,7 @@ const AdminApplications = () => {
 
     try {
       setOpeningId(applicationId);
+      setSelectedApplication(null);
       const detail = await getApplication(applicationId);
       setSelectedApplication(detail);
     } catch (openError) {
@@ -210,8 +365,8 @@ const AdminApplications = () => {
       )}
 
       {loading ? (
-        <div className="bg-card rounded-xl border border-border p-8 text-center">
-          <p className="text-sm text-muted-foreground">Loading applications...</p>
+        <div className="bg-card rounded-xl border border-border p-8">
+          <LoadingDots label="Loading applications..." />
         </div>
       ) : filtered.length === 0 ? (
         <div className="bg-card rounded-xl border border-border p-8 text-center">
@@ -237,7 +392,16 @@ const AdminApplications = () => {
               <tbody>
                 {filtered.map((app) => (
                   <tr key={app.id} className="border-b border-border/70">
-                    <td className="px-2 py-2 font-semibold text-foreground whitespace-nowrap">{app.reference_number}</td>
+                    <td className="px-2 py-2 font-semibold text-foreground whitespace-nowrap">
+                      <button
+                        type="button"
+                        disabled={openingId === app.id}
+                        onClick={() => void openForReview(app.id)}
+                        className="text-left hover:underline disabled:opacity-70"
+                      >
+                        {app.reference_number}
+                      </button>
+                    </td>
                     <td className="px-2 py-2 text-muted-foreground whitespace-nowrap">{app.licence_type}</td>
                     <td className="px-2 py-2 text-muted-foreground whitespace-nowrap">{new Date(app.created_at).toLocaleDateString()}</td>
                     <td className="px-2 py-2 text-muted-foreground whitespace-nowrap">
@@ -255,31 +419,27 @@ const AdminApplications = () => {
                       </button>
                     </td>
                     <td className="px-2 py-2">
-                      <div className="flex flex-nowrap gap-1">
-                        <button
-                          type="button"
-                          disabled={updatingId === app.id}
-                          onClick={() => void updateStatus(app.id, "under_review")}
-                          className="px-2 py-1 rounded-md text-[11px] font-medium border border-border bg-background hover:bg-muted transition-colors whitespace-nowrap"
-                        >
-                          In Progress
-                        </button>
-                        <button
-                          type="button"
-                          disabled={updatingId === app.id}
-                          onClick={() => void updateStatus(app.id, "approved")}
-                          className="px-2 py-1 rounded-md text-[11px] font-semibold bg-bocra-teal text-white hover:bg-bocra-teal/90 transition-colors whitespace-nowrap"
-                        >
-                          Approve
-                        </button>
-                        <button
-                          type="button"
-                          disabled={updatingId === app.id}
-                          onClick={() => void updateStatus(app.id, "rejected")}
-                          className="px-2 py-1 rounded-md text-[11px] font-semibold bg-bocra-rose text-white hover:bg-bocra-rose/90 transition-colors whitespace-nowrap"
-                        >
-                          Reject
-                        </button>
+                      <div className="flex flex-nowrap gap-1 items-center">
+                        {STATUS_OPTIONS.map((option) => {
+                          const isActive = app.status === option.key;
+                          const isUpdatingRow = updatingId === app.id;
+                          return (
+                            <button
+                              key={option.key}
+                              type="button"
+                              disabled={isUpdatingRow || isActive}
+                              onClick={() => void updateStatus(app.id, option.key)}
+                              className={`px-2 py-1 rounded-md text-[11px] transition-colors whitespace-nowrap ${
+                                isActive
+                                  ? "font-semibold bg-bocra-teal text-white"
+                                  : "font-medium border border-border bg-background hover:bg-muted"
+                              } ${isUpdatingRow ? "opacity-70" : ""}`}
+                            >
+                              {option.label}
+                            </button>
+                          );
+                        })}
+                        {updatingId === app.id && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
                       </div>
                     </td>
                   </tr>
@@ -287,6 +447,13 @@ const AdminApplications = () => {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {openingId && !selectedApplication && (
+        <div className="bg-card rounded-xl border border-border p-6 flex items-center justify-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Loading application details...</p>
         </div>
       )}
 
@@ -322,29 +489,47 @@ const AdminApplications = () => {
             </div>
           </div>
 
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-xs text-muted-foreground mb-2">Uploaded Documents</p>
+            {selectedApplication.documents.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No uploaded documents linked to this application.</p>
+            ) : (
+              <div className="space-y-1.5">
+                {selectedApplication.documents.map((doc) => (
+                  <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs">
+                    <span className="font-medium text-foreground break-all">{doc.file_name}</span>
+                    <span className="text-muted-foreground">
+                      {(doc.file_type || "unknown type")} • {doc.file_size ? `${Math.max(1, Math.round(doc.file_size / 1024))} KB` : "size n/a"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             <div className="rounded-lg border border-border p-3">
               <p className="text-xs text-muted-foreground mb-2">Form Data A</p>
               <pre className="text-xs text-foreground whitespace-pre-wrap break-words">
-                {JSON.stringify(selectedApplication.form_data_a ?? {}, null, 2)}
+                {formatDataBlock(selectedApplication.form_data_a)}
               </pre>
             </div>
             <div className="rounded-lg border border-border p-3">
               <p className="text-xs text-muted-foreground mb-2">Form Data B</p>
               <pre className="text-xs text-foreground whitespace-pre-wrap break-words">
-                {JSON.stringify(selectedApplication.form_data_b ?? {}, null, 2)}
+                {formatDataBlock(selectedApplication.form_data_b)}
               </pre>
             </div>
             <div className="rounded-lg border border-border p-3">
               <p className="text-xs text-muted-foreground mb-2">Form Data C</p>
               <pre className="text-xs text-foreground whitespace-pre-wrap break-words">
-                {JSON.stringify(selectedApplication.form_data_c ?? {}, null, 2)}
+                {formatDataBlock(selectedApplication.form_data_c)}
               </pre>
             </div>
             <div className="rounded-lg border border-border p-3">
               <p className="text-xs text-muted-foreground mb-2">Form Data D</p>
               <pre className="text-xs text-foreground whitespace-pre-wrap break-words">
-                {JSON.stringify(selectedApplication.form_data_d ?? {}, null, 2)}
+                {formatDataBlock(selectedApplication.form_data_d)}
               </pre>
             </div>
           </div>

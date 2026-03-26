@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { FileText, Plus, Clock, CheckCircle, XCircle, AlertCircle, Eye, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { listApplications, type ApplicationListItem } from "@/lib/applications";
+import { LoadingDots } from "@/components/ui/loading-dots";
 
 type AppStatus = "all" | "draft" | "submitted" | "under_review" | "approved" | "rejected";
 
@@ -107,7 +108,7 @@ const Applications = () => {
       {/* Applications Table */}
       {loading ? (
         <div className="glass rounded-2xl p-8 text-center">
-          <p className="text-sm text-muted-foreground">Loading your applications...</p>
+          <LoadingDots label="Loading your applications..." />
         </div>
       ) : filtered.length === 0 ? (
         <div className="glass rounded-2xl p-8 text-center">

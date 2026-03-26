@@ -102,7 +102,8 @@ const navItems = [
         items: [
           { icon: FileCheck, label: "Apply for License", description: "Start a new license application", action: "toggle-signin-modal" },
           { icon: ClipboardList, label: "Renew License", description: "Renew an existing license", action: "toggle-signin-modal" },
-          { icon: Shield, label: "Verify License", description: "Check license status and validity", action: "toggle-signin-modal" },
+          { icon: ClipboardList, label: "Type Approval", description: "Get equipment approved for use", action: "toggle-signin-modal" },
+          { icon: Shield, label: "Verify License", description: "Check license status and validity", action: "toggle-verify-licence-modal" },
           { icon: Scale, label: "Fee Schedule", description: "View licensing fees", action: "toggle-signin-modal" },
         ],
       },
