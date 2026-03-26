@@ -1,4 +1,4 @@
-import { AlertTriangle, FileText, Loader2, Search } from "lucide-react";
+import { AlertTriangle, Eye, FileText, Loader2, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
   getApplication,
@@ -417,9 +417,15 @@ const AdminApplications = () => {
       {selectedApplication && (
         <div className="bg-card rounded-xl border border-border p-4 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-foreground">
-              Reviewing {selectedApplication.reference_number}
-            </h3>
+            <div className="flex items-center gap-3">
+              <h3 className="text-sm font-semibold text-foreground">
+                Reviewing {selectedApplication.reference_number}
+              </h3>
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
+                <Eye className="h-3.5 w-3.5" />
+                Read Only
+              </div>
+            </div>
             <button
               type="button"
               onClick={() => setSelectedApplication(null)}

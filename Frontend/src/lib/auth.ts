@@ -228,7 +228,7 @@ export async function logout(): Promise<void> {
 }
 
 export async function signInWithGoogle(): Promise<void> {
-  const redirectTo = `${window.location.origin}/`;
+  const redirectTo = `${window.location.origin}/customer/dashboard`;
   logAuthInfo("google_oauth_started", { redirectTo });
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
