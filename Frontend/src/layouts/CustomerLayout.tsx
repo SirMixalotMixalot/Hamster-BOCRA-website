@@ -44,13 +44,7 @@ const CustomerLayout = () => {
       >
         {/* Logo – solid navy */}
         <div className="flex items-center gap-2.5 px-5 h-16 shrink-0 bg-bocra-navy border-b border-white/10">
-          <img src={bocraLogo} alt="BOCRA" className="h-8 w-8 object-contain brightness-200 shrink-0" />
-          {!collapsed && (
-            <div>
-              <div className="font-heading font-bold text-white text-sm leading-tight">BOCRA</div>
-              <div className="text-[10px] text-white/50 leading-tight">Customer Portal</div>
-            </div>
-          )}
+          <img src={bocraLogo} alt="BOCRA" className="h-16 w-auto object-contain brightness-200 shrink-0" />
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden ml-auto p-1 text-white/50 hover:text-white">
             <X className="h-5 w-5" />
           </button>
@@ -60,15 +54,6 @@ const CustomerLayout = () => {
         <div className="flex-1 flex flex-col bg-gray-300 border-r border-gray-400/30">
           {/* Nav links */}
           <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
-            <NavLink
-              to="/"
-              onClick={() => setSidebarOpen(false)}
-              title={collapsed ? "Home" : undefined}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-bocra-navy/60 hover:bg-white/30 hover:text-bocra-navy ${collapsed ? "justify-center" : ""}`}
-            >
-              <Home className="h-4 w-4 shrink-0" />
-              {!collapsed && "Home"}
-            </NavLink>
             {sidebarLinks.map((link) => (
               <NavLink
                 key={link.to}
@@ -98,13 +83,22 @@ const CustomerLayout = () => {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${collapsed ? "justify-center" : ""} ${
                   isActive
-                    ? "bg-primary/10 text-primary border-l-2 border-primary shadow-[0_0_12px_hsl(210_85%_50%/0.15)] font-semibold"
-                    : "text-foreground/60 hover:bg-primary/5 hover:text-primary"
+                    ? "bg-white/40 text-bocra-navy shadow-sm"
+                    : "text-bocra-navy/60 hover:bg-white/30 hover:text-bocra-navy"
                 }`
               }
             >
               <User className="h-4 w-4 shrink-0" />
               {!collapsed && "Profile"}
+            </NavLink>
+            <NavLink
+              to="/"
+              onClick={() => setSidebarOpen(false)}
+              title={collapsed ? "Home" : undefined}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-bocra-navy/60 hover:bg-white/30 hover:text-bocra-navy ${collapsed ? "justify-center" : ""}`}
+            >
+              <Home className="h-4 w-4 shrink-0" />
+              {!collapsed && "Home Page"}
             </NavLink>
             <button
               onClick={handleLogout}
