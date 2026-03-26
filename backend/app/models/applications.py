@@ -56,9 +56,15 @@ class ApplicationPatchRequest(BaseModel):
     form_data_c: dict[str, Any] | None = None
     form_data_d: dict[str, Any] | None = None
     # Admin-only fields (will be validated in endpoint)
-    status: Literal["draft", "submitted", "under_review", "approved", "rejected", "requires_action"] | None = None
+    status: Literal["draft", "submitted", "under_review", "waiting_for_payment", "approved", "rejected", "requires_action"] | None = None
     admin_notes: str | None = None
     decision_reason: str | None = None
+
+
+class ApplicationRequestInfoRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    note: StrictStr = Field(min_length=1, max_length=2000)
 
 
 class ApplicationDecideRequest(BaseModel):

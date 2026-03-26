@@ -6,6 +6,7 @@ export type ApplicationStatus =
   | "draft"
   | "submitted"
   | "under_review"
+  | "waiting_for_payment"
   | "approved"
   | "rejected"
   | "requires_action";
@@ -38,6 +39,15 @@ export interface ApplicationDetail extends ApplicationListItem {
   decision_reason: string | null;
   decided_by: string | null;
   decided_at: string | null;
+}
+
+export interface ApplicationStatusLogItem {
+  id: string;
+  old_status: string | null;
+  new_status: string;
+  changed_by: string | null;
+  reason: string | null;
+  created_at: string;
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -109,6 +119,20 @@ export async function submitApplication(applicationId: string): Promise<Applicat
   });
 }
 
+export async function resubmitApplication(applicationId: string): Promise<ApplicationDetail> {
+  return request<ApplicationDetail>(`/api/applications/${applicationId}/resubmit`, {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
+export async function requestApplicationInfo(applicationId: string, note: string): Promise<ApplicationDetail> {
+  return request<ApplicationDetail>(`/api/applications/${applicationId}/request-info`, {
+    method: "POST",
+    body: JSON.stringify({ note }),
+  });
+}
+
 export async function updateApplicationStatus(
   applicationId: string,
   status: ApplicationStatus,
@@ -121,4 +145,8 @@ export async function updateApplicationStatus(
       admin_notes: adminNotes,
     }),
   });
+}
+
+export async function getApplicationHistory(applicationId: string): Promise<ApplicationStatusLogItem[]> {
+  return request<ApplicationStatusLogItem[]>(`/api/applications/${applicationId}/history`, { method: "GET" });
 }

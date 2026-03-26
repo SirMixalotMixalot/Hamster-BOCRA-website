@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, ArrowRight, FileText, MapPinned, PieChart as PieChartIcon, ShieldCheck, Activity } from "lucide-react";
+import { AlertTriangle, ArrowRight, FileText, MapPinned, PieChart as PieChartIcon, ShieldCheck, Activity, Clock3 } from "lucide-react";
 import { getApiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth";
 
@@ -17,6 +17,14 @@ type RegionalCoverageItem = {
 
 type ApplicationsAnalyticsResponse = {
   total_eligible_licences: number;
+  status_breakdown: {
+    submitted: number;
+    under_review: number;
+    waiting_for_payment: number;
+    requires_action: number;
+    approved: number;
+    rejected: number;
+  };
   licence_type_distribution: LicenceTypeDistributionItem[];
   regional_coverage: RegionalCoverageItem[];
 };
@@ -77,6 +85,14 @@ const SECTOR_COLORS: Record<string, string> = {
 
 const MOCK_APPLICATIONS_ANALYTICS: ApplicationsAnalyticsResponse = {
   total_eligible_licences: 124,
+  status_breakdown: {
+    submitted: 28,
+    under_review: 22,
+    waiting_for_payment: 11,
+    requires_action: 9,
+    approved: 47,
+    rejected: 7,
+  },
   licence_type_distribution: [
     { licence_type: "Cellular Licence", count: 28 },
     { licence_type: "Broadcasting Licence", count: 20 },
@@ -463,7 +479,7 @@ const Dashboard = () => {
         <p className="text-sm text-muted-foreground mt-1">System overview and pending actions</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="bg-card rounded-xl border border-border p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -474,6 +490,19 @@ const Dashboard = () => {
             </div>
             <span className="text-2xl font-heading font-bold text-foreground">
               {displayApplicationsAnalytics.total_eligible_licences}
+            </span>
+          </div>
+        </div>
+        <div className="bg-card rounded-xl border border-border p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 shrink-0 rounded-lg flex items-center justify-center text-indigo-600 bg-indigo-100/70">
+                <Clock3 className="h-5 w-5" />
+              </div>
+              <p className="text-xs text-muted-foreground">Waiting for Payment</p>
+            </div>
+            <span className="text-2xl font-heading font-bold text-foreground">
+              {displayApplicationsAnalytics.status_breakdown.waiting_for_payment}
             </span>
           </div>
         </div>

@@ -20,6 +20,7 @@ from app.models.applications import (
     ApplicationDetail,
     ApplicationListItem,
     ApplicationPatchRequest,
+    ApplicationRequestInfoRequest,
     ApplicationStatusLog,
     ApplicationSubmitRequest,
 )
@@ -394,6 +395,7 @@ async def applications_analytics(
     rows = [row for row in (result.data or []) if isinstance(row, dict)]
 
     licence_counter: Counter[str] = Counter()
+    status_counter: Counter[str] = Counter()
     region_sector_counter: dict[str, Counter[str]] = defaultdict(Counter)
     region_licence_counter: dict[str, Counter[str]] = defaultdict(Counter)
 
@@ -405,6 +407,8 @@ async def applications_analytics(
         licence_type = str(row.get("licence_type") or "Unknown").strip() or "Unknown"
         sector = _derive_sector_from_licence_type(licence_type)
         licence_counter[licence_type] += 1
+        status_value = str(row.get("status") or "unknown").strip().lower() or "unknown"
+        status_counter[status_value] += 1
 
         all_regions: list[str] = []
         all_regions.extend(_extract_region_candidates(row.get("form_data_a")))
@@ -443,6 +447,14 @@ async def applications_analytics(
 
     return {
         "total_eligible_licences": len(eligible_rows),
+        "status_breakdown": {
+            "submitted": int(status_counter.get("submitted", 0)),
+            "under_review": int(status_counter.get("under_review", 0)),
+            "waiting_for_payment": int(status_counter.get("waiting_for_payment", 0)),
+            "requires_action": int(status_counter.get("requires_action", 0)),
+            "approved": int(status_counter.get("approved", 0)),
+            "rejected": int(status_counter.get("rejected", 0)),
+        },
         "licence_type_distribution": licence_distribution,
         "regional_coverage": regional_coverage,
     }
@@ -569,17 +581,37 @@ async def patch_application(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
 
     if not is_admin:
-        # Normal user: only allow draft edits
-        if app_row["status"] != "draft": # type: ignore
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Can only edit draft applications",
-            )
+        current_status = str(app_row.get("status") or "")
         # Disallow setting admin-only fields
         if payload.status is not None or payload.admin_notes is not None or payload.decision_reason is not None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Cannot set admin-only fields",
+            )
+
+        if current_status == "draft":
+            pass
+        elif current_status == "requires_action":
+            # Customer can only submit additional response data while action is required.
+            if any([
+                payload.licence_type is not None,
+                payload.form_data_a is not None,
+                payload.form_data_b is not None,
+                payload.form_data_c is not None,
+            ]):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Only additional response data can be updated when action is required",
+                )
+            if payload.form_data_d is None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Provide response details in form_data_d",
+                )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Can only edit draft applications or submit responses for requires_action",
             )
 
     update_data = {
@@ -706,6 +738,139 @@ async def submit_application(
         )
 
     logger.info("submit_application app_id=%s user_id=%s", application_id, current_user_id)
+
+    documents = _get_application_documents(supabase, str(application_id))
+    return _build_application_detail(updated_row, documents)
+
+
+@router.post("/{application_id}/resubmit", response_model=ApplicationDetail)
+async def resubmit_application(
+    application_id: UUID,
+    current_profile: dict[str, Any] = Depends(get_current_profile),
+) -> ApplicationDetail:
+    """
+    Customer resubmits an application after responding to a requires_action request.
+    - Owner only.
+    - Only from requires_action status.
+    """
+    supabase = get_supabase_admin()
+    current_user_id = UUID(current_profile["id"])
+
+    result = supabase.table("applications").select("*").eq("id", str(application_id)).execute()
+    if not result.data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Application not found")
+
+    app_row = result.data[0]
+    app_applicant_id = UUID(app_row["applicant_id"])  # type: ignore
+
+    if app_applicant_id != current_user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only owner can resubmit")
+
+    if app_row["status"] != "requires_action":  # type: ignore
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Can only resubmit applications in requires_action status (current status: {app_row['status']})",  # type: ignore
+        )
+
+    now = datetime.utcnow()
+    update_data: dict[str, Any] = {
+        "status": "submitted",
+        "updated_at": now.isoformat(),
+    }
+    if not app_row.get("submitted_at"):
+        update_data["submitted_at"] = now.isoformat()
+
+    update_result = (
+        supabase.table("applications")
+        .update(update_data)
+        .eq("id", str(application_id))
+        .execute()
+    )
+
+    if not update_result.data:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Resubmit failed")
+
+    updated_row = update_result.data[0]
+    _log_status_change(
+        supabase,
+        application_id,
+        "requires_action",
+        "submitted",
+        current_user_id,
+        reason="Customer resubmitted requested additional information",
+    )
+
+    logger.info("resubmit_application app_id=%s user_id=%s", application_id, current_user_id)
+
+    documents = _get_application_documents(supabase, str(application_id))
+    return _build_application_detail(updated_row, documents)
+
+
+@router.post("/{application_id}/request-info", response_model=ApplicationDetail)
+async def request_application_info(
+    application_id: UUID,
+    payload: ApplicationRequestInfoRequest,
+    current_profile: dict[str, Any] = Depends(require_admin),
+) -> ApplicationDetail:
+    """
+    Admin requests additional information from customer.
+    - Sets status to requires_action.
+    - Stores guidance in admin_notes.
+    """
+    supabase = get_supabase_admin()
+    current_user_id = UUID(current_profile["id"])
+
+    result = supabase.table("applications").select("*").eq("id", str(application_id)).execute()
+    if not result.data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Application not found")
+
+    app_row = result.data[0]
+    old_status = str(app_row.get("status") or "")
+    if old_status in {"approved", "rejected"}:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot request additional information for finalized applications",
+        )
+
+    note = payload.note.strip()
+    now = datetime.utcnow()
+    update_result = (
+        supabase.table("applications")
+        .update({
+            "status": "requires_action",
+            "admin_notes": note,
+            "updated_at": now.isoformat(),
+        })
+        .eq("id", str(application_id))
+        .execute()
+    )
+
+    if not update_result.data:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Request-info update failed")
+
+    updated_row = update_result.data[0]
+    _log_status_change(
+        supabase,
+        application_id,
+        old_status if old_status else None,
+        "requires_action",
+        current_user_id,
+        reason=f"Admin requested more information: {note}",
+    )
+
+    applicant_id = str(updated_row.get("applicant_id") or "")
+    reference_number = str(updated_row.get("reference_number") or "")
+    licence_type = str(updated_row.get("licence_type") or "")
+    if applicant_id and reference_number:
+        _send_application_status_email(
+            supabase,
+            applicant_id=applicant_id,
+            reference_number=reference_number,
+            licence_type=licence_type,
+            new_status="requires_action",
+        )
+
+    logger.info("request_application_info app_id=%s admin_id=%s", application_id, current_user_id)
 
     documents = _get_application_documents(supabase, str(application_id))
     return _build_application_detail(updated_row, documents)

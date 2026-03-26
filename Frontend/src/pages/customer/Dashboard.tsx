@@ -4,14 +4,15 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
+  ChevronRight,
   ArrowRight,
   Plus,
   ShieldCheck,
   LifeBuoy,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getCachedMe, getMe } from "@/lib/auth";
-import { listApplications, type ApplicationListItem } from "@/lib/applications";
+import { getApplicationHistory, listApplications, type ApplicationListItem, type ApplicationStatusLogItem } from "@/lib/applications";
 import { listSupportTickets, type SupportTicketItem } from "@/lib/support";
 import { LoadingDots } from "@/components/ui/loading-dots";
 
@@ -27,7 +28,11 @@ type RecentActivity = {
   title: string;
   detail: string;
   timestamp: string;
+  route: string;
 };
+
+const statusLabel = (status: string) =>
+  status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
 const statCards = [
   { key: "activeLicences", label: "Active Licences", icon: CheckCircle2, color: "text-bocra-teal bg-bocra-teal/10" },
@@ -43,6 +48,7 @@ const quickActions = [
 ];
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [userName, setUserName] = useState(() => {
     const me = getCachedMe();
     if (!me) return "";
@@ -58,7 +64,11 @@ const Dashboard = () => {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
 
-  const buildRecentActivity = (applications: ApplicationListItem[], tickets: SupportTicketItem[]) => {
+  const buildRecentActivity = (
+    applications: ApplicationListItem[],
+    applicationHistory: Record<string, ApplicationStatusLogItem[]>,
+    tickets: SupportTicketItem[],
+  ) => {
     const activity: RecentActivity[] = [];
 
     for (const app of applications) {
@@ -67,6 +77,7 @@ const Dashboard = () => {
         title: "Application created",
         detail: `${app.reference_number} (${app.licence_type})`,
         timestamp: app.created_at,
+        route: `/customer/applications?ref=${encodeURIComponent(app.reference_number)}`,
       });
 
       if (app.submitted_at) {
@@ -75,6 +86,19 @@ const Dashboard = () => {
           title: "Application submitted",
           detail: `${app.reference_number} (${app.licence_type})`,
           timestamp: app.submitted_at,
+          route: `/customer/applications?ref=${encodeURIComponent(app.reference_number)}`,
+        });
+      }
+
+      const history = applicationHistory[app.id] || [];
+      for (const event of history) {
+        if (!event.new_status || event.new_status === "submitted") continue;
+        activity.push({
+          id: `application-${app.id}-status-${event.id}`,
+          title: "Application status updated",
+          detail: `${app.reference_number} is now ${statusLabel(event.new_status)}`,
+          timestamp: event.created_at,
+          route: `/customer/applications?ref=${encodeURIComponent(app.reference_number)}`,
         });
       }
     }
@@ -85,6 +109,7 @@ const Dashboard = () => {
         title: "Support ticket opened",
         detail: ticket.subject,
         timestamp: ticket.created_at,
+        route: "/customer/support",
       });
     }
 
@@ -110,6 +135,14 @@ const Dashboard = () => {
           listSupportTickets().catch(() => ({ items: [] as SupportTicketItem[] })),
         ]);
 
+        const historyEntries = await Promise.all(
+          applications.map(async (app) => {
+            const history = await getApplicationHistory(app.id).catch(() => [] as ApplicationStatusLogItem[]);
+            return [app.id, history] as const;
+          }),
+        );
+        const historyByAppId = Object.fromEntries(historyEntries);
+
         if (!mounted) return;
 
         if (me) {
@@ -118,7 +151,7 @@ const Dashboard = () => {
         setUserName(name);
         }
 
-        const pendingStatuses = new Set(["submitted", "under_review", "requires_action"]);
+        const pendingStatuses = new Set(["submitted", "under_review", "waiting_for_payment", "requires_action"]);
         const activeLicences = applications.filter((app) => app.status === "approved").length;
         const pendingLicences = applications.filter((app) => pendingStatuses.has(app.status)).length;
         const openTickets = (ticketsResponse.items || []).filter((ticket) => ticket.status === "open").length;
@@ -129,7 +162,7 @@ const Dashboard = () => {
           totalApplications: applications.length,
           openTickets,
         });
-        setRecentActivity(buildRecentActivity(applications, ticketsResponse.items || []));
+        setRecentActivity(buildRecentActivity(applications, historyByAppId, ticketsResponse.items || []));
       } finally {
         if (mounted) {
           setLoadingStats(false);
@@ -219,18 +252,29 @@ const Dashboard = () => {
           <div className="glass rounded-xl overflow-hidden">
             <ul className="divide-y divide-[hsl(var(--glass-border))]">
               {recentActivity.map((item) => (
-                <li key={item.id} className="px-5 py-3.5">
-                  <p className="text-sm font-medium text-foreground">{item.title}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{item.detail}</p>
-                  <p className="text-[11px] text-muted-foreground/80 mt-1">
-                    {new Date(item.timestamp).toLocaleString("en-BW", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    onClick={() => navigate(item.route)}
+                    className="w-full px-5 py-3.5 text-left hover:bg-primary/5 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{item.title}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{item.detail}</p>
+                        <p className="text-[11px] text-muted-foreground/80 mt-1">
+                          {new Date(item.timestamp).toLocaleString("en-BW", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                    </div>
+                  </button>
                 </li>
               ))}
             </ul>

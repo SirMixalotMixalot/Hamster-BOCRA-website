@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   getApplication,
   listApplications,
+  requestApplicationInfo,
   updateApplicationStatus,
   type ApplicationDetail,
   type ApplicationListItem,
@@ -51,10 +52,12 @@ const MOCK_RECEIVED_APPLICATIONS: ApplicationListItem[] = [
   },
 ];
 
-const STATUS_OPTIONS: Array<{ key: "under_review" | "approved" | "rejected"; label: string }> = [
+const STATUS_OPTIONS: Array<{ key: "under_review" | "waiting_for_payment" | "approved" | "rejected" | "requires_action"; label: string }> = [
   { key: "under_review", label: "In Progress" },
+  { key: "waiting_for_payment", label: "Waiting for Payment" },
   { key: "approved", label: "Approve" },
   { key: "rejected", label: "Reject" },
+  { key: "requires_action", label: "Request Info" },
 ];
 
 const BASE64_PATTERN = /^[A-Za-z0-9+/]+={0,2}$/;
@@ -206,11 +209,16 @@ const AdminApplications = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "submitted" | "under_review" | "approved" | "rejected">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "submitted" | "under_review" | "waiting_for_payment" | "approved" | "rejected" | "requires_action">("all");
   const [licenceFilter, setLicenceFilter] = useState<string>("all");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [selectedApplication, setSelectedApplication] = useState<ApplicationDetail | null>(null);
   const [openingId, setOpeningId] = useState<string | null>(null);
+  const [requestInfoDraft, setRequestInfoDraft] = useState("");
+
+  useEffect(() => {
+    setRequestInfoDraft(selectedApplication?.admin_notes ?? "");
+  }, [selectedApplication]);
 
   useEffect(() => {
     let mounted = true;
@@ -250,10 +258,10 @@ const AdminApplications = () => {
     });
   }, [displayApplications, search, statusFilter, licenceFilter]);
 
-  const updateStatus = async (applicationId: string, status: ApplicationStatus) => {
+  const updateStatus = async (applicationId: string, status: ApplicationStatus, adminNotes?: string) => {
     try {
       setUpdatingId(applicationId);
-      const updated = await updateApplicationStatus(applicationId, status);
+      const updated = await updateApplicationStatus(applicationId, status, adminNotes);
       setApplications((current) => current.map((item) => (item.id === applicationId ? { ...item, status: updated.status } : item)));
       if (selectedApplication?.id === applicationId) {
         setSelectedApplication(updated);
@@ -313,6 +321,37 @@ const AdminApplications = () => {
   const statusLabel = (status: string) =>
     status === "under_review" ? "In Progress" : status.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
+  const requestMoreInfo = async () => {
+    if (!selectedApplication) return;
+    const note = requestInfoDraft.trim();
+    if (!note) {
+      toast({
+        title: "Request note required",
+        description: "Add guidance on what more information the customer should provide.",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      setUpdatingId(selectedApplication.id);
+      const updated = await requestApplicationInfo(selectedApplication.id, note);
+      setApplications((current) => current.map((item) => (item.id === selectedApplication.id ? { ...item, status: updated.status } : item)));
+      setSelectedApplication(updated);
+      toast({
+        title: "Information requested",
+        description: `Customer has been asked to provide additional details for ${updated.reference_number}.`,
+      });
+    } catch (requestError) {
+      toast({
+        title: "Request failed",
+        description: requestError instanceof Error ? requestError.message : "Could not request additional information.",
+        variant: "destructive",
+      });
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-6xl">
       <div>
@@ -351,8 +390,10 @@ const AdminApplications = () => {
             <option value="all">View all</option>
             <option value="submitted">Pending</option>
             <option value="under_review">In Progress</option>
+            <option value="waiting_for_payment">Waiting for Payment</option>
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
+            <option value="requires_action">Action Required</option>
           </select>
         </div>
       </div>
@@ -386,7 +427,6 @@ const AdminApplications = () => {
                   <th className="px-2 py-2 font-semibold text-foreground whitespace-nowrap">Submitted</th>
                   <th className="px-2 py-2 font-semibold text-foreground whitespace-nowrap">Status</th>
                   <th className="px-2 py-2 font-semibold text-foreground whitespace-nowrap">Open / Review</th>
-                  <th className="px-2 py-2 font-semibold text-foreground whitespace-nowrap">Update Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -417,30 +457,6 @@ const AdminApplications = () => {
                       >
                         {openingId === app.id ? "Opening..." : "Open"}
                       </button>
-                    </td>
-                    <td className="px-2 py-2">
-                      <div className="flex flex-nowrap gap-1 items-center">
-                        {STATUS_OPTIONS.map((option) => {
-                          const isActive = app.status === option.key;
-                          const isUpdatingRow = updatingId === app.id;
-                          return (
-                            <button
-                              key={option.key}
-                              type="button"
-                              disabled={isUpdatingRow || isActive}
-                              onClick={() => void updateStatus(app.id, option.key)}
-                              className={`px-2 py-1 rounded-md text-[11px] transition-colors whitespace-nowrap ${
-                                isActive
-                                  ? "font-semibold bg-bocra-teal text-white"
-                                  : "font-medium border border-border bg-background hover:bg-muted"
-                              } ${isUpdatingRow ? "opacity-70" : ""}`}
-                            >
-                              {option.label}
-                            </button>
-                          );
-                        })}
-                        {updatingId === app.id && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
-                      </div>
                     </td>
                   </tr>
                 ))}
@@ -489,6 +505,53 @@ const AdminApplications = () => {
             </div>
           </div>
 
+          <div className="rounded-lg border border-border p-3 space-y-2">
+            <p className="text-xs text-muted-foreground">Update Status</p>
+            <div className="flex flex-wrap gap-1.5 items-center">
+              {STATUS_OPTIONS.map((option) => {
+                const isActive = selectedApplication.status === option.key;
+                const isUpdatingSelected = updatingId === selectedApplication.id;
+                return (
+                  <button
+                    key={option.key}
+                    type="button"
+                    disabled={isUpdatingSelected || isActive || option.key === "requires_action"}
+                    onClick={() => void updateStatus(selectedApplication.id, option.key)}
+                    className={`px-2.5 py-1 rounded-md text-[11px] transition-colors whitespace-nowrap ${
+                      isActive
+                        ? "font-semibold bg-bocra-teal text-white"
+                        : "font-medium border border-border bg-background hover:bg-muted"
+                    } ${isUpdatingSelected ? "opacity-70" : ""}`}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+              {updatingId === selectedApplication.id && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+            </div>
+            <div className="space-y-2 pt-1 border-t border-border/70">
+              <p className="text-[11px] text-muted-foreground">Need more information from customer?</p>
+              <textarea
+                rows={3}
+                value={requestInfoDraft}
+                onChange={(event) => setRequestInfoDraft(event.target.value)}
+                placeholder="Tell the customer exactly what additional information or documents are needed..."
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-y"
+              />
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  disabled={updatingId === selectedApplication.id}
+                  onClick={() => void requestMoreInfo()}
+                  className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-60"
+                >
+                  Mark Action Required
+                </button>
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground">Status updates are only available while reviewing an opened application.</p>
+          </div>
+
           <div className="rounded-lg border border-border p-3">
             <p className="text-xs text-muted-foreground mb-2">Uploaded Documents</p>
             {selectedApplication.documents.length === 0 ? (
@@ -504,6 +567,39 @@ const AdminApplications = () => {
                   </div>
                 ))}
               </div>
+            )}
+          </div>
+
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-xs text-muted-foreground mb-2">Customer Additional Information Responses</p>
+            {Array.isArray((selectedApplication.form_data_d as Record<string, unknown> | null)?.additional_info_responses) &&
+            ((selectedApplication.form_data_d as Record<string, unknown>).additional_info_responses as unknown[]).length > 0 ? (
+              <div className="space-y-2">
+                {((selectedApplication.form_data_d as Record<string, unknown>).additional_info_responses as Array<Record<string, unknown>>).map((response, index) => (
+                  <div key={`additional-response-${index}`} className="rounded-md border border-border/70 p-2.5">
+                    <p className="text-[11px] text-muted-foreground">
+                      Submitted {response.submitted_at ? new Date(String(response.submitted_at)).toLocaleString() : "at unknown time"}
+                    </p>
+                    {response.note && <p className="text-xs text-foreground mt-1 whitespace-pre-wrap">{String(response.note)}</p>}
+                    {Array.isArray(response.uploaded_documents) && response.uploaded_documents.length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        <p className="text-[11px] font-semibold text-muted-foreground">Uploaded with this response</p>
+                        {(response.uploaded_documents as Array<Record<string, unknown>>).map((doc, docIndex) => (
+                          <div
+                            key={`additional-response-${index}-doc-${docIndex}`}
+                            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-[11px]"
+                          >
+                            <span className="font-medium text-foreground break-all">{String(doc.file_name || "Document")}</span>
+                            <span className="text-muted-foreground">{String(doc.file_type || "unknown type")}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">No additional information responses submitted yet.</p>
             )}
           </div>
 
