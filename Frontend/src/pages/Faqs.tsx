@@ -137,10 +137,14 @@ const faqs = [
 
 const Faqs = () => {
   const navigate = useNavigate();
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [openSet, setOpenSet] = useState<Set<number>>(new Set());
 
   const toggle = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
+    setOpenSet((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index); else next.add(index);
+      return next;
+    });
   };
 
   return (
@@ -166,14 +170,14 @@ const Faqs = () => {
                   onClick={() => toggle(index)}
                   className="w-full flex items-start gap-3 py-3 text-left"
                 >
-                  {openIndex === index ? (
+                  {openSet.has(index) ? (
                     <Minus className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                   ) : (
                     <Plus className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                   )}
                   <span className="text-sm md:text-base font-semibold text-foreground">{faq.question}</span>
                 </button>
-                {openIndex === index && (
+                {openSet.has(index) && (
                   <div className="pl-8 pb-4">
                     <p className="text-sm md:text-base leading-relaxed text-muted-foreground">{faq.answer}</p>
                   </div>

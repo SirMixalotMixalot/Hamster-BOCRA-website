@@ -38,15 +38,6 @@ const navItems = [
     id: "licensing",
     sections: [
       {
-        title: "License Types",
-        items: [
-          { icon: Wifi, label: "Telecommunications", description: "Fixed and mobile network licenses" },
-          { icon: Tv, label: "Broadcasting", description: "Radio and television broadcasting" },
-          { icon: Globe2, label: "Internet Services", description: "ISP and data services" },
-          { icon: Package, label: "Postal Services", description: "Courier and postal licenses" },
-        ],
-      },
-      {
         title: "Licensing Process",
         items: [
           { icon: ClipboardCheck, label: "How Licensing Works", description: "Application, renewal and timelines", action: "navigate:/licensing/how-it-works" },
@@ -55,10 +46,19 @@ const navItems = [
         ],
       },
       {
+        title: "License Types",
+        items: [
+          { icon: Wifi, label: "Telecommunications", description: "Fixed and mobile network licenses", action: "navigate:/licensing/telecommunications" },
+          { icon: Tv, label: "Broadcasting", description: "Radio and television broadcasting", action: "navigate:/licensing/broadcasting" },
+          { icon: Globe2, label: "Internet Services", description: "ISP and data services", action: "navigate:/licensing/internet-services" },
+          { icon: Package, label: "Postal Services", description: "Courier and postal licenses", action: "navigate:/licensing/postal-services" },
+        ],
+      },
+      {
         title: "Spectrum & Interconnection",
         items: [
-          { icon: Wifi, label: "Spectrum Management", description: "Frequency allocation and management" },
-          { icon: ExternalLink, label: "Interconnection", description: "Network interconnection guidelines" },
+          { icon: Wifi, label: "Spectrum Management", description: "Frequency allocation and management", action: "navigate:/licensing/spectrum-management" },
+          { icon: ExternalLink, label: "Interconnection", description: "Network interconnection guidelines", action: "navigate:/licensing/interconnection" },
         ],
       },
     ],

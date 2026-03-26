@@ -36,6 +36,12 @@ import AnnualReports from "./pages/about/AnnualReports.tsx";
 import HowLicensingWorks from "./pages/licensing/HowLicensingWorks.tsx";
 import LicenceFees from "./pages/licensing/LicenceFees.tsx";
 import LicenceVerification from "./pages/licensing/LicenceVerification.tsx";
+import Telecommunications from "./pages/licensing/Telecommunications";
+import Broadcasting from "./pages/licensing/Broadcasting";
+import InternetServices from "./pages/licensing/InternetServices";
+import PostalServices from "./pages/licensing/PostalServices";
+import SpectrumManagement from "./pages/licensing/SpectrumManagement";
+import Interconnection from "./pages/licensing/Interconnection";
 import PoliciesFrameworks from "./pages/resources/PoliciesFrameworks.tsx";
 import PublicConsultations from "./pages/resources/PublicConsultations.tsx";
 import ConsumerEducation from "./pages/resources/ConsumerEducation.tsx";
@@ -142,6 +148,12 @@ const App = () => (
           <Route path="/licensing/how-it-works" element={<HowLicensingWorks />} />
           <Route path="/licensing/fees" element={<LicenceFees />} />
           <Route path="/licensing/verification" element={<LicenceVerification />} />
+          <Route path="/licensing/telecommunications" element={<Telecommunications />} />
+          <Route path="/licensing/broadcasting" element={<Broadcasting />} />
+          <Route path="/licensing/internet-services" element={<InternetServices />} />
+          <Route path="/licensing/postal-services" element={<PostalServices />} />
+          <Route path="/licensing/spectrum-management" element={<SpectrumManagement />} />
+          <Route path="/licensing/interconnection" element={<Interconnection />} />
           <Route path="/resources/policies" element={<PoliciesFrameworks />} />
           <Route path="/resources/consultations" element={<PublicConsultations />} />
           <Route path="/resources/consumer-education" element={<ConsumerEducation />} />
