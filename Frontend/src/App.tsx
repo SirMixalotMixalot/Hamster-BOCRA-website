@@ -46,6 +46,8 @@ import PoliciesFrameworks from "./pages/resources/PoliciesFrameworks.tsx";
 import LegislationRegulations from "./pages/resources/LegislationRegulations.tsx";
 import ConsumerEducation from "./pages/resources/ConsumerEducation.tsx";
 import Publications from "./pages/resources/Publications.tsx";
+import Tenders from "./pages/resources/Tenders.tsx";
+import Statistics from "./pages/resources/Statistics.tsx";
 import FormsDocuments from "./pages/resources/FormsDocuments.tsx";
 import JobDetail from "./pages/careers/JobDetail.tsx";
 import JobApplication from "./pages/careers/JobApplication.tsx";
@@ -162,6 +164,8 @@ const App = () => (
           <Route path="/resources/legislation" element={<LegislationRegulations />} />
           <Route path="/resources/forms-documents" element={<FormsDocuments />} />
           <Route path="/resources/publications" element={<Publications />} />
+          <Route path="/resources/tenders" element={<Tenders />} />
+          <Route path="/resources/statistics" element={<Statistics />} />
           <Route path="/resources/consumer-education" element={<ConsumerEducation />} />
 
           {/* Customer Portal */}

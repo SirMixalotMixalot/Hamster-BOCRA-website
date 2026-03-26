@@ -100,9 +100,7 @@ const navItems = [
         items: [
           { icon: FileCheck, label: "Apply for License", description: "Start a new license application", action: "toggle-signin-modal" },
           { icon: ClipboardList, label: "Renew License", description: "Renew an existing license", action: "toggle-signin-modal" },
-          { icon: ClipboardList, label: "Type Approval", description: "Get equipment approved for use", action: "toggle-signin-modal" },
           { icon: Shield, label: "Verify License", description: "Check license status and validity", action: "toggle-verify-licence-modal" },
-          { icon: Scale, label: "Fee Schedule", description: "View licensing fees", action: "toggle-signin-modal" },
         ],
       },
       {
@@ -110,15 +108,14 @@ const navItems = [
         items: [
           { icon: ClipboardList, label: "Type Approval", description: "Get equipment approved for use", action: "toggle-signin-modal" },
           { icon: Search, label: "Track Complaint", description: "Check your complaint status", action: "toggle-track-complaint-modal" },
-          { icon: Briefcase, label: "Tenders", description: "View current procurement opportunities" },
         ],
       },
       {
         title: "Information",
         items: [
           { icon: Newspaper, label: "News", description: "Latest announcements and media updates" },
-          { icon: BarChart3, label: "Statistics", description: "Market data and sector indicators", action: "toggle-telecom-stats-modal" },
-          { icon: BarChart3, label: "QOS Monitoring", description: "Quality of service metrics and performance" },
+          { icon: BarChart3, label: "Statistics", description: "Market data and sector indicators", action: "navigate:/resources/statistics" },
+          { icon: Briefcase, label: "Tenders", description: "View current procurement opportunities", action: "navigate:/resources/tenders" },
         ],
       },
     ],
