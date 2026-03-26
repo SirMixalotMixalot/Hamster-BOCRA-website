@@ -7,6 +7,7 @@ import {
   MessageSquareWarning,
   LifeBuoy,
   BarChart3,
+  Briefcase,
   User,
   Home,
   LogOut,
@@ -25,6 +26,7 @@ const sidebarLinks = [
   { to: "/admin/applications", icon: FileText, label: "Applications" },
   { to: "/admin/complaints", icon: MessageSquareWarning, label: "Complaints" },
   { to: "/admin/tickets", icon: LifeBuoy, label: "Tickets" },
+  { to: "/admin/careers", icon: Briefcase, label: "Careers" },
   { to: "/admin/reports", icon: BarChart3, label: "Documents Management" },
 ];
 

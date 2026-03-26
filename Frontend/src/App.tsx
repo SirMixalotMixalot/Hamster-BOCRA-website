@@ -39,6 +39,9 @@ import LicenceVerification from "./pages/licensing/LicenceVerification.tsx";
 import PoliciesFrameworks from "./pages/resources/PoliciesFrameworks.tsx";
 import PublicConsultations from "./pages/resources/PublicConsultations.tsx";
 import ConsumerEducation from "./pages/resources/ConsumerEducation.tsx";
+import JobDetail from "./pages/careers/JobDetail.tsx";
+import JobApplication from "./pages/careers/JobApplication.tsx";
+import AdminCareers from "./pages/admin/AdminCareers.tsx";
 
 const queryClient = new QueryClient();
 
@@ -128,6 +131,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/careers" element={<Careers />} />
+          <Route path="/careers/:jobId" element={<JobDetail />} />
+          <Route path="/careers/:jobId/apply" element={<JobApplication />} />
           <Route path="/faqs" element={<Faqs />} />
           <Route path="/about/who-we-are" element={<WhoWeAre />} />
           <Route path="/about/mandate" element={<OurMandate />} />
@@ -164,6 +169,7 @@ const App = () => (
             <Route path="complaints" element={<Complaints />} />
             <Route path="tickets" element={<Tickets />} />
             <Route path="reports" element={<Reports />} />
+            <Route path="careers" element={<AdminCareers />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
 
