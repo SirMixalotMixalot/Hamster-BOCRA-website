@@ -143,7 +143,7 @@ const CustomerLayout = () => {
                 const event = new CustomEvent("toggle-ai-chatbot");
                 window.dispatchEvent(event);
               }}
-              className="hidden md:inline-flex items-center gap-2 px-3 py-2 bg-bocra-gold text-bocra-navy rounded-md text-sm font-semibold hover:opacity-90 transition-opacity shadow-sm"
+              className="inline-flex items-center gap-2 px-3 py-2 bg-bocra-gold text-bocra-navy rounded-md text-sm font-semibold hover:opacity-90 transition-opacity shadow-sm"
             >
               AI Assistant
             </button>
