@@ -146,6 +146,7 @@ const Header = () => {
       decision: [],
       document: [],
       service: [],
+      page: [],
     };
 
     for (const result of searchResults) {
@@ -159,6 +160,7 @@ const Header = () => {
     { key: "news" as const, label: "News" },
     { key: "decision" as const, label: "Decisions" },
     { key: "document" as const, label: "Documents" },
+    { key: "page" as const, label: "Pages" },
     { key: "service" as const, label: "Services" },
   ];
 

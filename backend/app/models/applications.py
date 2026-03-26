@@ -141,3 +141,19 @@ class LicenceVerificationItem(BaseModel):
 class LicenceVerificationResponse(BaseModel):
     items: list[LicenceVerificationItem]
     count: int
+
+
+class ApplicationHistoryBatchRequest(BaseModel):
+    """Request to fetch histories for multiple applications in a single call."""
+    application_ids: list[UUID]
+
+
+class ApplicationHistoryBatchItem(BaseModel):
+    """Single application with its history."""
+    id: UUID
+    history: list[ApplicationStatusLog]
+
+
+class ApplicationHistoryBatchResponse(BaseModel):
+    """Batch response containing histories for multiple applications."""
+    items: list[ApplicationHistoryBatchItem]

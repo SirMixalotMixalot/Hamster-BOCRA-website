@@ -367,7 +367,7 @@ const Applications = () => {
               <p className="text-xs text-muted-foreground">No timeline events yet.</p>
             ) : (
               <div className="space-y-2">
-                {statusTimeline.map((entry) => (
+                {statusTimeline.slice().reverse().map((entry) => (
                   <div key={entry.id} className="rounded-md border border-[hsl(var(--input-border))] p-2">
                     <p className="text-xs font-semibold text-foreground">{entry.new_status.replace(/_/g, " ")}</p>
                     <p className="text-[11px] text-muted-foreground">{new Date(entry.created_at).toLocaleString()}</p>

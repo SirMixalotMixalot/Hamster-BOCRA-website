@@ -30,6 +30,26 @@ export interface SupportTicketsResponse {
   offset: number;
 }
 
+const SUPPORT_TICKETS_CACHE_TTL_MS = 2 * 60 * 1000;
+
+let supportTicketsCache:
+  | {
+      token: string | null;
+      fetchedAt: number;
+      data: SupportTicketsResponse;
+    }
+  | null = null;
+
+function invalidatePortalBatchCacheEventually(): void {
+  void import("@/lib/batch")
+    .then((mod) => {
+      mod.invalidatePortalBatchCache();
+    })
+    .catch(() => {
+      // no-op
+    });
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getAccessToken();
   if (!token) {
@@ -59,8 +79,35 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
-export async function listSupportTickets(): Promise<SupportTicketsResponse> {
-  return request<SupportTicketsResponse>("/api/support/tickets", { method: "GET" });
+export function setSupportTicketsCache(response: SupportTicketsResponse): void {
+  supportTicketsCache = {
+    token: getAccessToken(),
+    fetchedAt: Date.now(),
+    data: response,
+  };
+}
+
+export function invalidateSupportTicketsCache(): void {
+  supportTicketsCache = null;
+  invalidatePortalBatchCacheEventually();
+}
+
+export async function listSupportTickets(options?: { force?: boolean }): Promise<SupportTicketsResponse> {
+  const token = getAccessToken();
+  const now = Date.now();
+
+  if (
+    !options?.force &&
+    supportTicketsCache &&
+    supportTicketsCache.token === token &&
+    now - supportTicketsCache.fetchedAt <= SUPPORT_TICKETS_CACHE_TTL_MS
+  ) {
+    return supportTicketsCache.data;
+  }
+
+  const response = await request<SupportTicketsResponse>("/api/support/tickets", { method: "GET" });
+  setSupportTicketsCache(response);
+  return response;
 }
 
 export async function createSupportTicket(payload: {
@@ -68,8 +115,10 @@ export async function createSupportTicket(payload: {
   message: string;
   category?: SupportCategory;
 }): Promise<SupportTicketItem> {
-  return request<SupportTicketItem>("/api/support/tickets", {
+  const created = await request<SupportTicketItem>("/api/support/tickets", {
     method: "POST",
     body: JSON.stringify(payload),
   });
+  invalidateSupportTicketsCache();
+  return created;
 }

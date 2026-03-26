@@ -11,9 +11,14 @@ import {
   LifeBuoy,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { getCachedMe, getMe } from "@/lib/auth";
-import { getApplicationHistory, listApplications, type ApplicationListItem, type ApplicationStatusLogItem } from "@/lib/applications";
-import { listSupportTickets, type SupportTicketItem } from "@/lib/support";
+import { getCachedMe } from "@/lib/auth";
+import {
+  batchGetApplicationHistories,
+  type ApplicationListItem,
+  type ApplicationStatusLogItem,
+} from "@/lib/applications";
+import { type SupportTicketItem } from "@/lib/support";
+import { getPortalBatch } from "@/lib/batch";
 import { LoadingDots } from "@/components/ui/loading-dots";
 
 type DashboardStats = {
@@ -129,32 +134,24 @@ const Dashboard = () => {
 
     const load = async () => {
       try {
-        const [me, applications, ticketsResponse] = await Promise.all([
-          getMe().catch(() => null),
-          listApplications().catch(() => [] as ApplicationListItem[]),
-          listSupportTickets().catch(() => ({ items: [] as SupportTicketItem[] })),
-        ]);
+        const portalBatch = await getPortalBatch({ includeComplaints: true }).catch(() => ({
+          applications: [] as ApplicationListItem[],
+          complaints: [],
+          support_tickets: [] as SupportTicketItem[],
+        }));
 
-        const historyEntries = await Promise.all(
-          applications.map(async (app) => {
-            const history = await getApplicationHistory(app.id).catch(() => [] as ApplicationStatusLogItem[]);
-            return [app.id, history] as const;
-          }),
-        );
-        const historyByAppId = Object.fromEntries(historyEntries);
+        const applications = portalBatch.applications || [];
+        const supportTickets = portalBatch.support_tickets || [];
+
+        const historyMap = await batchGetApplicationHistories(applications.map((app) => app.id)).catch(() => new Map<string, ApplicationStatusLogItem[]>());
+        const historyByAppId = Object.fromEntries(historyMap);
 
         if (!mounted) return;
-
-        if (me) {
-        const fullName = me.profile.full_name || me.user.email?.split("@")[0] || "";
-        const name = fullName.split(" ")[0];
-        setUserName(name);
-        }
 
         const pendingStatuses = new Set(["submitted", "under_review", "waiting_for_payment", "requires_action"]);
         const activeLicences = applications.filter((app) => app.status === "approved").length;
         const pendingLicences = applications.filter((app) => pendingStatuses.has(app.status)).length;
-        const openTickets = (ticketsResponse.items || []).filter((ticket) => ticket.status === "open").length;
+        const openTickets = supportTickets.filter((ticket) => ticket.status === "open").length;
 
         setStats({
           activeLicences,
@@ -162,7 +159,7 @@ const Dashboard = () => {
           totalApplications: applications.length,
           openTickets,
         });
-        setRecentActivity(buildRecentActivity(applications, historyByAppId, ticketsResponse.items || []));
+        setRecentActivity(buildRecentActivity(applications, historyByAppId, supportTickets));
       } finally {
         if (mounted) {
           setLoadingStats(false);
@@ -179,7 +176,6 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6 max-w-6xl">
-      {/* Welcome */}
       <div>
         <h2 className="text-2xl font-heading font-bold text-foreground">
           Welcome back{userName ? `, ${userName}` : ""}!
@@ -187,7 +183,6 @@ const Dashboard = () => {
         <p className="text-sm text-muted-foreground mt-1">Here's an overview of your account</p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((stat) => (
           <div key={stat.label} className="glass rounded-xl p-4">
@@ -212,7 +207,6 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Quick Actions */}
       <div>
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Quick Actions</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -235,7 +229,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Recent Activity */}
       <div>
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Recent Activity</h3>
         {loadingStats ? (

@@ -1,6 +1,6 @@
 import { getApiBaseUrl } from "@/lib/api";
 
-export type SearchResultType = "news" | "decision" | "document" | "service";
+export type SearchResultType = "news" | "decision" | "document" | "service" | "page";
 export type SearchResultAction =
   | "open_signin_modal"
   | "open_services_overlay"
@@ -24,7 +24,7 @@ export interface SearchResponse {
 }
 
 function isSearchType(value: unknown): value is SearchResultType {
-  return value === "news" || value === "decision" || value === "document" || value === "service";
+  return value === "news" || value === "decision" || value === "document" || value === "service" || value === "page";
 }
 
 function isSearchAction(value: unknown): value is SearchResultAction {

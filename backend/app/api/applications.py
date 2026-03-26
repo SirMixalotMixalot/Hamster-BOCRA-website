@@ -23,6 +23,9 @@ from app.models.applications import (
     ApplicationRequestInfoRequest,
     ApplicationStatusLog,
     ApplicationSubmitRequest,
+    ApplicationHistoryBatchRequest,
+    ApplicationHistoryBatchResponse,
+    ApplicationHistoryBatchItem,
 )
 
 router = APIRouter(prefix="/api/applications", tags=["applications"])
@@ -1009,3 +1012,79 @@ async def get_application_history(
 
     logger.info("get_application_history app_id=%s user_id=%s count=%d", application_id, current_user_id, len(logs))
     return logs
+
+
+
+@router.post("/batch/histories", response_model=ApplicationHistoryBatchResponse)
+async def batch_get_application_histories(
+    payload: ApplicationHistoryBatchRequest,
+    current_profile: dict[str, Any] = Depends(get_current_profile),
+) -> ApplicationHistoryBatchResponse:
+    """
+    Fetch status change histories for multiple applications in a single request.
+    - Owner or admin only (filters to accessible applications).
+    - Returns empty history arrays for applications user doesn't have access to.
+    """
+    if not payload.application_ids:
+        return ApplicationHistoryBatchResponse(items=[])
+
+    supabase = get_supabase_admin()
+    current_user_id = UUID(current_profile["id"])
+    is_admin = current_profile.get("role") == "admin"
+
+    # Get applicant IDs for access control
+    app_ids_str = [str(app_id) for app_id in payload.application_ids]
+    apps_result = (
+        supabase.table("applications")
+        .select("id, applicant_id")
+        .in_("id", app_ids_str)
+        .execute()
+    )
+
+    accessible_ids = set()
+    for row in apps_result.data or []:
+        app_id = UUID(row["id"])  # type: ignore
+        applicant_id = UUID(row["applicant_id"])  # type: ignore
+        if is_admin or applicant_id == current_user_id:
+            accessible_ids.add(str(app_id))
+
+    # Fetch histories for accessible applications
+    if accessible_ids:
+        logs_result = (
+            supabase.table("application_status_log")
+            .select("*")
+            .in_("application_id", list(accessible_ids))
+            .order("created_at", desc=False)
+            .execute()
+        )
+    else:
+        logs_result = type("obj", (object,), {"data": []})()
+
+    # Group by application_id
+    logs_by_app: dict[str, list[ApplicationStatusLog]] = defaultdict(list)
+    for row in logs_result.data or []:
+        app_id = row["application_id"]  # type: ignore
+        logs_by_app[app_id].append(
+            ApplicationStatusLog(
+                id=UUID(row["id"]),  # type: ignore
+                old_status=row.get("old_status"),  # type: ignore
+                new_status=row["new_status"],  # type: ignore
+                changed_by=UUID(row["changed_by"]) if row.get("changed_by") else None,  # type: ignore
+                reason=row.get("reason"),  # type: ignore
+                created_at=datetime.fromisoformat(row["created_at"]),  # type: ignore
+            )
+        )
+
+    # Build response with all requested app IDs (including inaccessible ones with empty history)
+    items = []
+    for app_id in payload.application_ids:
+        app_id_str = str(app_id)
+        items.append(
+            ApplicationHistoryBatchItem(
+                id=app_id,
+                history=logs_by_app.get(app_id_str, []),
+            )
+        )
+
+    logger.info("batch_get_application_histories user_id=%s count=%d", current_user_id, len(payload.application_ids))
+    return ApplicationHistoryBatchResponse(items=items)

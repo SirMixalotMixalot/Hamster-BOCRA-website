@@ -61,6 +61,7 @@ const AuthBootstrapper = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [shouldShowOverlay, setShouldShowOverlay] = useState(false);
 
   const enforceRouteAccess = (path: string, me: MeResponse | null) => {
     const isProtected = path.startsWith("/admin") || path.startsWith("/customer");
@@ -88,6 +89,22 @@ const AuthBootstrapper = () => {
     let active = true;
 
     const bootstrap = async () => {
+      const isProtected = location.pathname.startsWith("/admin") || location.pathname.startsWith("/customer");
+      const cachedMe = getCachedMe();
+      
+      // Only bootstrap if going to protected route or has cached session for protected route
+      if (!isProtected && !cachedMe) {
+        // Public page with no cached login - no need to wait for auth
+        setIsBootstrapping(false);
+        return;
+      }
+
+      // Protected route requires overlay while verifying
+      // Cached login on public page: verify silently in background without overlay
+      if (isProtected) {
+        setShouldShowOverlay(true);
+      }
+
       const me = await bootstrapAuth();
       if (!active) {
         return;
@@ -110,7 +127,7 @@ const AuthBootstrapper = () => {
       active = false;
       unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   useEffect(() => {
     if (isBootstrapping) {
@@ -119,7 +136,7 @@ const AuthBootstrapper = () => {
     enforceRouteAccess(location.pathname, getCachedMe());
   }, [isBootstrapping, location.pathname]);
 
-  if (!isBootstrapping) {
+  if (!isBootstrapping || !shouldShowOverlay) {
     return null;
   }
 

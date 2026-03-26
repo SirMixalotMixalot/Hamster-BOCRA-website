@@ -44,6 +44,8 @@ const PROFILE_ROLE_KEY = "bocra_profile_role";
 const ME_CACHE_KEY = "bocra_me_cache";
 const AUTH_LOG_PREFIX = "[auth]";
 
+const JWT_EXPIRY_SKEW_SECONDS = 15;
+
 function logAuthInfo(event: string, meta?: Record<string, unknown>): void {
   if (import.meta.env.DEV) {
     console.info(`${AUTH_LOG_PREFIX} ${event}`, meta || {});
@@ -64,8 +66,37 @@ class ApiError extends Error {
   }
 }
 function getAuthHeader() {
-  const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+  const token = getAccessToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  const parts = token.split(".");
+  if (parts.length < 2) {
+    return null;
+  }
+
+  try {
+    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padded = payload + "=".repeat((4 - (payload.length % 4)) % 4);
+    const json = atob(padded);
+    const parsed = JSON.parse(json);
+    return typeof parsed === "object" && parsed !== null ? (parsed as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
+}
+
+function isJwtExpired(token: string): boolean {
+  const payload = decodeJwtPayload(token);
+  const exp = payload?.exp;
+  if (typeof exp !== "number") {
+    // If we cannot parse expiry, treat token as unusable to avoid backend 401 spam.
+    return true;
+  }
+
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  return exp <= nowSeconds + JWT_EXPIRY_SKEW_SECONDS;
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -103,13 +134,49 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export function getAccessToken(): string | null {
-  return localStorage.getItem(ACCESS_TOKEN_KEY);
+  const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+  if (!token) {
+    return null;
+  }
+
+  if (isJwtExpired(token)) {
+    logAuthInfo("access_token_expired_client_side", { action: "clear" });
+    clearAccessToken();
+    return null;
+  }
+
+  return token;
 }
 
 export function clearAccessToken(): void {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(PROFILE_ROLE_KEY);
   localStorage.removeItem(ME_CACHE_KEY);
+
+  // Clear in-memory caches tied to previous auth state.
+  void import("@/lib/batch")
+    .then((mod) => {
+      mod.invalidatePortalBatchCache();
+    })
+    .catch(() => {
+      // no-op
+    });
+
+  void import("@/lib/applications")
+    .then((mod) => {
+      mod.invalidateApplicationsListCache();
+    })
+    .catch(() => {
+      // no-op
+    });
+
+  void import("@/lib/support")
+    .then((mod) => {
+      mod.invalidateSupportTicketsCache();
+    })
+    .catch(() => {
+      // no-op
+    });
 }
 
 export function getStoredRole(): AppRole | null {
@@ -208,17 +275,21 @@ export async function login(payload: {
 }
 
 export async function logout(): Promise<void> {
+  const token = getAccessToken();
+
+  // Fire-and-forget server logout before clearing local token to avoid missing bearer 401 logs.
+  if (token) {
+    void request<{ message: string }>("/api/auth/logout", {
+      method: "POST",
+    }).catch((error) => {
+      logAuthWarn("logout_api_failed", {
+        reason: error instanceof Error ? error.message : "unknown",
+      });
+    });
+  }
+
   logAuthInfo("logout_clearing_local_session");
   clearAccessToken();
-
-  // Fire-and-forget server logout to avoid blocking UI navigation.
-  void request<{ message: string }>("/api/auth/logout", {
-    method: "POST",
-  }).catch((error) => {
-    logAuthWarn("logout_api_failed", {
-      reason: error instanceof Error ? error.message : "unknown",
-    });
-  });
 
   void supabase.auth.signOut().catch((error) => {
     logAuthWarn("logout_supabase_failed", {

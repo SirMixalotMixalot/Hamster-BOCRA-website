@@ -5,6 +5,7 @@ from typing import Any
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
+from supabase_auth.errors import AuthApiError
 
 from app.db.client import get_supabase_admin
 
@@ -70,7 +71,14 @@ async def auth_context_middleware(request: Request, call_next):
         return _unauthorized("Missing bearer token")
 
     supabase = get_supabase_admin()
-    user_response = supabase.auth.get_user(token)
+    try:
+        user_response = supabase.auth.get_user(token)
+    except AuthApiError as exc:
+        logger.warning("auth_middleware_token_validation_failed path=%s detail=%s", path, str(exc))
+        return _unauthorized("Invalid or expired access token")
+    except Exception:
+        logger.exception("auth_middleware_token_validation_error path=%s", path)
+        return _unauthorized("Invalid or expired access token")
     user = getattr(user_response, "user", None)
 
     if user is None:
