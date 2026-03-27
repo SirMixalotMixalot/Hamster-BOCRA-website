@@ -378,7 +378,7 @@ const Header = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-transparent shadow-none">
+      <header className="sticky top-0 z-50 h-auto bg-transparent shadow-none">
         <div className="hidden lg:block container pt-4 pb-2">
           <div className="group relative rounded-full border border-slate-200/70 bg-white/80 px-6 py-3 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.55)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-[0_28px_65px_-28px_rgba(15,23,42,0.65)]">
             <div className="pointer-events-none absolute inset-y-1 left-1/2 w-48 -translate-x-1/2 rounded-full bg-white/70 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
@@ -469,7 +469,7 @@ const Header = () => {
           </div>
         </div>
 
-        <div className="container flex h-16 items-center justify-center lg:hidden md:h-[72px]">
+        <div className="container fixed inset-x-0 top-0 z-[70] flex h-16 items-center justify-center lg:hidden md:h-[72px]">
           <div className="group relative mx-auto w-full max-w-[30rem] overflow-hidden rounded-full border border-slate-200/70 bg-white/80 px-3 py-2 shadow-[0_14px_34px_-24px_rgba(15,23,42,0.6)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-0.5 hover:scale-[1.01]">
             <div className="pointer-events-none absolute inset-y-1 left-1/2 w-40 -translate-x-1/2 rounded-full bg-white/70 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
             <div className="relative z-10 flex h-11 items-center justify-between md:h-12">
@@ -540,15 +540,15 @@ const Header = () => {
 
         {/* Search Bar */}
         {searchOpen && (
-          <div className="animate-fade-in border-t border-slate-200/70">
+          <div className="animate-fade-in fixed inset-x-0 top-16 md:top-[72px] lg:relative lg:top-auto z-[80] border-t border-slate-200/70">
             <div className="container py-4">
               <div className="relative max-w-2xl mx-auto" ref={searchContainerRef}>
                 <form onSubmit={submitSearch}>
-                  <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/50 lg:text-slate-500" />
+                  <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
                   <input
                     type="text"
                     placeholder="Search BOCRA services, documents, regulations..."
-                    className="w-full rounded-lg border border-white/20 bg-white/10 py-3 pl-12 pr-4 text-sm text-white placeholder:text-white/50 focus:border-bocra-gold focus:outline-none focus:ring-2 focus:ring-bocra-gold/30 lg:border-slate-300 lg:bg-white lg:text-slate-900 lg:placeholder:text-slate-500"
+                    className="w-full rounded-lg border border-slate-300 bg-white py-3 pl-12 pr-4 text-sm text-slate-900 placeholder:text-slate-500 focus:border-bocra-gold focus:outline-none focus:ring-2 focus:ring-bocra-gold/30"
                     autoFocus
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
@@ -561,17 +561,17 @@ const Header = () => {
                 </form>
 
                 {showSearchResults && (
-                  <div className="absolute z-50 mt-2 w-full rounded-lg border border-white/15 bg-bocra-navy/95 p-3 shadow-xl backdrop-blur lg:border-slate-200 lg:bg-white/95">
+                  <div className="absolute z-50 mt-2 w-full rounded-lg border border-white/15 bg-bocra-navy/95 p-3 shadow-xl backdrop-blur">
                     {isSearching && (
-                      <p className="px-2 py-1 text-sm text-white/80 lg:text-slate-700">Searching...</p>
+                      <p className="px-2 py-1 text-sm text-white/80">Searching...</p>
                     )}
 
                     {!isSearching && searchError && (
-                      <p className="px-2 py-1 text-sm text-red-200 lg:text-red-600">{searchError}</p>
+                      <p className="px-2 py-1 text-sm text-red-200">{searchError}</p>
                     )}
 
                     {!isSearching && !searchError && hasSubmittedSearch && searchResults.length === 0 && (
-                      <p className="px-2 py-1 text-sm text-white/70 lg:text-slate-600">No results found.</p>
+                      <p className="px-2 py-1 text-sm text-white/70">No results found.</p>
                     )}
 
                     {!isSearching && !searchError && searchResults.length > 0 && (
@@ -584,7 +584,7 @@ const Header = () => {
 
                           return (
                             <section key={group.key} className="space-y-1">
-                              <h4 className="px-2 text-xs font-semibold uppercase tracking-wide text-bocra-gold/90 lg:text-bocra-navy">
+                              <h4 className="px-2 text-xs font-semibold uppercase tracking-wide text-bocra-gold/90">
                                 {group.label}
                               </h4>
                               {items.map((result, index) => (
@@ -592,10 +592,10 @@ const Header = () => {
                                   key={`${result.type}-${result.url}-${index}`}
                                   type="button"
                                   onClick={() => handleResultClick(result)}
-                                  className="w-full rounded-md px-2 py-2 text-left transition-colors hover:bg-white/10 lg:hover:bg-slate-100"
+                                  className="w-full rounded-md px-2 py-2 text-left transition-colors hover:bg-white/10"
                                 >
-                                  <p className="text-sm font-medium text-white lg:text-slate-900">{result.title}</p>
-                                  <p className="line-clamp-2 text-xs text-white/70 lg:text-slate-600">{result.snippet}</p>
+                                  <p className="text-sm font-medium text-white">{result.title}</p>
+                                  <p className="line-clamp-2 text-xs text-white/70">{result.snippet}</p>
                                 </button>
                               ))}
                             </section>
