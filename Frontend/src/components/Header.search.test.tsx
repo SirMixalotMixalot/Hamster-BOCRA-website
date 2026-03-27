@@ -3,6 +3,12 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import Header from "./Header";
+import { LanguageProvider } from "@/i18n";
+
+const clickSearchToggle = () => {
+  const [searchToggle] = screen.getAllByRole("button", { name: "Toggle search" });
+  fireEvent.click(searchToggle);
+};
 
 describe("Header search", () => {
   afterEach(() => {
@@ -34,12 +40,14 @@ describe("Header search", () => {
     } as Response);
 
     render(
-      <MemoryRouter>
-        <Header />
-      </MemoryRouter>
+      <LanguageProvider>
+        <MemoryRouter>
+          <Header />
+        </MemoryRouter>
+      </LanguageProvider>
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Toggle search" }));
+    clickSearchToggle();
 
     const input = screen.getByPlaceholderText("Search BOCRA services, documents, regulations...");
     fireEvent.change(input, { target: { value: "licence" } });
@@ -79,12 +87,14 @@ describe("Header search", () => {
     const dispatchSpy = vi.spyOn(window, "dispatchEvent");
 
     render(
-      <MemoryRouter>
-        <Header />
-      </MemoryRouter>
+      <LanguageProvider>
+        <MemoryRouter>
+          <Header />
+        </MemoryRouter>
+      </LanguageProvider>
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Toggle search" }));
+    clickSearchToggle();
     const input = screen.getByPlaceholderText("Search BOCRA services, documents, regulations...");
     fireEvent.change(input, { target: { value: "contact" } });
     fireEvent.submit(input.closest("form")!);
@@ -116,12 +126,14 @@ describe("Header search", () => {
     const dispatchSpy = vi.spyOn(window, "dispatchEvent");
 
     render(
-      <MemoryRouter>
-        <Header />
-      </MemoryRouter>
+      <LanguageProvider>
+        <MemoryRouter>
+          <Header />
+        </MemoryRouter>
+      </LanguageProvider>
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Toggle search" }));
+    clickSearchToggle();
     const input = screen.getByPlaceholderText("Search BOCRA services, documents, regulations...");
     fireEvent.change(input, { target: { value: "complaint" } });
     fireEvent.submit(input.closest("form")!);
