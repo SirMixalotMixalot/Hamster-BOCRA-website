@@ -273,7 +273,23 @@ def _send_complaint_status_email(
         "Please log in to the BOCRA portal to view details.\n\n"
         "Regards,\nBOCRA"
     )
-    send_email(to_email=email, subject=email_subject, body=body)
+    sent = send_email(to_email=email, subject=email_subject, body=body)
+    if not sent:
+        logger.error(
+            "send_complaint_status_email_failed complaint_id=%s email=%s reference_number=%s new_status=%s",
+            complaint_id,
+            email,
+            reference_number,
+            new_status,
+        )
+    else:
+        logger.info(
+            "send_complaint_status_email_success complaint_id=%s email=%s reference_number=%s new_status=%s",
+            complaint_id,
+            email,
+            reference_number,
+            new_status,
+        )
 
 
 def _build_verification_key(email: str) -> str:
