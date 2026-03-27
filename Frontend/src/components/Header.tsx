@@ -540,7 +540,7 @@ const Header = () => {
 
         {/* Search Bar */}
         {searchOpen && (
-          <div className="animate-fade-in fixed inset-x-0 top-16 md:top-[72px] lg:relative lg:top-auto z-[80] border-t border-slate-200/70">
+          <div className="animate-fade-in fixed inset-x-0 top-16 md:top-[72px] lg:relative lg:top-auto z-[80]">
             <div className="container py-4">
               <div className="relative max-w-2xl mx-auto" ref={searchContainerRef}>
                 <form onSubmit={submitSearch}>
