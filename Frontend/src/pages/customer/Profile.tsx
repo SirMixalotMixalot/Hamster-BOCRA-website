@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { User as UserIcon, Camera, Loader2, Lock, Bell, Mail, MessageSquare, Pencil } from "lucide-react";
-import { getCachedMe, getMe } from "@/lib/auth";
+import { getCachedMe, getMe, updateMeProfile } from "@/lib/auth";
 import { LoadingDots } from "@/components/ui/loading-dots";
 
 const inputBase =
@@ -19,6 +19,7 @@ const Profile = () => {
   // Edit mode
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Personal details
   const [fullName, setFullName] = useState("");
@@ -37,6 +38,7 @@ const Profile = () => {
 
   const applyProfile = (me: Awaited<ReturnType<typeof getMe>>) => {
     setFullName(me.profile.full_name || "");
+    setIdNumber(me.profile.id_number || "");
     setEmail(me.user.email || "");
     setGender(me.profile.gender || "");
     setDob(me.profile.date_of_birth || "");
@@ -95,12 +97,26 @@ const Profile = () => {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [passwordOpen, notifOpen]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
+    setSaveError(null);
+    try {
+      const updated = await updateMeProfile({
+        full_name: fullName || null,
+        id_number: idNumber || null,
+        gender: gender || null,
+        date_of_birth: dob || null,
+        phone: phone || null,
+        address: street || null,
+        profile_photo_url: photoUrl || null,
+      });
+      applyProfile(updated);
       setEditing(false);
-    }, 800);
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Failed to save profile changes");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -179,6 +195,11 @@ const Profile = () => {
 
         {/* Personal Details */}
         <div className="space-y-4 pb-6 mb-6 border-b border-white/40">
+          {saveError && (
+            <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-2 text-sm text-destructive">
+              {saveError}
+            </div>
+          )}
           <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Personal Details</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">

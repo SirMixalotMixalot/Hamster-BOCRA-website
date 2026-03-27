@@ -15,6 +15,7 @@ from app.models.auth import (
     AuthUserResponse,
     LoginRequest,
     MeResponse,
+    ProfileUpdateRequest,
     ProfileResponse,
     SignUpRequest,
 )
@@ -178,4 +179,66 @@ async def me(
     return MeResponse(
         user=AuthUserResponse(id=current_user["id"], email=current_user.get("email")),
         profile=ProfileResponse(**current_profile),
+    )
+
+
+@router.patch("/me", response_model=MeResponse)
+async def update_me(
+    payload: ProfileUpdateRequest,
+    current_user: dict[str, Any] = Depends(get_current_user),
+) -> MeResponse:
+    supabase = get_supabase_admin()
+    user_id = current_user["id"]
+
+    update_data: dict[str, Any] = {}
+    if payload.full_name is not None:
+        update_data["full_name"] = payload.full_name.strip() or None
+    if payload.id_number is not None:
+        update_data["id_number"] = payload.id_number.strip() or None
+    if payload.gender is not None:
+        update_data["gender"] = payload.gender.strip() or None
+    if payload.date_of_birth is not None:
+        update_data["date_of_birth"] = payload.date_of_birth.isoformat()
+    if payload.phone is not None:
+        update_data["phone"] = payload.phone.strip() or None
+    if payload.address is not None:
+        update_data["address"] = payload.address.strip() or None
+    if payload.profile_photo_url is not None:
+        update_data["profile_photo_url"] = payload.profile_photo_url.strip() or None
+    if payload.consent_given is not None:
+        update_data["consent_given"] = payload.consent_given
+
+    if update_data:
+        update_result = (
+            supabase.table("profiles")
+            .update(update_data)
+            .eq("id", user_id)
+            .execute()
+        )
+        rows = [row for row in (update_result.data or []) if isinstance(row, dict)]
+        if not rows:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Profile not found for authenticated user",
+            )
+
+    refreshed = (
+        supabase.table("profiles")
+        .select(
+            "id,role,full_name,id_number,gender,date_of_birth,phone,address,profile_photo_url,consent_given,created_at,updated_at"
+        )
+        .eq("id", user_id)
+        .limit(1)
+        .execute()
+    )
+    refreshed_rows = [row for row in (refreshed.data or []) if isinstance(row, dict)]
+    if not refreshed_rows:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Profile not found for authenticated user",
+        )
+
+    return MeResponse(
+        user=AuthUserResponse(id=user_id, email=current_user.get("email")),
+        profile=ProfileResponse(**refreshed_rows[0]),
     )

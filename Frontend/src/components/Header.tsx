@@ -149,12 +149,26 @@ const Header = () => {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
-  const [isCustomer, setIsCustomer] = useState(false);
+  const [authRole, setAuthRole] = useState<string | null>(null);
   const searchContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    setIsCustomer(!!getAccessToken() && getStoredRole() === "customer");
+    const syncAuthRole = () => {
+      if (!getAccessToken()) {
+        setAuthRole(null);
+        return;
+      }
+      setAuthRole(getStoredRole());
+    };
+
+    syncAuthRole();
+    window.addEventListener("storage", syncAuthRole);
+    return () => window.removeEventListener("storage", syncAuthRole);
   }, []);
+
+  const isAuthenticated = !!authRole;
+  const portalPath = authRole === "admin" ? "/admin/dashboard" : "/customer/dashboard";
+  const portalLabel = authRole === "admin" ? "Admin Portal" : "Customer Portal";
 
   const groupedResults = useMemo(() => {
     const grouped: Record<SearchResultItem["type"], SearchResultItem[]> = {
@@ -377,20 +391,20 @@ const Header = () => {
             >
               <Search className="h-5 w-5 text-white/70" />
             </button>
-            {isCustomer ? (
+            {isAuthenticated ? (
               <>
                 <button
-                  onClick={() => navigate("/customer/dashboard")}
+                  onClick={() => navigate(portalPath)}
                   className="md:hidden p-2 rounded-md hover:bg-white/10 transition-colors"
-                  aria-label="Customer Portal"
+                  aria-label={portalLabel}
                 >
                   <LogIn className="h-5 w-5 text-white/70" />
                 </button>
                 <button
-                  onClick={() => navigate("/customer/dashboard")}
+                  onClick={() => navigate(portalPath)}
                   className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 border border-white/30 rounded-md text-sm font-medium text-white hover:bg-white/10 transition-colors"
                 >
-                  Customer Portal
+                  {portalLabel}
                 </button>
               </>
             ) : (

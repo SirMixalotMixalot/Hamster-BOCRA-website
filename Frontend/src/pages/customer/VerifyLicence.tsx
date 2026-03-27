@@ -1,25 +1,8 @@
 import { useState } from "react";
 import { ShieldCheck, Search, Loader2, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { verifyLicence, type LicenceVerificationItem, type LicenceVerificationStatus } from "@/lib/applications";
 
 type LicenceType = "ALL" | "Spectrum License" | "Dealer" | "Type Approval" | "System and Services";
-
-type LicenceResult = {
-  licenceNo: string;
-  clientName: string;
-  licenceType: string;
-  issueDate: string;
-  expirationDate: string;
-  status: "Active" | "Expired" | "Suspended";
-};
-
-const MOCK_DATA: LicenceResult[] = [
-  { licenceNo: "4646", clientName: "11 WARD SECURITY SERVICES", licenceType: "Spectrum License", issueDate: "Jul 01, 2019", expirationDate: "Jun 30, 2022", status: "Expired" },
-  { licenceNo: "5012", clientName: "MASCOM WIRELESS (PTY) LTD", licenceType: "Spectrum License", issueDate: "Jan 01, 2024", expirationDate: "Dec 31, 2026", status: "Active" },
-  { licenceNo: "3891", clientName: "ORANGE BOTSWANA (PTY) LTD", licenceType: "Spectrum License", issueDate: "Mar 16, 2022", expirationDate: "Mar 15, 2027", status: "Active" },
-  { licenceNo: "4100", clientName: "BOTSWANA TELECOMMUNICATIONS", licenceType: "System and Services", issueDate: "Oct 01, 2020", expirationDate: "Sep 30, 2025", status: "Suspended" },
-  { licenceNo: "6230", clientName: "KWENA COMMUNICATIONS", licenceType: "Dealer", issueDate: "Aug 13, 2023", expirationDate: "Aug 12, 2026", status: "Active" },
-  { licenceNo: "5500", clientName: "SAMSUNG ELECTRONICS SA", licenceType: "Type Approval", issueDate: "Jan 21, 2022", expirationDate: "Jan 20, 2025", status: "Expired" },
-];
 
 const licenceTypes: LicenceType[] = ["ALL", "Spectrum License", "Dealer", "Type Approval", "System and Services"];
 
@@ -29,37 +12,49 @@ const statusColors: Record<string, string> = {
   Suspended: "bg-yellow-100 text-yellow-700",
 };
 
-const statusIcons: Record<string, { icon: typeof CheckCircle2; color: string; bg: string; label: string }> = {
+const statusIcons: Record<LicenceVerificationStatus, { icon: typeof CheckCircle2; color: string; bg: string; label: string }> = {
   Active: { icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50", label: "Valid & Active" },
   Expired: { icon: XCircle, color: "text-red-600", bg: "bg-red-50", label: "Expired" },
   Suspended: { icon: AlertTriangle, color: "text-yellow-600", bg: "bg-yellow-50", label: "Suspended" },
 };
 
+function formatDate(dateString: string | Date): string {
+  const date = typeof dateString === "string" ? new Date(dateString) : dateString;
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  }).format(date);
+}
+
 const VerifyLicence = () => {
   const [customerName, setCustomerName] = useState("");
   const [licenceNumber, setLicenceNumber] = useState("");
   const [licenceType, setLicenceType] = useState<LicenceType>("ALL");
-  const [results, setResults] = useState<LicenceResult[] | null>(null);
-  const [selected, setSelected] = useState<LicenceResult | null>(null);
+  const [results, setResults] = useState<LicenceVerificationItem[] | null>(null);
+  const [selected, setSelected] = useState<LicenceVerificationItem | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     setLoading(true);
     setSelected(null);
-    setTimeout(() => {
-      const filtered = MOCK_DATA.filter((item) => {
-        const matchesName = !customerName || item.clientName.toLowerCase().includes(customerName.toLowerCase());
-        const matchesNumber = !licenceNumber || item.licenceNo.includes(licenceNumber);
-        const matchesType = licenceType === "ALL" || item.licenceType === licenceType;
-        return matchesName && matchesNumber && matchesType;
+    setError(null);
+    try {
+      const response = await verifyLicence({
+        customer_name: customerName || undefined,
+        licence_number: licenceNumber || undefined,
+        licence_type: licenceType !== "ALL" ? licenceType : undefined,
       });
-      setResults(filtered);
-      // Auto-select if only one result
-      if (filtered.length === 1) {
-        setSelected(filtered[0]);
+      setResults(response.items);
+      if (response.items.length === 1) {
+        setSelected(response.items[0]);
       }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to search licences");
+    } finally {
       setLoading(false);
-    }, 600);
+    }
   };
 
   const statusInfo = selected ? statusIcons[selected.status] : null;
@@ -137,6 +132,12 @@ const VerifyLicence = () => {
           )}
           Search
         </button>
+
+        {error && (
+          <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
+            {error}
+          </div>
+        )}
       </div>
 
       {/* Results Card */}
@@ -167,20 +168,20 @@ const VerifyLicence = () => {
                 <tbody>
                   {results.map((row, i) => (
                     <tr
-                      key={row.licenceNo}
+                      key={row.licence_number}
                       onClick={() => setSelected(row)}
                       className={`border-b border-white/30 last:border-0 cursor-pointer transition-colors ${
-                        selected?.licenceNo === row.licenceNo
+                        selected?.licence_number === row.licence_number
                           ? "bg-primary/10"
                           : i % 2 === 1
                           ? "bg-white/30 hover:bg-white/50"
                           : "hover:bg-white/40"
                       }`}
                     >
-                      <td className="px-4 py-3 text-foreground font-medium">{row.licenceNo}</td>
-                      <td className="px-4 py-3 text-foreground">{row.clientName}</td>
-                      <td className="px-4 py-3 text-foreground">{row.licenceType}</td>
-                      <td className="px-4 py-3 text-foreground">{row.expirationDate}</td>
+                      <td className="px-4 py-3 text-foreground font-medium">{row.licence_number}</td>
+                      <td className="px-4 py-3 text-foreground">{row.customer_name}</td>
+                      <td className="px-4 py-3 text-foreground">{row.licence_type}</td>
+                      <td className="px-4 py-3 text-foreground">{formatDate(row.expiration_date)}</td>
                       <td className="px-4 py-3">
                         <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[row.status]}`}>
                           {row.status}
@@ -208,33 +209,33 @@ const VerifyLicence = () => {
             </div>
             <div>
               <p className={`text-lg font-bold ${statusInfo.color}`}>{statusInfo.label}</p>
-              <p className="text-sm text-muted-foreground">Licence #{selected.licenceNo}</p>
+              <p className="text-sm text-muted-foreground">Licence #{selected.licence_number}</p>
             </div>
           </div>
 
           {/* Licence Holder */}
           <div className="border-t border-white/40 pt-4">
             <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Licence Holder</p>
-            <p className="text-lg font-semibold text-foreground">{selected.clientName}</p>
+            <p className="text-lg font-semibold text-foreground">{selected.customer_name}</p>
           </div>
 
           {/* Detail Grid */}
           <div className="grid grid-cols-2 gap-4 border-t border-white/40 pt-4">
             <div>
               <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Licence Number</p>
-              <p className="text-sm font-semibold text-foreground">{selected.licenceNo}</p>
+              <p className="text-sm font-semibold text-foreground">{selected.licence_number}</p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Licence Type</p>
-              <p className="text-sm font-semibold text-foreground">{selected.licenceType}</p>
+              <p className="text-sm font-semibold text-foreground">{selected.licence_type}</p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Issue Date</p>
-              <p className="text-sm font-semibold text-foreground">{selected.issueDate}</p>
+              <p className="text-sm font-semibold text-foreground">{formatDate(selected.issue_date)}</p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Expiration Date</p>
-              <p className="text-sm font-semibold text-foreground">{selected.expirationDate}</p>
+              <p className="text-sm font-semibold text-foreground">{formatDate(selected.expiration_date)}</p>
             </div>
           </div>
 

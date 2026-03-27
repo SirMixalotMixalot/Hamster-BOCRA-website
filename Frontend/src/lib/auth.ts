@@ -12,6 +12,7 @@ export interface MeResponse {
     id: string;
     role: AppRole;
     full_name?: string | null;
+    id_number?: string | null;
     gender?: string | null;
     date_of_birth?: string | null;
     phone?: string | null;
@@ -313,6 +314,25 @@ export async function signInWithGoogle(): Promise<void> {
 
 export async function getMe(): Promise<MeResponse> {
   const response = await request<MeResponse>("/api/auth/me", { method: "GET" });
+  storeProfileRole(response.profile.role);
+  storeCachedMe(response);
+  return response;
+}
+
+export async function updateMeProfile(payload: {
+  full_name?: string | null;
+  id_number?: string | null;
+  gender?: string | null;
+  date_of_birth?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  profile_photo_url?: string | null;
+  consent_given?: boolean;
+}): Promise<MeResponse> {
+  const response = await request<MeResponse>("/api/auth/me", {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
   storeProfileRole(response.profile.role);
   storeCachedMe(response);
   return response;

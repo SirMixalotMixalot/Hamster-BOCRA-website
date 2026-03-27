@@ -88,7 +88,7 @@ async def auth_context_middleware(request: Request, call_next):
     profile_result = (
         supabase.table("profiles")
         .select(
-            "id,role,full_name,gender,date_of_birth,phone,address,profile_photo_url,consent_given,created_at,updated_at"
+            "id,role,full_name,id_number,gender,date_of_birth,phone,address,profile_photo_url,consent_given,created_at,updated_at"
         )
         .eq("id", str(user.id))
         .limit(1)
@@ -110,7 +110,7 @@ async def auth_context_middleware(request: Request, call_next):
         profile_result = (
             supabase.table("profiles")
             .select(
-                "id,role,full_name,gender,date_of_birth,phone,address,profile_photo_url,consent_given,created_at,updated_at"
+                "id,role,full_name,id_number,gender,date_of_birth,phone,address,profile_photo_url,consent_given,created_at,updated_at"
             )
             .eq("id", str(user.id))
             .limit(1)

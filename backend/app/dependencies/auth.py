@@ -66,7 +66,7 @@ async def get_current_profile(
     result = (
         supabase.table("profiles")
         .select(
-            "id,role,full_name,gender,date_of_birth,phone,address,profile_photo_url,consent_given,created_at,updated_at"
+            "id,role,full_name,id_number,gender,date_of_birth,phone,address,profile_photo_url,consent_given,created_at,updated_at"
         )
         .eq("id", current_user["id"])
         .limit(1)
@@ -87,7 +87,7 @@ async def get_current_profile(
         result = (
             supabase.table("profiles")
             .select(
-                "id,role,full_name,gender,date_of_birth,phone,address,profile_photo_url,consent_given,created_at,updated_at"
+                "id,role,full_name,id_number,gender,date_of_birth,phone,address,profile_photo_url,consent_given,created_at,updated_at"
             )
             .eq("id", current_user["id"])
             .limit(1)

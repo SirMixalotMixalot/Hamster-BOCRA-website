@@ -50,6 +50,22 @@ export interface ApplicationStatusLogItem {
   created_at: string;
 }
 
+export type LicenceVerificationStatus = "Active" | "Expired" | "Suspended";
+
+export interface LicenceVerificationItem {
+  licence_number: string;
+  customer_name: string;
+  licence_type: string;
+  issue_date: string;
+  expiration_date: string;
+  status: LicenceVerificationStatus;
+}
+
+export interface LicenceVerificationResponse {
+  items: LicenceVerificationItem[];
+  count: number;
+}
+
 const APPLICATIONS_CACHE_TTL_MS = 2 * 60 * 1000;
 const APPLICATION_HISTORY_BATCH_CACHE_TTL_MS = 2 * 60 * 1000;
 
@@ -270,4 +286,30 @@ export async function batchGetApplicationHistories(
   });
 
   return historyMap;
+}
+
+export async function verifyLicence(filters?: {
+  customer_name?: string;
+  licence_number?: string;
+  licence_type?: string;
+  limit?: number;
+}): Promise<LicenceVerificationResponse> {
+  const params = new URLSearchParams();
+  if (filters?.customer_name) {
+    params.append("customer_name", filters.customer_name);
+  }
+  if (filters?.licence_number) {
+    params.append("licence_number", filters.licence_number);
+  }
+  if (filters?.licence_type && filters.licence_type !== "ALL") {
+    params.append("licence_type", filters.licence_type);
+  }
+  if (filters?.limit) {
+    params.append("limit", filters.limit.toString());
+  }
+
+  const queryString = params.toString();
+  const path = queryString ? `/api/applications/verify?${queryString}` : "/api/applications/verify";
+
+  return request<LicenceVerificationResponse>(path, { method: "GET" });
 }

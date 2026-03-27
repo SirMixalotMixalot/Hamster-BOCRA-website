@@ -44,6 +44,7 @@ class ProfileResponse(BaseModel):
     id: UUID
     role: Literal["customer", "admin"] | str
     full_name: str | None = None
+    id_number: str | None = None
     gender: str | None = None
     date_of_birth: date | None = None
     phone: str | None = None
@@ -57,3 +58,16 @@ class ProfileResponse(BaseModel):
 class MeResponse(BaseModel):
     user: AuthUserResponse
     profile: ProfileResponse
+
+
+class ProfileUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    full_name: StrictStr | None = Field(default=None, max_length=200)
+    id_number: StrictStr | None = Field(default=None, max_length=100)
+    gender: StrictStr | None = Field(default=None, max_length=50)
+    date_of_birth: date | None = None
+    phone: StrictStr | None = Field(default=None, max_length=50)
+    address: StrictStr | None = Field(default=None, max_length=500)
+    profile_photo_url: StrictStr | None = Field(default=None, max_length=1000)
+    consent_given: bool | None = None
