@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 import os
 import smtplib
@@ -10,17 +11,40 @@ from app.core.config import get_settings
 logger = logging.getLogger("app.email")
 
 
-def send_email(*, to_email: str, subject: str, body: str) -> bool:
+@dataclass
+class EmailSendResult:
+    ok: bool
+    code: str | None = None
+    message: str | None = None
+
+
+def _pick_env(*names: str) -> str:
+    for name in names:
+        value = os.getenv(name)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return ""
+
+
+def send_email_detailed(*, to_email: str, subject: str, body: str) -> EmailSendResult:
     """
     Send a plaintext email. Returns True on send success, False otherwise.
     Uses SMTP_* environment variables; logs and no-ops when unconfigured.
     """
     settings = get_settings()
-    smtp_host = str(settings.smtp_host or os.getenv("SMTP_HOST") or "").strip()
+    smtp_host = str(
+        settings.smtp_host or _pick_env("SMTP_HOST", "MAIL_HOST", "EMAIL_HOST")
+    ).strip()
     smtp_port = int(str(settings.smtp_port or os.getenv("SMTP_PORT") or "587").strip() or "587")
-    smtp_user = str(settings.smtp_username or os.getenv("SMTP_USERNAME") or "").strip()
-    smtp_password = str(settings.smtp_password or os.getenv("SMTP_PASSWORD") or "").strip()
-    smtp_from = str(settings.smtp_from or os.getenv("SMTP_FROM") or "").strip()
+    smtp_user = str(
+        settings.smtp_username or _pick_env("SMTP_USERNAME", "SMTP_USER", "MAIL_USERNAME")
+    ).strip()
+    smtp_password = str(
+        settings.smtp_password or _pick_env("SMTP_PASSWORD", "SMTP_PASS", "MAIL_PASSWORD")
+    ).strip()
+    smtp_from = str(
+        settings.smtp_from or _pick_env("SMTP_FROM", "MAIL_FROM", "EMAIL_FROM")
+    ).strip()
     smtp_use_tls = bool(settings.smtp_use_tls)
 
     if settings.debug:
@@ -31,7 +55,7 @@ def send_email(*, to_email: str, subject: str, body: str) -> bool:
             subject,
             preview,
         )
-        return True
+        return EmailSendResult(ok=True)
 
     if not smtp_host or not smtp_from:
         missing_vars = []
@@ -49,7 +73,27 @@ def send_email(*, to_email: str, subject: str, body: str) -> bool:
             bool(smtp_user),
             bool(smtp_password),
         )
-        return False
+        return EmailSendResult(
+            ok=False,
+            code="missing_config",
+            message=(
+                "Missing required email config: " + ", ".join(missing_vars)
+                if missing_vars
+                else "Missing required email config"
+            ),
+        )
+
+    if smtp_user and not smtp_password:
+        logger.error(
+            "email_not_sent_missing_password to=%s subject=%s smtp_user_set=true smtp_password_set=false",
+            to_email,
+            subject,
+        )
+        return EmailSendResult(
+            ok=False,
+            code="missing_config",
+            message="Missing required email config: SMTP_PASSWORD",
+        )
 
     message = EmailMessage()
     message["From"] = smtp_from
@@ -79,7 +123,7 @@ def send_email(*, to_email: str, subject: str, body: str) -> bool:
             to_email,
             subject,
         )
-        return True
+        return EmailSendResult(ok=True)
     except smtplib.SMTPAuthenticationError as exc:
         logger.error(
             "email_send_failed_authentication to=%s subject=%s smtp_host=%s smtp_user=%s error=%s",
@@ -89,7 +133,11 @@ def send_email(*, to_email: str, subject: str, body: str) -> bool:
             smtp_user if smtp_user else "NOT_SET",
             str(exc),
         )
-        return False
+        return EmailSendResult(
+            ok=False,
+            code="smtp_auth",
+            message="SMTP authentication failed. Check SMTP_USERNAME/SMTP_PASSWORD.",
+        )
     except smtplib.SMTPException as exc:
         error_msg = str(exc)
         if "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
@@ -101,6 +149,11 @@ def send_email(*, to_email: str, subject: str, body: str) -> bool:
                 smtp_port,
                 error_msg,
             )
+            return EmailSendResult(
+                ok=False,
+                code="timeout",
+                message="SMTP request timed out while sending email.",
+            )
         elif "connection" in error_msg.lower() or "refused" in error_msg.lower():
             logger.error(
                 "email_send_failed_connection to=%s subject=%s smtp_host=%s smtp_port=%s error=%s",
@@ -110,6 +163,11 @@ def send_email(*, to_email: str, subject: str, body: str) -> bool:
                 smtp_port,
                 error_msg,
             )
+            return EmailSendResult(
+                ok=False,
+                code="connection",
+                message="SMTP connection failed. Check SMTP_HOST/SMTP_PORT and provider network rules.",
+            )
         else:
             logger.error(
                 "email_send_failed_smtp to=%s subject=%s smtp_host=%s error=%s",
@@ -118,7 +176,11 @@ def send_email(*, to_email: str, subject: str, body: str) -> bool:
                 smtp_host,
                 error_msg,
             )
-        return False
+            return EmailSendResult(
+                ok=False,
+                code="smtp_error",
+                message="SMTP provider returned an error while sending email.",
+            )
     except Exception as exc:
         logger.error(
             "email_send_failed to=%s subject=%s smtp_host=%s exc_type=%s error=%s",
@@ -128,4 +190,12 @@ def send_email(*, to_email: str, subject: str, body: str) -> bool:
             type(exc).__name__,
             str(exc),
         )
-        return False
+        return EmailSendResult(
+            ok=False,
+            code="unknown",
+            message=f"Unexpected email error: {type(exc).__name__}",
+        )
+
+
+def send_email(*, to_email: str, subject: str, body: str) -> bool:
+    return send_email_detailed(to_email=to_email, subject=subject, body=body).ok

@@ -9,7 +9,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 
 from app.db.client import get_supabase_admin
-from app.core.email import send_email
+from app.core.email import send_email, send_email_detailed
 from app.core.config import get_settings
 from app.dependencies.auth import get_current_profile, require_admin
 from app.models.complaints import (
@@ -24,7 +24,14 @@ from app.models.complaints import (
     ComplaintsListResponse,
 )
 from app.services.email_verification import create_or_refresh_code, verify_code
-from app.services.email_verification import is_recently_verified
+from app.services.email_verification import (
+    is_recently_verified,
+    issue_code_challenge,
+    issue_verification_ticket,
+    mark_recently_verified,
+    verify_code_challenge,
+    verify_verification_ticket,
+)
 
 router = APIRouter(prefix="/api/complaints", tags=["complaints"])
 logger = logging.getLogger("app.complaints")
@@ -107,8 +114,9 @@ def _generate_reference_number(supabase_admin, current_year: int) -> str:
         if isinstance(row, dict) and row.get("reference_number"):
             parts = str(row["reference_number"]).split("-")
             try:
-                if len(parts) == 5:
-                    max_num = max(max_num, int(parts[4]))
+                # Expected format: BOCRA-CMP-YYYY-NNNN (4 parts)
+                if len(parts) == 4 and parts[0] == "BOCRA" and parts[1] == "CMP":
+                    max_num = max(max_num, int(parts[3]))
             except ValueError:
                 continue
 
@@ -276,16 +284,16 @@ def _send_complaint_status_email(
     sent = send_email(to_email=email, subject=email_subject, body=body)
     if not sent:
         logger.error(
-            "send_complaint_status_email_failed complaint_id=%s email=%s reference_number=%s new_status=%s",
-            complaint_id,
+            "send_complaint_status_email_failed complainant_id=%s email=%s reference_number=%s new_status=%s",
+            complainant_id,
             email,
             reference_number,
             new_status,
         )
     else:
         logger.info(
-            "send_complaint_status_email_success complaint_id=%s email=%s reference_number=%s new_status=%s",
-            complaint_id,
+            "send_complaint_status_email_success complainant_id=%s email=%s reference_number=%s new_status=%s",
+            complainant_id,
             email,
             reference_number,
             new_status,
@@ -324,14 +332,20 @@ async def send_complaint_verification_code(
             code,
         )
 
-    sent = send_email(to_email=payload.email, subject=subject, body=body)
-    if not sent:
+    result = send_email_detailed(to_email=payload.email, subject=subject, body=body)
+    if not result.ok:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Email service error: Could not send verification code. Please ensure SMTP_HOST, SMTP_FROM, SMTP_USERNAME, and SMTP_PASSWORD are configured in environment variables.",
+            detail=(
+                "Email service error: Could not send verification code. "
+                f"Reason: {result.message or 'Unknown SMTP failure.'}"
+            ),
         )
 
-    return ComplaintVerificationResponse(message="Verification code sent")
+    return ComplaintVerificationResponse(
+        message="Verification code sent",
+        challenge_token=issue_code_challenge(verification_key, code),
+    )
 
 
 @router.post("/verification/verify", response_model=ComplaintVerificationResponse)
@@ -339,14 +353,27 @@ async def verify_complaint_verification_code(
     payload: ComplaintVerificationVerifyRequest,
 ) -> ComplaintVerificationResponse:
     verification_key = _build_verification_key(payload.email)
-    is_valid, message = verify_code(verification_key, payload.code)
+    if payload.challenge_token:
+        is_valid, message = verify_code_challenge(
+            verification_key,
+            payload.code,
+            payload.challenge_token,
+        )
+    else:
+        is_valid, message = verify_code(verification_key, payload.code)
+
     if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=message,
         )
 
-    return ComplaintVerificationResponse(message=message)
+    mark_recently_verified(verification_key)
+
+    return ComplaintVerificationResponse(
+        message=message,
+        verification_ticket=issue_verification_ticket(verification_key),
+    )
 
 
 def build_complaints_analytics(supabase) -> dict[str, Any]:
@@ -545,7 +572,17 @@ async def create_complaint(
     """Create complaint after email verification. Supports guest submission."""
 
     verification_key = _build_verification_key(payload.email)
-    if not is_recently_verified(verification_key):
+    if payload.verification_ticket:
+        is_ticket_valid, ticket_message = verify_verification_ticket(
+            verification_key,
+            payload.verification_ticket,
+        )
+        if not is_ticket_valid:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Email verification is required before submitting a complaint: {ticket_message}",
+            )
+    elif not is_recently_verified(verification_key):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email verification is required before submitting a complaint",
@@ -586,7 +623,8 @@ async def create_complaint(
                 created_row = first_row
                 break
         except Exception as exc:
-            error_str = str(exc).lower()
+            raw_error = str(exc)
+            error_str = raw_error.lower()
             if "unique" in error_str and "reference" in error_str and attempt < max_retries - 1:
                 logger.warning(
                     "Complaint reference collision, retrying attempt=%d/%d error=%s",
@@ -595,10 +633,39 @@ async def create_complaint(
                     exc,
                 )
                 continue
+
+            logger.error(
+                "create_complaint_insert_failed attempt=%d/%d reference_number=%s error=%s",
+                attempt + 1,
+                max_retries,
+                reference_number,
+                raw_error,
+            )
+
+            if "complainant_id" in error_str and ("null" in error_str or "not-null" in error_str):
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=(
+                        "Failed to create complaint due to deployment schema mismatch: "
+                        "complaints.complainant_id is not nullable. Apply migration "
+                        "20260326112000_allow_guest_complaints_nullable_complainant.sql "
+                        "or submit while authenticated."
+                    ),
+                ) from exc
+
+            if "foreign key" in error_str and "complainant_id" in error_str:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=(
+                        "Failed to create complaint: invalid complainant_id constraint in deployment schema. "
+                        "Verify complaints table constraints and latest migrations."
+                    ),
+                ) from exc
+
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to create complaint",
-            )
+                detail=f"Failed to create complaint: {raw_error}",
+            ) from exc
 
     if not isinstance(created_row, dict):
         raise HTTPException(

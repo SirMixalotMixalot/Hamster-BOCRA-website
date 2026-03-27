@@ -41,6 +41,8 @@ const ComplaintModal = () => {
 
   const [referenceNumber, setReferenceNumber] = useState("");
   const [copied, setCopied] = useState(false);
+  const [challengeToken, setChallengeToken] = useState<string | null>(null);
+  const [verificationTicket, setVerificationTicket] = useState<string | null>(null);
 
   // Verification
   const [code, setCode] = useState(["", "", "", "", "", ""]);
@@ -64,6 +66,8 @@ const ComplaintModal = () => {
     setReferenceNumber("");
     setCopied(false);
     setSending(false);
+    setChallengeToken(null);
+    setVerificationTicket(null);
   };
 
   const handleOpenChange = (val: boolean) => {
@@ -94,6 +98,8 @@ const ComplaintModal = () => {
         });
         return;
       }
+
+      setChallengeToken(response.challenge_token ?? null);
 
       toast.success("Verification code sent", {
         description: `A 6-digit code was sent to ${email.trim()}.`,
@@ -131,7 +137,12 @@ const ComplaintModal = () => {
 
     setSending(true);
     try {
-      await verifyComplaintVerificationCode(email.trim().toLowerCase(), joinedCode);
+      const verification = await verifyComplaintVerificationCode(
+        email.trim().toLowerCase(),
+        joinedCode,
+        challengeToken ?? undefined,
+      );
+      setVerificationTicket(verification.verification_ticket ?? null);
 
       const category = `${sector}:${company}`;
       const subject = `${company} complaint`;
@@ -140,6 +151,7 @@ const ComplaintModal = () => {
         subject,
         category,
         description,
+        verification_ticket: verification.verification_ticket ?? verificationTicket ?? undefined,
       });
 
       setReferenceNumber(created.reference_number || "");
@@ -307,6 +319,7 @@ const ComplaintModal = () => {
                     try {
                       setSending(true);
                       const response = await sendComplaintVerificationCode(email.trim().toLowerCase());
+                      setChallengeToken(response.challenge_token ?? null);
                       if (response.retry_after_seconds) {
                         toast.info("Please wait before requesting another code", {
                           description: `Try again in ${response.retry_after_seconds}s.`,

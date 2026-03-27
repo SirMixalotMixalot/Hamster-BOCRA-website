@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FileText, Plus, Clock, CheckCircle, XCircle, AlertCircle, Eye, Award } from "lucide-react";
 import { useLocation, useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -16,6 +16,10 @@ import { LoadingDots } from "@/components/ui/loading-dots";
 import { uploadDocument } from "@/lib/documents";
 
 type AppStatus = "all" | "draft" | "submitted" | "under_review" | "waiting_for_payment" | "requires_action" | "approved" | "rejected";
+type StatusSnapshot = Record<string, string>;
+
+const APPLICATION_STATUS_SNAPSHOT_KEY = "bocra_application_status_snapshot";
+const STATUS_POLL_INTERVAL_MS = 60_000;
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ElementType }> = {
   draft: { label: "Draft", color: "text-gray-600", bg: "bg-gray-100", icon: FileText },
@@ -38,6 +42,15 @@ const FILTER_TABS: { value: AppStatus; label: string }[] = [
   { value: "rejected", label: "Rejected" },
 ];
 
+const toStatusSnapshot = (items: ApplicationListItem[]): StatusSnapshot =>
+  items.reduce<StatusSnapshot>((acc, item) => {
+    acc[item.id] = item.status;
+    return acc;
+  }, {});
+
+const normalizeStatusLabel = (status: string) =>
+  status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
 const Applications = () => {
   const [filter, setFilter] = useState<AppStatus>("all");
   const [applications, setApplications] = useState<ApplicationListItem[]>([]);
@@ -50,11 +63,49 @@ const Applications = () => {
   const [submittingAdditional, setSubmittingAdditional] = useState(false);
   const [statusTimeline, setStatusTimeline] = useState<ApplicationStatusLogItem[]>([]);
   const [loadingTimeline, setLoadingTimeline] = useState(false);
+  const applicationsRef = useRef<ApplicationListItem[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
   const { isSidebarCollapsed } = useOutletContext<{ isSidebarCollapsed?: boolean }>();
   const [searchParams] = useSearchParams();
   const focusRef = searchParams.get("ref")?.trim() || "";
+
+  const persistStatusSnapshot = (items: ApplicationListItem[]) => {
+    try {
+      localStorage.setItem(APPLICATION_STATUS_SNAPSHOT_KEY, JSON.stringify(toStatusSnapshot(items)));
+    } catch {
+      // Ignore storage errors (private mode/quota).
+    }
+  };
+
+  const getStoredStatusSnapshot = (): StatusSnapshot => {
+    try {
+      const raw = localStorage.getItem(APPLICATION_STATUS_SNAPSHOT_KEY);
+      if (!raw) return {};
+      const parsed = JSON.parse(raw) as unknown;
+      if (!parsed || typeof parsed !== "object") return {};
+      return parsed as StatusSnapshot;
+    } catch {
+      return {};
+    }
+  };
+
+  const notifyStatusChanges = (previousSnapshot: StatusSnapshot, nextItems: ApplicationListItem[]) => {
+    for (const item of nextItems) {
+      const previousStatus = previousSnapshot[item.id];
+      if (!previousStatus || previousStatus === item.status) {
+        continue;
+      }
+
+      toast.info("Application status updated", {
+        description: `${item.reference_number} changed from ${normalizeStatusLabel(previousStatus)} to ${normalizeStatusLabel(item.status)}.`,
+      });
+    }
+  };
+
+  useEffect(() => {
+    applicationsRef.current = applications;
+  }, [applications]);
 
   useEffect(() => {
     let mounted = true;
@@ -62,7 +113,10 @@ const Applications = () => {
       try {
         const items = await listApplications();
         if (!mounted) return;
+        const previousSnapshot = getStoredStatusSnapshot();
         setApplications(items);
+        notifyStatusChanges(previousSnapshot, items);
+        persistStatusSnapshot(items);
         setError(null);
       } catch (loadError) {
         if (!mounted) return;
@@ -74,6 +128,36 @@ const Applications = () => {
     void load();
     return () => {
       mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const poll = async () => {
+      try {
+        const latest = await listApplications();
+        if (cancelled) return;
+
+        const previousSnapshot = toStatusSnapshot(applicationsRef.current);
+        setApplications(latest);
+        notifyStatusChanges(previousSnapshot, latest);
+        persistStatusSnapshot(latest);
+      } catch {
+        // Silent background polling failure to avoid noisy UX.
+      }
+    };
+
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState !== "visible") {
+        return;
+      }
+      void poll();
+    }, STATUS_POLL_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
     };
   }, []);
 

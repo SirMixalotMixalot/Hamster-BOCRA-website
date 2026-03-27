@@ -24,6 +24,7 @@ class ComplaintCreateRequest(BaseModel):
     category: str | None = Field(default=None, max_length=120)
     description: str = Field(min_length=1, max_length=5000)
     evidence_file_ids: list[UUID] | None = None
+    verification_ticket: str | None = Field(default=None, max_length=2000)
 
     @field_validator("subject", "description", mode="before")
     @classmethod
@@ -138,6 +139,7 @@ class ComplaintVerificationVerifyRequest(BaseModel):
 
     email: str = Field(min_length=3, max_length=320)
     code: str = Field(min_length=6, max_length=6)
+    challenge_token: str | None = Field(default=None, max_length=2000)
 
     @field_validator("email", mode="before")
     @classmethod
@@ -161,3 +163,5 @@ class ComplaintVerificationVerifyRequest(BaseModel):
 class ComplaintVerificationResponse(BaseModel):
     message: str
     retry_after_seconds: int | None = None
+    challenge_token: str | None = None
+    verification_ticket: str | None = None

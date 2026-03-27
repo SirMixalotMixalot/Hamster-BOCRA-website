@@ -35,11 +35,14 @@ export interface ComplaintCreatePayload {
   category?: string;
   description: string;
   evidence_file_ids?: string[];
+  verification_ticket?: string;
 }
 
 export interface ComplaintVerificationResponse {
   message: string;
   retry_after_seconds?: number | null;
+  challenge_token?: string | null;
+  verification_ticket?: string | null;
 }
 
 const COMPLAINTS_CACHE_TTL_MS = 2 * 60 * 1000;
@@ -168,10 +171,11 @@ export async function sendComplaintVerificationCode(email: string): Promise<Comp
 export async function verifyComplaintVerificationCode(
   email: string,
   code: string,
+  challengeToken?: string,
 ): Promise<ComplaintVerificationResponse> {
   return request<ComplaintVerificationResponse>("/api/complaints/verification/verify", {
     method: "POST",
-    body: JSON.stringify({ email, code }),
+    body: JSON.stringify({ email, code, challenge_token: challengeToken ?? null }),
   });
 }
 
