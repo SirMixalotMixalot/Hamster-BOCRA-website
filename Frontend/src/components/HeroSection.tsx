@@ -160,9 +160,8 @@ const HeroSection = () => {
             {heroQuickActions.map((action) => (
               <a
                 key={action.label}
-                type="button"
+                href={action.href}
                 className="inline-flex w-full sm:w-auto min-w-[220px] items-center justify-center gap-3 rounded-2xl border border-white/25 bg-white/10 px-6 py-4 text-sm font-semibold uppercase tracking-[0.08em] text-white backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/15"
-
               >
                 <span className={`h-3.5 w-3.5 shrink-0 rounded-full ${action.dotClass}`} />
                 <span>{action.label}</span>
@@ -173,7 +172,7 @@ const HeroSection = () => {
       </section>
 
       {/* ─── FILE A COMPLAINT ──────────────────────────────────── */}
-      <section className="py-20 bg-muted/30">
+      <section className="pt-14 pb-20 bg-muted/30">
         <div className="container max-w-5xl mx-auto px-4">
           <div className="flex flex-col md:flex-row gap-12 items-start">
             <div className="flex-1">
