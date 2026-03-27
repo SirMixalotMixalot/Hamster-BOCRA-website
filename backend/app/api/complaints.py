@@ -328,7 +328,7 @@ async def send_complaint_verification_code(
     if not sent:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Verification email service is not configured",
+            detail="Email service error: Could not send verification code. Please ensure SMTP_HOST, SMTP_FROM, SMTP_USERNAME, and SMTP_PASSWORD are configured in environment variables.",
         )
 
     return ComplaintVerificationResponse(message="Verification code sent")

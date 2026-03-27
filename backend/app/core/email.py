@@ -34,10 +34,20 @@ def send_email(*, to_email: str, subject: str, body: str) -> bool:
         return True
 
     if not smtp_host or not smtp_from:
-        logger.info(
-            "email_not_sent_missing_smtp_config to=%s subject=%s",
+        missing_vars = []
+        if not smtp_host:
+            missing_vars.append("SMTP_HOST")
+        if not smtp_from:
+            missing_vars.append("SMTP_FROM")
+        logger.error(
+            "email_not_sent_missing_smtp_config to=%s subject=%s missing_variables=%s smtp_host_configured=%s smtp_from_configured=%s smtp_username_configured=%s smtp_password_configured=%s",
             to_email,
             subject,
+            ",".join(missing_vars),
+            bool(smtp_host),
+            bool(smtp_from),
+            bool(smtp_user),
+            bool(smtp_password),
         )
         return False
 
@@ -70,13 +80,52 @@ def send_email(*, to_email: str, subject: str, body: str) -> bool:
             subject,
         )
         return True
-    except Exception as exc:
+    except smtplib.SMTPAuthenticationError as exc:
         logger.error(
-            "email_send_failed to=%s subject=%s smtp_host=%s error=%s exc_type=%s",
+            "email_send_failed_authentication to=%s subject=%s smtp_host=%s smtp_user=%s error=%s",
             to_email,
             subject,
             smtp_host,
-            exc,
+            smtp_user if smtp_user else "NOT_SET",
+            str(exc),
+        )
+        return False
+    except smtplib.SMTPException as exc:
+        error_msg = str(exc)
+        if "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
+            logger.error(
+                "email_send_failed_timeout to=%s subject=%s smtp_host=%s smtp_port=%s timeout_seconds=120 error=%s",
+                to_email,
+                subject,
+                smtp_host,
+                smtp_port,
+                error_msg,
+            )
+        elif "connection" in error_msg.lower() or "refused" in error_msg.lower():
+            logger.error(
+                "email_send_failed_connection to=%s subject=%s smtp_host=%s smtp_port=%s error=%s",
+                to_email,
+                subject,
+                smtp_host,
+                smtp_port,
+                error_msg,
+            )
+        else:
+            logger.error(
+                "email_send_failed_smtp to=%s subject=%s smtp_host=%s error=%s",
+                to_email,
+                subject,
+                smtp_host,
+                error_msg,
+            )
+        return False
+    except Exception as exc:
+        logger.error(
+            "email_send_failed to=%s subject=%s smtp_host=%s exc_type=%s error=%s",
+            to_email,
+            subject,
+            smtp_host,
             type(exc).__name__,
+            str(exc),
         )
         return False
