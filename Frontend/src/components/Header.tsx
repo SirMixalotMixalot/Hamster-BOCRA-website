@@ -378,7 +378,7 @@ const Header = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-bocra-navy shadow-sm lg:bg-transparent lg:shadow-none">
+      <header className="sticky top-0 z-50 bg-transparent shadow-none">
         <div className="hidden lg:block container pt-4 pb-2">
           <div className="group relative rounded-full border border-slate-200/70 bg-white/80 px-6 py-3 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.55)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-[0_28px_65px_-28px_rgba(15,23,42,0.65)]">
             <div className="pointer-events-none absolute inset-y-1 left-1/2 w-48 -translate-x-1/2 rounded-full bg-white/70 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
@@ -469,30 +469,33 @@ const Header = () => {
           </div>
         </div>
 
-        <div className="container flex h-16 items-center justify-between lg:hidden md:h-[72px]">
-          {/* Logo */}
-          <button type="button" onClick={() => navigate("/")} className="shrink-0">
-            <img src={bocraLogo} alt="BOCRA" className="h-16 w-auto object-contain brightness-200 md:h-[72px]" />
-          </button>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setSearchOpen(!searchOpen)}
-              className="rounded-md p-2 transition-colors hover:bg-white/10"
-              aria-label="Toggle search"
-            >
-              <Search className="h-5 w-5 text-white/70" />
-            </button>
-            <div className="relative" ref={langMobileRef}>
-              <button
-                onClick={() => setLangOpen(!langOpen)}
-                className="flex items-center gap-1 rounded-md p-2 transition-colors hover:bg-white/10"
-                aria-label="Select language"
-              >
-                <Globe className="h-5 w-5 text-white/70" />
-                <ChevronDown className={`h-3 w-3 text-white/70 transition-transform ${langOpen ? "rotate-180" : ""}`} />
+        <div className="container py-3 lg:hidden">
+          <div className="group relative overflow-hidden rounded-full border border-slate-200/70 bg-white/80 px-3 py-2 shadow-[0_14px_34px_-24px_rgba(15,23,42,0.6)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-0.5 hover:scale-[1.01]">
+            <div className="pointer-events-none absolute inset-y-1 left-1/2 w-40 -translate-x-1/2 rounded-full bg-white/70 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
+            <div className="relative z-10 flex h-11 items-center justify-between md:h-12">
+              {/* Logo */}
+              <button type="button" onClick={() => navigate("/")} className="shrink-0">
+                <img src={bocraLogo} alt="BOCRA" className="h-10 w-auto object-contain md:h-11" />
               </button>
+
+              {/* Actions */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setSearchOpen(!searchOpen)}
+                  className="rounded-full p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                  aria-label="Toggle search"
+                >
+                  <Search className="h-5 w-5" />
+                </button>
+                <div className="relative" ref={langMobileRef}>
+                  <button
+                    onClick={() => setLangOpen(!langOpen)}
+                    className="flex items-center gap-1 rounded-full p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                    aria-label="Select language"
+                  >
+                    <Globe className="h-5 w-5" />
+                    <ChevronDown className={`h-3 w-3 transition-transform ${langOpen ? "rotate-180" : ""}`} />
+                  </button>
               {langOpen && (
                 <div className="absolute right-0 top-full mt-1 w-40 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg animate-fade-in z-50">
                   <button
@@ -509,33 +512,35 @@ const Header = () => {
                   </button>
                 </div>
               )}
+                </div>
+                {isAuthenticated ? (
+                  <button
+                    onClick={() => navigate(portalPath)}
+                    className="rounded-full p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                    aria-label={portalLabel}
+                  >
+                    <LogIn className="h-5 w-5" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => window.dispatchEvent(new CustomEvent("toggle-signin-modal"))}
+                    className="rounded-full p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                    aria-label={t("header.signIn")}
+                  >
+                    <LogIn className="h-5 w-5" />
+                  </button>
+                )}
+                <button onClick={() => setMobileOpen(!mobileOpen)} className="rounded-full p-2 text-slate-700 transition-colors hover:bg-slate-100">
+                  {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                </button>
+              </div>
             </div>
-            {isAuthenticated ? (
-              <button
-                onClick={() => navigate(portalPath)}
-                className="rounded-md p-2 transition-colors hover:bg-white/10"
-                aria-label={portalLabel}
-              >
-                <LogIn className="h-5 w-5 text-white/70" />
-              </button>
-            ) : (
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent("toggle-signin-modal"))}
-                className="rounded-md p-2 transition-colors hover:bg-white/10"
-                aria-label={t("header.signIn")}
-              >
-                <LogIn className="h-5 w-5 text-white/70" />
-              </button>
-            )}
-            <button onClick={() => setMobileOpen(!mobileOpen)} className="rounded-md p-2 transition-colors hover:bg-white/10">
-              {mobileOpen ? <X className="h-5 w-5 text-white" /> : <Menu className="h-5 w-5 text-white" />}
-            </button>
           </div>
         </div>
 
         {/* Search Bar */}
         {searchOpen && (
-          <div className="animate-fade-in border-t border-white/10 lg:border-slate-200/70">
+          <div className="animate-fade-in border-t border-slate-200/70">
             <div className="container py-4">
               <div className="relative max-w-2xl mx-auto" ref={searchContainerRef}>
                 <form onSubmit={submitSearch}>
