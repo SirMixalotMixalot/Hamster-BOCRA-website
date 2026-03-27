@@ -69,5 +69,20 @@ export const tn: Translations = {
   "header.customerPortal": "Setswalo Sa Modirisi",
 
   // Footer
-  "footer.copyright": "\u00A9 2026 BOCRA. Ditshwanelo tsotlhe di sireletsegile. E dirilwe ke HAMSTER",
+  "footer.copyright": "\u00A9 2026 BOCRA. Ditshwanelo tsotlhe di sireletsegile.",
+  "footer.description": "Bothati Jwa Tsamaiso Ya Dikgokagano Tsa Botswana bo laola megala, phasalatso, poso, le ditirelo tsa inthanete mo Botswana.",
+  "footer.quickLinks": "Dikgolagano Tse Di Bonako",
+  "footer.home": "Legae",
+  "footer.aboutUs": "Ka Rona",
+  "footer.news": "Dikgang",
+  "footer.servicesTitle": "Ditirelo",
+  "footer.licensing": "Go Laesensa",
+  "footer.publications": "Diphatlalatso",
+  "footer.faqs": "Dipotso Tse Di Botswang Thata",
+  "footer.careers": "Ditiro",
+  "footer.contact": "Ikgolaganye",
+  "footer.address": "Plot 50671 Independence Avenue\nGaborone, Botswana",
+  "footer.phone": "+267 395 7755",
+  "footer.email": "info@bocra.org.bw",
+  "footer.tagline": "Tataiso ya setšhaba, diphatlalatso, le ditsela tsa go ikgolaganya le ditirelo tsa BOCRA.",
 };

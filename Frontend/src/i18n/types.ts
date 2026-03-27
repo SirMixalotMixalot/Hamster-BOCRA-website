@@ -62,6 +62,21 @@ export type TranslationKeys =
   | "header.adminPortal"
   | "header.customerPortal"
   // Footer
-  | "footer.copyright";
+  | "footer.copyright"
+  | "footer.description"
+  | "footer.quickLinks"
+  | "footer.home"
+  | "footer.aboutUs"
+  | "footer.news"
+  | "footer.servicesTitle"
+  | "footer.licensing"
+  | "footer.publications"
+  | "footer.faqs"
+  | "footer.careers"
+  | "footer.contact"
+  | "footer.address"
+  | "footer.phone"
+  | "footer.email"
+  | "footer.tagline";
 
 export type Translations = Record<TranslationKeys, string>;
