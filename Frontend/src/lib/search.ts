@@ -1,6 +1,15 @@
 import { getApiBaseUrl } from "@/lib/api";
 
 export type SearchResultType = "news" | "decision" | "document" | "service" | "page";
+export type PublicDocumentSection =
+  | "news"
+  | "tenders"
+  | "forms"
+  | "publications"
+  | "legislation"
+  | "annual-reports"
+  | "statistics"
+  | "uncategorized";
 export type SearchResultAction =
   | "open_signin_modal"
   | "open_services_overlay"
@@ -14,6 +23,7 @@ export interface SearchResultItem {
   title: string;
   snippet: string;
   url: string;
+  section?: PublicDocumentSection;
   action?: SearchResultAction;
   score: number;
 }
@@ -38,6 +48,19 @@ function isSearchAction(value: unknown): value is SearchResultAction {
   );
 }
 
+function isPublicDocumentSection(value: unknown): value is PublicDocumentSection {
+  return (
+    value === "news" ||
+    value === "tenders" ||
+    value === "forms" ||
+    value === "publications" ||
+    value === "legislation" ||
+    value === "annual-reports" ||
+    value === "statistics" ||
+    value === "uncategorized"
+  );
+}
+
 function normalizeSearchResult(item: unknown): SearchResultItem | null {
   if (!item || typeof item !== "object") {
     return null;
@@ -57,6 +80,7 @@ function normalizeSearchResult(item: unknown): SearchResultItem | null {
   const snippet = typeof row.snippet === "string" ? row.snippet : "";
   const url = typeof row.url === "string" && row.url ? row.url : "#";
   const action = isSearchAction(row.action) ? row.action : undefined;
+  const section = type === "document" && isPublicDocumentSection(row.section) ? row.section : undefined;
   const score = typeof row.score === "number" ? row.score : 0;
 
   return {
@@ -64,6 +88,7 @@ function normalizeSearchResult(item: unknown): SearchResultItem | null {
     title,
     snippet,
     url,
+    section,
     action,
     score,
   };

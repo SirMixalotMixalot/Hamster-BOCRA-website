@@ -6,6 +6,27 @@ import MegaMenuDrawer from "./MegaMenuDrawer";
 import { SearchResultAction, SearchResultItem, searchContent } from "@/lib/search";
 import { getAccessToken, getStoredRole } from "@/lib/auth";
 
+type PublicDocumentSection =
+  | "news"
+  | "tenders"
+  | "forms"
+  | "publications"
+  | "legislation"
+  | "annual-reports"
+  | "statistics"
+  | "uncategorized";
+
+const DOCUMENT_SECTION_ROUTE: Record<PublicDocumentSection, string> = {
+  news: "/resources/news",
+  tenders: "/resources/tenders",
+  forms: "/resources/forms-documents",
+  publications: "/resources/publications",
+  legislation: "/resources/legislation",
+  "annual-reports": "/about/annual-reports",
+  statistics: "/resources/statistics",
+  uncategorized: "/resources/forms-documents",
+};
+
 const navItems = [
   {
     label: "About BOCRA",
@@ -87,6 +108,9 @@ const navItems = [
         title: "Support",
         items: [
           { icon: HelpCircle, label: "FAQs", description: "Frequently asked questions", action: "navigate:/faqs" },
+          { icon: Newspaper, label: "News", description: "Latest announcements and media updates", action: "navigate:/resources/news" },
+          { icon: BarChart3, label: "Statistics", description: "Market data and sector indicators", action: "navigate:/resources/statistics" },
+          { icon: Briefcase, label: "Tenders", description: "View current procurement opportunities", action: "navigate:/resources/tenders" },
         ],
       },
     ],
@@ -108,14 +132,6 @@ const navItems = [
         items: [
           { icon: ClipboardList, label: "Type Approval", description: "Get equipment approved for use", action: "toggle-signin-modal" },
           { icon: Search, label: "Track Complaint", description: "Check your complaint status", action: "toggle-track-complaint-modal" },
-        ],
-      },
-      {
-        title: "Information",
-        items: [
-          { icon: Newspaper, label: "News", description: "Latest announcements and media updates", action: "navigate:/resources/news" },
-          { icon: BarChart3, label: "Statistics", description: "Market data and sector indicators", action: "navigate:/resources/statistics" },
-          { icon: Briefcase, label: "Tenders", description: "View current procurement opportunities", action: "navigate:/resources/tenders" },
         ],
       },
     ],
@@ -271,9 +287,26 @@ const Header = () => {
     return false;
   };
 
+  const getDocumentTarget = (result: SearchResultItem): string => {
+    const match = /^\/documents\/([^/?#]+)/.exec(result.url || "");
+    const documentId = match?.[1] ?? null;
+    const section = result.section && result.section in DOCUMENT_SECTION_ROUTE ? result.section : "uncategorized";
+    const targetPath = DOCUMENT_SECTION_ROUTE[section as PublicDocumentSection];
+    if (!documentId) {
+      return targetPath;
+    }
+    return `${targetPath}?docId=${encodeURIComponent(documentId)}`;
+  };
+
   const handleResultClick = (result: SearchResultItem) => {
     setShowSearchResults(false);
     setSearchOpen(false);
+
+    if (result.type === "document") {
+      navigate(getDocumentTarget(result));
+
+      return;
+    }
 
     if (result.type === "service" && handleServiceFallback(result)) {
       return;

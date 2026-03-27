@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Download, ArrowLeft } from "lucide-react";
 import Header from "@/components/Header";
 import BottomBar from "@/components/BottomBar";
@@ -13,9 +13,11 @@ const formatFileSize = (bytes: number) => {
 
 const Publications = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [documents, setDocuments] = useState<PublicDocumentListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const focusedDocId = new URLSearchParams(location.search).get("docId");
 
   useEffect(() => {
     let mounted = true;
@@ -40,6 +42,19 @@ const Publications = () => {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!focusedDocId || loading) {
+      return;
+    }
+
+    const element = document.getElementById(`document-${focusedDocId}`);
+    if (!element) {
+      return;
+    }
+
+    element.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [focusedDocId, loading, documents]);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
@@ -71,10 +86,15 @@ const Publications = () => {
               {documents.map((doc) => (
                 <a
                   key={doc.id}
+                  id={`document-${doc.id}`}
                   href={doc.download_url || "#"}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 bg-white p-4 hover:border-blue-300 hover:bg-blue-50/30 transition-colors"
+                  className={`flex items-start justify-between gap-3 rounded-lg border bg-white p-4 transition-colors ${
+                    focusedDocId === doc.id
+                      ? "border-bocra-gold ring-2 ring-bocra-gold/40 bg-bocra-gold/5"
+                      : "border-gray-200 hover:border-blue-300 hover:bg-blue-50/30"
+                  }`}
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-foreground break-words">{doc.file_name}</p>

@@ -242,11 +242,189 @@ const handleViewStats = () => {
   window.location.href = "/";
 };
 
-const hasApplicationsAnalyticsData = (data: ApplicationsAnalyticsResponse | null) =>
-  Boolean(data && (data.licence_type_distribution.length > 0 || data.regional_coverage.length > 0));
+const mergeLicenceTypeDistribution = (
+  mockItems: LicenceTypeDistributionItem[],
+  liveItems: LicenceTypeDistributionItem[] = []
+) => {
+  const counts = new Map<string, number>();
+  mockItems.forEach((item) => counts.set(item.licence_type, item.count));
+  liveItems.forEach((item) => {
+    counts.set(item.licence_type, (counts.get(item.licence_type) ?? 0) + item.count);
+  });
 
-const hasComplaintsAnalyticsData = (data: ComplaintsAnalyticsResponse | null) =>
-  Boolean(data && (data.total_complaints > 0 || data.sector_breakdown.some((item) => item.total > 0)));
+  return Array.from(counts.entries()).map(([licence_type, count]) => ({ licence_type, count }));
+};
+
+const mergeRegionalCoverage = (mockRows: RegionalCoverageItem[], liveRows: RegionalCoverageItem[] = []) => {
+  const regions = new Map<string, RegionalCoverageItem>();
+
+  mockRows.forEach((row) => {
+    regions.set(row.region, {
+      ...row,
+      by_sector: { ...row.by_sector },
+      by_licence_type: row.by_licence_type.map((item) => ({ ...item })),
+    });
+  });
+
+  liveRows.forEach((row) => {
+    const existing =
+      regions.get(row.region) ??
+      ({
+        region: row.region,
+        total: 0,
+        by_sector: {},
+        by_licence_type: [],
+      } satisfies RegionalCoverageItem);
+
+    const telecom = (existing.by_sector.telecom ?? 0) + (row.by_sector?.telecom ?? 0);
+    const broadcasting = (existing.by_sector.broadcasting ?? 0) + (row.by_sector?.broadcasting ?? 0);
+    const postal = (existing.by_sector.postal ?? 0) + (row.by_sector?.postal ?? 0);
+    const internet = (existing.by_sector.internet ?? 0) + (row.by_sector?.internet ?? 0);
+
+    regions.set(row.region, {
+      ...existing,
+      total: existing.total + (row.total ?? 0),
+      by_sector: { telecom, broadcasting, postal, internet },
+      by_licence_type: mergeLicenceTypeDistribution(existing.by_licence_type, row.by_licence_type ?? []),
+    });
+  });
+
+  return Array.from(regions.values());
+};
+
+const mergeApplicationsAnalytics = (
+  mockData: ApplicationsAnalyticsResponse,
+  liveData: ApplicationsAnalyticsResponse | null
+): ApplicationsAnalyticsResponse => {
+  if (!liveData) {
+    return mockData;
+  }
+
+  return {
+    total_eligible_licences: mockData.total_eligible_licences + (liveData.total_eligible_licences ?? 0),
+    status_breakdown: {
+      submitted: mockData.status_breakdown.submitted + (liveData.status_breakdown?.submitted ?? 0),
+      under_review: mockData.status_breakdown.under_review + (liveData.status_breakdown?.under_review ?? 0),
+      waiting_for_payment:
+        mockData.status_breakdown.waiting_for_payment + (liveData.status_breakdown?.waiting_for_payment ?? 0),
+      requires_action: mockData.status_breakdown.requires_action + (liveData.status_breakdown?.requires_action ?? 0),
+      approved: mockData.status_breakdown.approved + (liveData.status_breakdown?.approved ?? 0),
+      rejected: mockData.status_breakdown.rejected + (liveData.status_breakdown?.rejected ?? 0),
+    },
+    licence_type_distribution: mergeLicenceTypeDistribution(
+      mockData.licence_type_distribution,
+      liveData.licence_type_distribution ?? []
+    ),
+    regional_coverage: mergeRegionalCoverage(mockData.regional_coverage, liveData.regional_coverage ?? []),
+  };
+};
+
+const mergeSectorBreakdown = (mockItems: SectorBreakdownItem[], liveItems: SectorBreakdownItem[] = []) => {
+  const totals = new Map<string, number>();
+  mockItems.forEach((item) => totals.set(item.sector, item.total));
+  liveItems.forEach((item) => totals.set(item.sector, (totals.get(item.sector) ?? 0) + item.total));
+  return Array.from(totals.entries()).map(([sector, total]) => ({ sector, total }));
+};
+
+const mergeCompanyBreakdown = (mockItems: CompanyBreakdownItem[], liveItems: CompanyBreakdownItem[] = []) => {
+  const totals = new Map<string, number>();
+  mockItems.forEach((item) => totals.set(item.company, item.total));
+  liveItems.forEach((item) => totals.set(item.company, (totals.get(item.company) ?? 0) + item.total));
+  return Array.from(totals.entries()).map(([company, total]) => ({ company, total }));
+};
+
+const mergeTrend = (mockPoints: ComplaintsTrendPoint[], livePoints: ComplaintsTrendPoint[] = []) => {
+  const points = new Map<string, ComplaintsTrendPoint>();
+
+  mockPoints.forEach((point) => points.set(point.date, { ...point }));
+
+  livePoints.forEach((point) => {
+    const existing = points.get(point.date);
+    if (!existing) {
+      points.set(point.date, { ...point });
+      return;
+    }
+
+    points.set(point.date, {
+      date: point.date,
+      telecom: existing.telecom + point.telecom,
+      broadcasting: existing.broadcasting + point.broadcasting,
+      postal: existing.postal + point.postal,
+      internet: existing.internet + point.internet,
+    });
+  });
+
+  return Array.from(points.values());
+};
+
+const mergeSectorAlerts = (mockAlerts: SectorAlert[], liveAlerts: SectorAlert[] = []) => {
+  const alerts = new Map<string, SectorAlert>();
+  mockAlerts.forEach((alert) => alerts.set(alert.sector, { ...alert }));
+
+  liveAlerts.forEach((alert) => {
+    const existing = alerts.get(alert.sector);
+    if (!existing) {
+      const threshold = alert.threshold || alert.normal * 1.25;
+      alerts.set(alert.sector, {
+        ...alert,
+        threshold,
+        is_alert: alert.today > threshold || alert.is_alert,
+      });
+      return;
+    }
+
+    const normal = existing.normal + alert.normal;
+    const threshold = normal * 1.25;
+    const today = existing.today + alert.today;
+
+    alerts.set(alert.sector, {
+      sector: alert.sector,
+      total: existing.total + alert.total,
+      normal,
+      threshold,
+      today,
+      is_alert: today > threshold,
+    });
+  });
+
+  return Array.from(alerts.values());
+};
+
+const mergeComplaintsAnalytics = (
+  mockData: ComplaintsAnalyticsResponse,
+  liveData: ComplaintsAnalyticsResponse | null
+): ComplaintsAnalyticsResponse => {
+  if (!liveData) {
+    return mockData;
+  }
+
+  const trend = mergeTrend(mockData.trend, liveData.trend ?? []);
+  const sector_alerts = mergeSectorAlerts(mockData.sector_alerts, liveData.sector_alerts ?? []);
+  const company_breakdown_by_sector: Record<string, CompanyBreakdownItem[]> = {
+    ...Object.fromEntries(
+      Object.entries(mockData.company_breakdown_by_sector).map(([sector, items]) => [
+        sector,
+        items.map((item) => ({ ...item })),
+      ])
+    ),
+  };
+
+  Object.entries(liveData.company_breakdown_by_sector ?? {}).forEach(([sector, items]) => {
+    company_breakdown_by_sector[sector] = mergeCompanyBreakdown(company_breakdown_by_sector[sector] ?? [], items);
+  });
+
+  return {
+    total_complaints: mockData.total_complaints + (liveData.total_complaints ?? 0),
+    open_complaints: mockData.open_complaints + (liveData.open_complaints ?? 0),
+    trend_days: Math.max(mockData.trend_days, liveData.trend_days ?? 0, trend.length),
+    trend,
+    sector_breakdown: mergeSectorBreakdown(mockData.sector_breakdown, liveData.sector_breakdown ?? []),
+    company_breakdown: mergeCompanyBreakdown(mockData.company_breakdown, liveData.company_breakdown ?? []),
+    company_breakdown_by_sector,
+    sector_alerts,
+    alert_count: sector_alerts.filter((item) => item.is_alert).length,
+  };
+};
 
 const PieChart = ({ data }: { data: LicenceTypeDistributionItem[] }) => {
   const total = data.reduce((sum, item) => sum + item.count, 0);
@@ -451,22 +629,24 @@ const Dashboard = () => {
     };
   }, []);
 
+  const displayApplicationsAnalytics = useMemo(
+    () => mergeApplicationsAnalytics(MOCK_APPLICATIONS_ANALYTICS, applicationsAnalytics),
+    [applicationsAnalytics]
+  );
+
+  const displayComplaintsAnalytics = useMemo(
+    () => mergeComplaintsAnalytics(MOCK_COMPLAINTS_ANALYTICS, complaintsAnalytics),
+    [complaintsAnalytics]
+  );
+
   const sectorCards = useMemo(() => {
-    const source = hasComplaintsAnalyticsData(complaintsAnalytics) ? complaintsAnalytics : MOCK_COMPLAINTS_ANALYTICS;
-    return source.sector_alerts.map((item) => ({
+    return displayComplaintsAnalytics.sector_alerts.map((item) => ({
       label: formatSector(item.sector),
       total: item.total,
       normal: item.normal,
       alert: item.is_alert,
     }));
-  }, [complaintsAnalytics]);
-
-  const displayApplicationsAnalytics = hasApplicationsAnalyticsData(applicationsAnalytics)
-    ? applicationsAnalytics
-    : MOCK_APPLICATIONS_ANALYTICS;
-  const displayComplaintsAnalytics = hasComplaintsAnalyticsData(complaintsAnalytics)
-    ? complaintsAnalytics
-    : MOCK_COMPLAINTS_ANALYTICS;
+  }, [displayComplaintsAnalytics]);
 
   const companyRowsForSelectedSector = useMemo(() => {
     return (displayComplaintsAnalytics.company_breakdown_by_sector?.[selectedCompanySector] ?? []).slice(0, 8);

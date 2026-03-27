@@ -13,6 +13,7 @@ class SearchResultItem(BaseModel):
     title: str
     snippet: str
     url: str
+    section: str | None = None
     action: str | None = None
     score: float = Field(ge=0)
 

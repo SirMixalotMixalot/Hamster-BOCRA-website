@@ -55,6 +55,17 @@ CATEGORY_VALIDATION = {
 }
 
 PUBLIC_DOCUMENT_SECTIONS = {"news", "tenders", "forms", "publications", "legislation", "annual-reports", "statistics"}
+PUBLIC_DOCUMENT_SECTION_ALIASES = {
+    "tender": "tenders",
+    "form": "forms",
+    "publication": "publications",
+    "legislations": "legislation",
+    "annual report": "annual-reports",
+    "annual reports": "annual-reports",
+    "annual_report": "annual-reports",
+    "annual_reports": "annual-reports",
+    "statistic": "statistics",
+}
 
 
 # ===== HELPER FUNCTIONS =====
@@ -150,6 +161,8 @@ def _extract_public_section_and_name(file_name: str) -> tuple[str, str]:
 
     section, display_name = file_name.split("::", 1)
     normalized_section = section.strip().lower()
+    alias_key = normalized_section.replace("_", " ").replace("-", " ")
+    normalized_section = PUBLIC_DOCUMENT_SECTION_ALIASES.get(alias_key, normalized_section)
     cleaned_name = display_name.strip() or file_name
 
     if normalized_section not in PUBLIC_DOCUMENT_SECTIONS:
@@ -162,7 +175,11 @@ def _get_public_download_url(supabase, *, bucket_name: str, file_path: str) -> s
     try:
         public_url = supabase.storage.from_(bucket_name).get_public_url(path=file_path)
         if isinstance(public_url, dict):
-            return public_url.get("publicUrl")
+            return (
+                public_url.get("publicUrl")
+                or public_url.get("publicURL")
+                or public_url.get("signedURL")
+            )
         if isinstance(public_url, str):
             return public_url
     except (AttributeError, TypeError):
@@ -420,6 +437,61 @@ async def list_public_documents() -> list[PublicDocumentListItem]:
         )
 
     return items
+
+
+@router.get("/public/{document_id}", response_model=PublicDocumentListItem)
+async def get_public_document(document_id: str) -> PublicDocumentListItem:
+    """Get one public document with a ready-to-use download URL."""
+    supabase = get_supabase_admin()
+
+    try:
+        result = (
+            supabase.table("documents")
+            .select("id,file_name,file_path,file_type,file_size,category,created_at")
+            .eq("id", document_id)
+            .eq("category", "public")
+            .limit(1)
+            .execute()
+        )
+    except Exception as exc:
+        logger.error("Failed to load public document '%s': %s", document_id, exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to load public document",
+        )
+
+    rows = result.data or []
+    if not rows:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Public document '{document_id}' not found",
+        )
+
+    row = rows[0]
+    file_name = str(row.get("file_name") or "").strip()
+    section, display_name = _extract_public_section_and_name(file_name)
+
+    file_path = str(row.get("file_path") or "")
+    if not file_path:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Public document '{document_id}' not found",
+        )
+
+    return PublicDocumentListItem(
+        id=row["id"],
+        file_name=display_name,
+        section=section,
+        category="public",
+        file_type=row.get("file_type") or "application/octet-stream",
+        file_size=int(row.get("file_size") or 0),
+        created_at=datetime.fromisoformat(row["created_at"]),
+        download_url=_get_public_download_url(
+            supabase,
+            bucket_name=CATEGORY_BUCKET_MAPPING["public"],
+            file_path=file_path,
+        ),
+    )
 
 
 @router.get("/{document_id}", response_model=DocumentResponse)
