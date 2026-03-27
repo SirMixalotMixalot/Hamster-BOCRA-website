@@ -61,6 +61,17 @@ function isPublicDocumentSection(value: unknown): value is PublicDocumentSection
   );
 }
 
+function normalizeResultUrl(_type: SearchResultType, rawUrl: unknown): string {
+  const url = typeof rawUrl === "string" && rawUrl ? rawUrl : "#";
+
+  // Keep legacy/internal news links compatible with the frontend route structure.
+  if (url === "/news" || url.startsWith("/news/")) {
+    return `/resources${url}`;
+  }
+
+  return url;
+}
+
 function normalizeSearchResult(item: unknown): SearchResultItem | null {
   if (!item || typeof item !== "object") {
     return null;
@@ -78,7 +89,7 @@ function normalizeSearchResult(item: unknown): SearchResultItem | null {
   }
 
   const snippet = typeof row.snippet === "string" ? row.snippet : "";
-  const url = typeof row.url === "string" && row.url ? row.url : "#";
+  const url = normalizeResultUrl(type, row.url);
   const action = isSearchAction(row.action) ? row.action : undefined;
   const section = type === "document" && isPublicDocumentSection(row.section) ? row.section : undefined;
   const score = typeof row.score === "number" ? row.score : 0;

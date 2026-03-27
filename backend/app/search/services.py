@@ -268,7 +268,7 @@ SERVICE_CATALOG: tuple[ServiceCatalogItem, ...] = (
         title="View News",
         description="Read the latest BOCRA announcements, notices, and press updates.",
         keywords=("news", "announcements", "press", "updates", "notices"),
-        url="/news",
+        url="/resources/news",
         action=None,
     ),
     ServiceCatalogItem(
