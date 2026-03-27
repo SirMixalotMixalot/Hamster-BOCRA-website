@@ -48,18 +48,35 @@ def send_email(*, to_email: str, subject: str, body: str) -> bool:
     message.set_content(body)
 
     try:
-        with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as client:
-            if smtp_use_tls:
-                client.starttls()
-            if smtp_user:
-                client.login(smtp_user, smtp_password)
-            client.send_message(message)
-        return True
-    except Exception as exc:
-        logger.warning(
-            "email_send_failed to=%s subject=%s error=%s",
+        logger.debug(
+            "email_sending_attempt to=%s subject=%s smtp_host=%s smtp_port=%s",
             to_email,
             subject,
+            smtp_host,
+            smtp_port,
+        )
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as client:
+            if smtp_use_tls:
+                logger.debug("email_starting_tls smtp_host=%s", smtp_host)
+                client.starttls()
+            if smtp_user:
+                logger.debug("email_logging_in smtp_user=%s", smtp_user)
+                client.login(smtp_user, smtp_password)
+            logger.debug("email_sending_message to=%s", to_email)
+            client.send_message(message)
+        logger.info(
+            "email_sent_successfully to=%s subject=%s",
+            to_email,
+            subject,
+        )
+        return True
+    except Exception as exc:
+        logger.error(
+            "email_send_failed to=%s subject=%s smtp_host=%s error=%s exc_type=%s",
+            to_email,
+            subject,
+            smtp_host,
             exc,
+            type(exc).__name__,
         )
         return False

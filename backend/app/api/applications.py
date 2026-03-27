@@ -122,6 +122,10 @@ def _send_application_submission_ack_email(
 ) -> None:
     email = _get_auth_email(supabase, applicant_id)
     if not email:
+        logger.warning(
+            "send_application_acknowledgement_email_skipped applicant_id=%s reason=email_not_found",
+            applicant_id,
+        )
         return
     full_name = _get_profile_full_name(supabase, applicant_id) or "Applicant"
     subject = f"BOCRA Application Acknowledgement - {reference_number}"
@@ -134,7 +138,21 @@ def _send_application_submission_ack_email(
         "You can track status updates in the BOCRA customer portal.\n\n"
         "Regards,\nBOCRA"
     )
-    send_email(to_email=email, subject=subject, body=body)
+    sent = send_email(to_email=email, subject=subject, body=body)
+    if not sent:
+        logger.error(
+            "send_application_acknowledgement_email_failed applicant_id=%s email=%s reference_number=%s",
+            applicant_id,
+            email,
+            reference_number,
+        )
+    else:
+        logger.info(
+            "send_application_acknowledgement_email_success applicant_id=%s email=%s reference_number=%s",
+            applicant_id,
+            email,
+            reference_number,
+        )
 
 
 def _send_application_status_email(
@@ -147,6 +165,10 @@ def _send_application_status_email(
 ) -> None:
     email = _get_auth_email(supabase, applicant_id)
     if not email:
+        logger.warning(
+            "send_application_status_email_skipped applicant_id=%s reason=email_not_found",
+            applicant_id,
+        )
         return
     full_name = _get_profile_full_name(supabase, applicant_id) or "Applicant"
     subject = f"BOCRA Application Status Update - {reference_number}"
@@ -159,7 +181,23 @@ def _send_application_status_email(
         "Please log in to the customer portal for details.\n\n"
         "Regards,\nBOCRA"
     )
-    send_email(to_email=email, subject=subject, body=body)
+    sent = send_email(to_email=email, subject=subject, body=body)
+    if not sent:
+        logger.error(
+            "send_application_status_email_failed applicant_id=%s email=%s reference_number=%s new_status=%s",
+            applicant_id,
+            email,
+            reference_number,
+            new_status,
+        )
+    else:
+        logger.info(
+            "send_application_status_email_success applicant_id=%s email=%s reference_number=%s new_status=%s",
+            applicant_id,
+            email,
+            reference_number,
+            new_status,
+        )
 
 
 def _generate_reference_number(supabase_admin, current_year: int) -> str:
