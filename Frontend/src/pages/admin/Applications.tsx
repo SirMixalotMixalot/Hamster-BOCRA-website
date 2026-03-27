@@ -1,6 +1,7 @@
 import { AlertTriangle, Eye, FileText, Loader2, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
+  getCachedApplicationsList,
   getApplication,
   listApplications,
   requestApplicationInfo,
@@ -142,8 +143,8 @@ function ApplicationReviewSections({ application }: { application: ApplicationDe
 
 const AdminApplications = () => {
   const { toast } = useToast();
-  const [applications, setApplications] = useState<ApplicationListItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [applications, setApplications] = useState<ApplicationListItem[]>(() => getCachedApplicationsList() || []);
+  const [loading, setLoading] = useState(() => !getCachedApplicationsList());
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "submitted" | "under_review" | "waiting_for_payment" | "approved" | "rejected" | "requires_action">("all");

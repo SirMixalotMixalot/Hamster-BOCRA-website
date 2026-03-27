@@ -30,15 +30,15 @@ const sidebarLinks = [
   { to: "/admin/reports", icon: BarChart3, label: "Documents Management" },
 ];
 
-const sidebarSubtitles: Record<string, string> = {
-  "/admin/dashboard": "System overview and pending actions",
-  "/admin/users": "Manage registered customers and operators",
-  "/admin/applications": "Review and process submitted licences",
-  "/admin/complaints": "Track and resolve customer complaints",
-  "/admin/tickets": "Handle support tickets and escalations",
-  "/admin/careers": "Manage job posts and applications",
-  "/admin/reports": "Manage published documents and reports",
-  "/admin/settings": "Update profile and account preferences",
+const pageMeta: Record<string, { title: string; subtitle: string }> = {
+  "/admin/dashboard": { title: "Dashboard", subtitle: "System overview and pending actions" },
+  "/admin/users": { title: "Users", subtitle: "Manage registered customers and operators" },
+  "/admin/applications": { title: "Applications", subtitle: "Review and process submitted licences" },
+  "/admin/complaints": { title: "Complaints", subtitle: "Track and resolve customer complaints" },
+  "/admin/tickets": { title: "Tickets", subtitle: "Handle support tickets and escalations" },
+  "/admin/careers": { title: "Careers", subtitle: "Manage job posts and applications" },
+  "/admin/reports": { title: "Documents Management", subtitle: "Manage published documents and reports" },
+  "/admin/settings": { title: "Profile", subtitle: "Update profile and account preferences" },
 };
 
 const AdminLayout = () => {
@@ -46,10 +46,10 @@ const AdminLayout = () => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const activeSidebarLink = sidebarLinks.find((link) => location.pathname.startsWith(link.to));
-  const sidebarHeading = activeSidebarLink?.label ?? "Admin";
-  const sidebarSubtitle =
-    Object.entries(sidebarSubtitles).find(([route]) => location.pathname.startsWith(route))?.[1] ?? "Admin portal section";
+  const activeMeta = Object.entries(pageMeta).find(([route]) => location.pathname.startsWith(route))?.[1] ?? {
+    title: "Admin",
+    subtitle: "Admin portal section",
+  };
 
   const handleLogout = () => {
     void logout();
@@ -72,8 +72,12 @@ const AdminLayout = () => {
           </div>
 
           <div className="hidden h-[5.75rem] flex-col justify-center px-5 lg:flex">
-            <h2 className="text-base font-heading font-bold leading-tight text-foreground">{sidebarHeading}</h2>
-            <p className="text-xs text-muted-foreground">{sidebarSubtitle}</p>
+            {!collapsed && (
+              <>
+                <h2 className="text-base font-heading font-bold leading-tight text-foreground">{activeMeta.title}</h2>
+                <p className="text-xs text-muted-foreground">{activeMeta.subtitle}</p>
+              </>
+            )}
           </div>
 
           {/* Nav area */}
@@ -202,6 +206,12 @@ const AdminLayout = () => {
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto bg-background p-4 lg:p-6">
+          {collapsed && (
+            <div className="mb-6 hidden lg:block">
+              <h2 className="text-2xl font-heading font-bold text-foreground">{activeMeta.title}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{activeMeta.subtitle}</p>
+            </div>
+          )}
           <Outlet />
         </main>
       </div>

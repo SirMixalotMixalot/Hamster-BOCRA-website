@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { LifeBuoy, Search } from "lucide-react";
-import { getApiBaseUrl } from "@/lib/api";
-import { getAccessToken } from "@/lib/auth";
+import { getCachedSupportTickets, listSupportTickets } from "@/lib/support";
 import { LoadingDots } from "@/components/ui/loading-dots";
 
 type TicketStatus = "open" | "in_progress" | "replied" | "resolved" | string;
@@ -15,13 +14,6 @@ type SupportTicket = {
   status: TicketStatus;
   created_at: string;
   updated_at: string;
-};
-
-type SupportTicketsResponse = {
-  items: SupportTicket[];
-  count: number;
-  limit: number;
-  offset: number;
 };
 
 const MOCK_TICKETS: SupportTicket[] = [
@@ -52,28 +44,19 @@ const MOCK_TICKETS: SupportTicket[] = [
 ];
 
 const Tickets = () => {
+  const cachedTickets = getCachedSupportTickets();
   const [search, setSearch] = useState("");
-  const [tickets, setTickets] = useState<SupportTicket[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [tickets, setTickets] = useState<SupportTicket[]>(() => (cachedTickets?.items as SupportTicket[]) || []);
+  const [loading, setLoading] = useState(() => !cachedTickets);
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
 
   useEffect(() => {
     let mounted = true;
     const load = async () => {
       try {
-        const token = getAccessToken();
-        const response = await fetch(`${getApiBaseUrl()}/api/support/tickets`, {
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch tickets");
-        }
-        const payload = (await response.json()) as SupportTicketsResponse;
+        const payload = await listSupportTickets();
         if (!mounted) return;
-        setTickets(payload.items || []);
+        setTickets((payload.items as SupportTicket[]) || []);
       } catch {
         if (!mounted) return;
         setTickets(MOCK_TICKETS);

@@ -3,6 +3,7 @@ import { LifeBuoy, Send, Loader2, Plus, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { createSupportTicket, listSupportTickets, type SupportCategory, type SupportTicketItem } from "@/lib/support";
 import { LoadingDots } from "@/components/ui/loading-dots";
+import { useOutletContext } from "react-router-dom";
 
 const CATEGORIES: { label: string; value: SupportCategory }[] = [
   { label: "Technical", value: "technical" },
@@ -33,6 +34,7 @@ const categoryLabel = (value: string | null): string => {
 };
 
 const Support = () => {
+  const { isSidebarCollapsed } = useOutletContext<{ isSidebarCollapsed?: boolean }>();
   const [tickets, setTickets] = useState<SupportTicketItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -101,8 +103,8 @@ const Support = () => {
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className={`flex items-center ${isSidebarCollapsed ? "justify-between" : "justify-between lg:justify-end"}`}>
+        <div className={`${isSidebarCollapsed ? "block" : "block lg:hidden"}`}>
           <h2 className="text-2xl font-heading font-bold text-foreground">Support</h2>
           <p className="text-sm text-muted-foreground mt-1">Log and track your support tickets</p>
         </div>

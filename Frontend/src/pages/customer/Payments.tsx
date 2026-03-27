@@ -7,6 +7,7 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
+import { useOutletContext } from "react-router-dom";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "");
 
@@ -209,6 +210,7 @@ const AddPaymentForm = ({
 };
 
 const Payments = () => {
+  const { isSidebarCollapsed } = useOutletContext<{ isSidebarCollapsed?: boolean }>();
   const [filter, setFilter] = useState<PaymentStatus>("All");
   const [selected, setSelected] = useState<PaymentRecord | null>(null);
 
@@ -291,7 +293,7 @@ const Payments = () => {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Page Header */}
-      <div className="flex items-center gap-3">
+      <div className={`${isSidebarCollapsed ? "flex" : "flex lg:hidden"} items-center gap-3`}>
         <div className="p-2 rounded-xl bg-primary/10">
           <CreditCard className="h-6 w-6 text-primary" />
         </div>

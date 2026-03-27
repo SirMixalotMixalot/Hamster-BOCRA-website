@@ -77,7 +77,7 @@ let applicationsListCache:
     }
   | null = null;
 
-let applicationHistoryBatchCache = new Map<
+const applicationHistoryBatchCache = new Map<
   string,
   {
     token: string | null;
@@ -127,6 +127,15 @@ export function setApplicationsListCache(items: ApplicationListItem[]): void {
     fetchedAt: Date.now(),
     data: items,
   };
+}
+
+export function getCachedApplicationsList(): ApplicationListItem[] | null {
+  const token = getAccessToken();
+  const now = Date.now();
+  if (!applicationsListCache) return null;
+  if (applicationsListCache.token !== token) return null;
+  if (now - applicationsListCache.fetchedAt > APPLICATIONS_CACHE_TTL_MS) return null;
+  return applicationsListCache.data;
 }
 
 export function invalidateApplicationsListCache(): void {

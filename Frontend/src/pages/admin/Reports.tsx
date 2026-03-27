@@ -2,8 +2,7 @@ import { useMemo, useState } from "react";
 import { BarChart3, FileText, Gavel, Megaphone, Newspaper, ScrollText, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { mergeHomePublishPayload, type HomeResourceItem, type HomeStatItem } from "@/lib/homePublishing";
-import { getApiBaseUrl } from "@/lib/api";
-import { getAccessToken } from "@/lib/auth";
+import { getAdminDashboardBatch } from "@/lib/adminBatch";
 import { uploadDocument } from "@/lib/documents";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import FileUploadZone from "@/components/applications/shared/FileUploadZone";
@@ -132,30 +131,17 @@ const Reports = () => {
     setActiveModal("stats");
     setStatsLoading(true);
     try {
-      const token = getAccessToken();
-      const response = await fetch(`${getApiBaseUrl()}/api/applications/analytics`, {
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
-      if (response.ok) {
-        const payload = (await response.json()) as {
-          licence_type_distribution?: { licence_type: string; count: number }[];
-          total_eligible_licences?: number;
-        };
-        const total = Math.max(1, Number(payload.total_eligible_licences || 0));
-        const top = (payload.licence_type_distribution || []).slice(0, 4);
-        if (top.length > 0) {
-          setStatsPreview(
-            top.map((item) => ({
-              value: `${Math.round((item.count / total) * 100)}%`,
-              label: item.licence_type,
-            })),
-          );
-        } else {
-          setStatsPreview(MOCK_STATS);
-        }
+      const batch = await getAdminDashboardBatch();
+      const payload = batch.applications;
+      const total = Math.max(1, Number(payload.total_eligible_licences || 0));
+      const top = (payload.licence_type_distribution || []).slice(0, 4);
+      if (top.length > 0) {
+        setStatsPreview(
+          top.map((item) => ({
+            value: `${Math.round((item.count / total) * 100)}%`,
+            label: item.licence_type,
+          })),
+        );
       } else {
         setStatsPreview(MOCK_STATS);
       }

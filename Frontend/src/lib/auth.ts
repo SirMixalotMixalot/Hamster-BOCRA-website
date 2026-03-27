@@ -178,6 +178,22 @@ export function clearAccessToken(): void {
     .catch(() => {
       // no-op
     });
+
+  void import("@/lib/complaints")
+    .then((mod) => {
+      mod.invalidateComplaintsListCache();
+    })
+    .catch(() => {
+      // no-op
+    });
+
+  void import("@/lib/adminBatch")
+    .then((mod) => {
+      mod.invalidateAdminDashboardBatchCache();
+    })
+    .catch(() => {
+      // no-op
+    });
 }
 
 export function getStoredRole(): AppRole | null {

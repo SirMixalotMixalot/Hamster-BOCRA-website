@@ -333,18 +333,7 @@ async def verify_complaint_verification_code(
     return ComplaintVerificationResponse(message=message)
 
 
-@router.get("/analytics")
-async def complaints_analytics(
-    current_profile: dict[str, Any] = Depends(require_admin),
-) -> dict[str, Any]:
-    """
-    Admin analytics for dashboard:
-    - totals by sector and company
-    - 7-day trend (4-sector lines)
-    - normal baseline and spike alerts (>25% over normal)
-    """
-    _ = current_profile
-    supabase = get_supabase_admin()
+def build_complaints_analytics(supabase) -> dict[str, Any]:
     result = supabase.table("complaints").select(
         "subject,category,description,status,created_at"
     ).execute()
@@ -438,6 +427,21 @@ async def complaints_analytics(
         "sector_alerts": sector_alerts,
         "alert_count": sum(1 for item in sector_alerts if item["is_alert"]),
     }
+
+
+@router.get("/analytics")
+async def complaints_analytics(
+    current_profile: dict[str, Any] = Depends(require_admin),
+) -> dict[str, Any]:
+    """
+    Admin analytics for dashboard:
+    - totals by sector and company
+    - 7-day trend (4-sector lines)
+    - normal baseline and spike alerts (>25% over normal)
+    """
+    _ = current_profile
+    supabase = get_supabase_admin()
+    return build_complaints_analytics(supabase)
 
 
 @router.get("", response_model=ComplaintsListResponse)

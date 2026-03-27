@@ -380,18 +380,7 @@ async def verify_licence(
     return LicenceVerificationResponse(items=items, count=len(items))
 
 
-@router.get("/analytics")
-async def applications_analytics(
-    current_profile: dict[str, Any] = Depends(require_admin),
-) -> dict[str, Any]:
-    """
-    Admin analytics for dashboard:
-    - licence type distribution
-    - regional coverage by sector and licence type
-    """
-    _ = current_profile
-    supabase = get_supabase_admin()
-
+def build_applications_analytics(supabase) -> dict[str, Any]:
     result = supabase.table("applications").select(
         "licence_type,status,form_data_a,form_data_b,form_data_c,form_data_d"
     ).execute()
@@ -461,6 +450,21 @@ async def applications_analytics(
         "licence_type_distribution": licence_distribution,
         "regional_coverage": regional_coverage,
     }
+
+
+@router.get("/analytics")
+async def applications_analytics(
+    current_profile: dict[str, Any] = Depends(require_admin),
+) -> dict[str, Any]:
+    """
+    Admin analytics for dashboard:
+    - licence type distribution
+    - regional coverage by sector and licence type
+    """
+    _ = current_profile
+    supabase = get_supabase_admin()
+
+    return build_applications_analytics(supabase)
 
 
 @router.post("", response_model=ApplicationDetail, status_code=status.HTTP_201_CREATED)

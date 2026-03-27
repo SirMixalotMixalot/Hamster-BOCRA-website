@@ -1,6 +1,13 @@
 import { Loader2, MessageSquareWarning, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { getComplaint, listComplaints, updateComplaint, type ComplaintDetailResponse, type ComplaintListItem } from "@/lib/complaints";
+import {
+  getCachedComplaintsList,
+  getComplaint,
+  listComplaints,
+  updateComplaint,
+  type ComplaintDetailResponse,
+  type ComplaintListItem,
+} from "@/lib/complaints";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingDots } from "@/components/ui/loading-dots";
 
@@ -36,8 +43,15 @@ const STATUS_OPTIONS: Array<{ key: "open" | "investigating" | "resolved"; label:
 
 const Complaints = () => {
   const { toast } = useToast();
-  const [complaints, setComplaints] = useState<ComplaintWithCompany[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [complaints, setComplaints] = useState<ComplaintWithCompany[]>(() => {
+    const cached = getCachedComplaintsList();
+    if (!cached) return [];
+    return cached.items.map((item) => ({
+      ...item,
+      company: getCompanyFromText(item.subject, item.category),
+    }));
+  });
+  const [loading, setLoading] = useState(() => !getCachedComplaintsList());
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "open" | "investigating" | "resolved">("all");

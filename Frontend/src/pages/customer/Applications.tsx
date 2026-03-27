@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { FileText, Plus, Clock, CheckCircle, XCircle, AlertCircle, Eye, Award } from "lucide-react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
   getApplication,
@@ -52,6 +52,7 @@ const Applications = () => {
   const [loadingTimeline, setLoadingTimeline] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { isSidebarCollapsed } = useOutletContext<{ isSidebarCollapsed?: boolean }>();
   const [searchParams] = useSearchParams();
   const focusRef = searchParams.get("ref")?.trim() || "";
 
@@ -193,25 +194,9 @@ const Applications = () => {
   return (
     <div className="space-y-6 max-w-6xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
+        <div className={`${isSidebarCollapsed ? "block" : "block lg:hidden"}`}>
           <h2 className="text-2xl font-heading font-bold text-foreground">My Applications</h2>
           <p className="text-sm text-muted-foreground mt-1">Track your licence applications</p>
-        </div>
-        <div className="flex w-full sm:w-auto items-center gap-3">
-          <button
-            onClick={() => navigate("/customer/licences")}
-            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-[hsl(var(--input-bg))] text-foreground border border-[hsl(var(--input-border))] hover:bg-primary/5 hover:border-primary/30 hover:text-primary transition-all"
-          >
-            <Award className="h-4 w-4" />
-            View Licences
-          </button>
-          <button
-            onClick={() => navigate("/customer/applications/new")}
-            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-[hsl(210_85%_35%)] text-primary-foreground rounded-full text-sm font-medium shadow-glow-primary hover:opacity-90 transition-all"
-          >
-            <Plus className="h-4 w-4" />
-            New Application
-          </button>
         </div>
       </div>
 
@@ -250,6 +235,22 @@ const Applications = () => {
           <p className="text-xs text-muted-foreground/60 mt-1">
             {filter === "all" ? "Start a new licence application to get started" : `No ${filter.replace("_", " ")} applications`}
           </p>
+          <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <button
+              onClick={() => navigate("/customer/licences")}
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-[hsl(var(--input-border))] bg-[hsl(var(--input-bg))] px-4 py-2 text-sm font-medium text-foreground transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
+            >
+              <Award className="h-4 w-4" />
+              View Licences
+            </button>
+            <button
+              onClick={() => navigate("/customer/applications/new")}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-[hsl(210_85%_35%)] px-4 py-2 text-sm font-medium text-primary-foreground shadow-glow-primary transition-all hover:opacity-90"
+            >
+              <Plus className="h-4 w-4" />
+              New Application
+            </button>
+          </div>
         </div>
       ) : (
         <div className="glass rounded-2xl overflow-hidden">

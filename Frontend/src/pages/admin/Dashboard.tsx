@@ -1,80 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, ArrowRight, FileText, MapPinned, PieChart as PieChartIcon, ShieldCheck, Activity, Clock3 } from "lucide-react";
-import { getApiBaseUrl } from "@/lib/api";
-import { getAccessToken } from "@/lib/auth";
-
-type LicenceTypeDistributionItem = {
-  licence_type: string;
-  count: number;
-};
-
-type RegionalCoverageItem = {
-  region: string;
-  total: number;
-  by_sector: Record<string, number>;
-  by_licence_type: LicenceTypeDistributionItem[];
-};
-
-type ApplicationsAnalyticsResponse = {
-  total_eligible_licences: number;
-  status_breakdown: {
-    submitted: number;
-    under_review: number;
-    waiting_for_payment: number;
-    requires_action: number;
-    approved: number;
-    rejected: number;
-  };
-  licence_type_distribution: LicenceTypeDistributionItem[];
-  regional_coverage: RegionalCoverageItem[];
-};
-
-type ComplaintsTrendPoint = {
-  date: string;
-  telecom: number;
-  broadcasting: number;
-  postal: number;
-  internet: number;
-};
-
-type SectorBreakdownItem = {
-  sector: string;
-  total: number;
-};
-
-type CompanyBreakdownItem = {
-  company: string;
-  total: number;
-};
-
-type SectorAlert = {
-  sector: string;
-  total: number;
-  normal: number;
-  threshold: number;
-  today: number;
-  is_alert: boolean;
-};
-
-type ComplaintsAnalyticsResponse = {
-  total_complaints: number;
-  open_complaints: number;
-  trend_days: number;
-  trend: ComplaintsTrendPoint[];
-  sector_breakdown: SectorBreakdownItem[];
-  company_breakdown: CompanyBreakdownItem[];
-  company_breakdown_by_sector: Record<string, CompanyBreakdownItem[]>;
-  sector_alerts: SectorAlert[];
-  alert_count: number;
-};
+import {
+  getAdminDashboardBatch,
+  type ApplicationsAnalyticsResponse,
+  type CompanyBreakdownItem,
+  type ComplaintsAnalyticsResponse,
+  type ComplaintsTrendPoint,
+  type LicenceTypeDistributionItem,
+  type RegionalCoverageItem,
+  type SectorAlert,
+  type SectorBreakdownItem,
+} from "@/lib/adminBatch";
 
 const quickActions = [
   { label: "Review Applications", description: "Pending submissions", icon: FileText, to: "/admin/applications" },
   { label: "Manage Users", description: "View users and licences", icon: ShieldCheck, to: "/admin/users" },
   { label: "View Complaints", description: "Unresolved cases", icon: FileText, to: "/admin/complaints" },
 ];
-
-const POLL_MS = 30_000;
 
 const SECTOR_COLORS: Record<string, string> = {
   telecom: "#1d4ed8",
@@ -222,20 +164,6 @@ const MOCK_COMPLAINTS_ANALYTICS: ComplaintsAnalyticsResponse = {
   ],
   alert_count: 2,
 };
-
-async function fetchJson<T>(path: string): Promise<T> {
-  const token = getAccessToken();
-  const response = await fetch(`${getApiBaseUrl()}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to load dashboard data (${response.status})`);
-  }
-  return (await response.json()) as T;
-}
 
 const formatSector = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
 const handleViewStats = () => {
@@ -614,13 +542,10 @@ const Dashboard = () => {
 
     const load = async () => {
       try {
-        const [apps, complaints] = await Promise.all([
-          fetchJson<ApplicationsAnalyticsResponse>("/api/applications/analytics"),
-          fetchJson<ComplaintsAnalyticsResponse>("/api/complaints/analytics"),
-        ]);
+        const batch = await getAdminDashboardBatch();
         if (!mounted) return;
-        setApplicationsAnalytics(apps);
-        setComplaintsAnalytics(complaints);
+        setApplicationsAnalytics(batch.applications);
+        setComplaintsAnalytics(batch.complaints);
         setError(null);
       } catch (loadError) {
         if (!mounted) return;
@@ -631,13 +556,9 @@ const Dashboard = () => {
     };
 
     void load();
-    const intervalId = window.setInterval(() => {
-      void load();
-    }, POLL_MS);
 
     return () => {
       mounted = false;
-      window.clearInterval(intervalId);
     };
   }, []);
 

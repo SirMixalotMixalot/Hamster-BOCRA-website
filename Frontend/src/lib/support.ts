@@ -87,6 +87,15 @@ export function setSupportTicketsCache(response: SupportTicketsResponse): void {
   };
 }
 
+export function getCachedSupportTickets(): SupportTicketsResponse | null {
+  const token = getAccessToken();
+  const now = Date.now();
+  if (!supportTicketsCache) return null;
+  if (supportTicketsCache.token !== token) return null;
+  if (now - supportTicketsCache.fetchedAt > SUPPORT_TICKETS_CACHE_TTL_MS) return null;
+  return supportTicketsCache.data;
+}
+
 export function invalidateSupportTicketsCache(): void {
   supportTicketsCache = null;
   invalidatePortalBatchCacheEventually();
