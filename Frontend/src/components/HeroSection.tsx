@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MessageSquare, Shield, BarChart3, ArrowRight, Newspaper, Calendar, ArrowUpRight, ShieldCheck, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
-import heroBg from "@/assets/hero-bg.jpg";
+import heroBg from "@/assets/styling/t3.jpg";
 import newsImage1 from "@/assets/news/news1.jpg";
 import newsImage2 from "@/assets/news/news2.jpg";
 import newsImage3 from "@/assets/news/news3.jpg";
