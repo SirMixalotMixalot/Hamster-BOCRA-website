@@ -160,7 +160,7 @@ const HeroSection = () => {
   return (
     <>
       {/* ─── HERO ─────────────────────────────────────────────── */}
-      <section className="relative flex items-center justify-center py-28 md:py-36">
+      <section className="relative flex items-center justify-center py-14 md:py-36">
         <div className="absolute inset-0 overflow-hidden">
           <img src={heroBg} alt="" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/80 to-bocra-navy/70" />
@@ -193,14 +193,14 @@ const HeroSection = () => {
           </p>
 
           <div
-            className="mt-10 flex w-full flex-col items-center justify-center gap-4 animate-fade-in-up sm:flex-row"
+            className="mt-6 sm:mt-10 flex w-full flex-col items-center justify-center gap-4 animate-fade-in-up sm:flex-row"
             style={{ animationDelay: "0.2s" }}
           >
             {heroQuickActions.map((action) => (
               <button
                 key={action.label}
                 type="button"
-                className="inline-flex min-w-[220px] items-center justify-center gap-3 rounded-2xl border border-white/25 bg-white/10 px-6 py-4 text-sm font-semibold uppercase tracking-[0.08em] text-white backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/15"
+                className="inline-flex w-full sm:w-auto min-w-[220px] items-center justify-center gap-3 rounded-2xl border border-white/25 bg-white/10 px-6 py-4 text-sm font-semibold uppercase tracking-[0.08em] text-white backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/15"
               >
                 <span className={`h-3.5 w-3.5 shrink-0 rounded-full ${action.dotClass}`} />
                 <span>{action.label}</span>
