@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { getMe, login, logout, signInWithGoogle, signup } from "@/lib/auth";
+import { getAccessToken, getMe, getStoredRole, login, logout, signInWithGoogle, signup } from "@/lib/auth";
 
 type Step = "sign-in" | "sign-up" | "admin-login";
 
@@ -25,6 +25,21 @@ const SignInModal = () => {
   const [step, setStep] = useState<Step>("sign-in");
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("Signing you in...");
+  const [authRole, setAuthRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const syncAuthRole = () => {
+      if (!getAccessToken()) {
+        setAuthRole(null);
+        return;
+      }
+      setAuthRole(getStoredRole());
+    };
+
+    syncAuthRole();
+    window.addEventListener("storage", syncAuthRole);
+    return () => window.removeEventListener("storage", syncAuthRole);
+  }, []);
 
   const [signInEmail, setSignInEmail] = useState("");
   const [signInPassword, setSignInPassword] = useState("");
@@ -50,6 +65,11 @@ const SignInModal = () => {
       };
       setOpen(true);
       setStep(stepMap[rawStep] || rawStep || "sign-in");
+      if (getAccessToken()) {
+        setAuthRole(getStoredRole());
+      } else {
+        setAuthRole(null);
+      }
     };
     window.addEventListener("toggle-signin-modal", handler);
     return () => window.removeEventListener("toggle-signin-modal", handler);
@@ -295,25 +315,57 @@ const SignInModal = () => {
 
             {/* Footer links */}
             <div className="space-y-2 text-center">
-              <p className="text-xs text-gray-400">
-                Don't have an account?{" "}
-                <button
-                  type="button"
-                  onClick={() => setStep("sign-up")}
-                  className="text-blue-400 hover:underline font-medium"
-                >
-                  Sign up
-                </button>
-              </p>
-              <p className="text-xs text-gray-400">
-                <button
-                  type="button"
-                  onClick={() => setStep("admin-login")}
-                  className="text-blue-400 hover:underline font-medium"
-                >
-                  Admin portal
-                </button>
-              </p>
+              {authRole === "admin" ? (
+                <p className="text-xs text-gray-400">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpen(false);
+                      setStep("sign-in");
+                      navigate("/admin/dashboard", { replace: true });
+                    }}
+                    className="text-blue-400 hover:underline font-medium"
+                  >
+                    Admin Portal
+                  </button>
+                </p>
+              ) : authRole === "customer" ? (
+                <p className="text-xs text-gray-400">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpen(false);
+                      setStep("sign-in");
+                      navigate("/customer/dashboard", { replace: true });
+                    }}
+                    className="text-blue-400 hover:underline font-medium"
+                  >
+                    Customer Portal
+                  </button>
+                </p>
+              ) : (
+                <>
+                  <p className="text-xs text-gray-400">
+                    Don't have an account?{" "}
+                    <button
+                      type="button"
+                      onClick={() => setStep("sign-up")}
+                      className="text-blue-400 hover:underline font-medium"
+                    >
+                      Sign up
+                    </button>
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    <button
+                      type="button"
+                      onClick={() => setStep("admin-login")}
+                      className="text-blue-400 hover:underline font-medium"
+                    >
+                      Admin portal
+                    </button>
+                  </p>
+                </>
+              )}
             </div>
           </>
         )}

@@ -25,6 +25,11 @@ const MegaMenuDrawer = ({ isOpen, onClose, activeItem }: MegaMenuDrawerProps) =>
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
+      const target = e.target as Element | null;
+      if (target?.closest("[data-mega-menu-trigger='true']")) {
+        return;
+      }
+
       if (ref.current && !ref.current.contains(e.target as Node)) {
         onClose();
       }
