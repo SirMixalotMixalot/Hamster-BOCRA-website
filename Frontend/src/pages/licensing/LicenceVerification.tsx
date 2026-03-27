@@ -1,6 +1,5 @@
 import Header from "@/components/Header";
 import BottomBar from "@/components/BottomBar";
-import VerifyLicenceModal from "@/components/VerifyLicenceModal";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Plus, Minus, Search } from "lucide-react";
 import { useState } from "react";
@@ -140,7 +139,6 @@ const LicenceVerification = () => {
         </section>
       </main>
       <BottomBar />
-      <VerifyLicenceModal />
     </div>
   );
 };

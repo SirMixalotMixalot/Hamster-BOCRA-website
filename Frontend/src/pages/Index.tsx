@@ -3,11 +3,8 @@ import HeroSection from "@/components/HeroSection";
 import AIChatbot from "@/components/AIChatbot";
 import BottomBar from "@/components/BottomBar";
 import ContactModal from "@/components/ContactModal";
-import ComplaintModal from "@/components/ComplaintModal";
-import VerifyLicenceModal from "@/components/VerifyLicenceModal";
 import TelecomStatsModal from "@/components/TelecomStatsModal";
 import TypeApprovalModal from "@/components/TypeApprovalModal";
-import TrackComplaintModal from "@/components/TrackComplaintModal";
 
 const Index = () => {
   return (
@@ -19,11 +16,8 @@ const Index = () => {
       <BottomBar />
       <AIChatbot />
       <ContactModal />
-      <ComplaintModal />
-      <VerifyLicenceModal />
       <TelecomStatsModal />
       <TypeApprovalModal />
-      <TrackComplaintModal />
     </div>
   );
 };

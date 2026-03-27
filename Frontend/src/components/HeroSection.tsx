@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { MessageSquare, Shield, BarChart3, ArrowRight, Newspaper, Calendar, ArrowUpRight, ShieldCheck, ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { MessageSquare, Shield, BarChart3, ArrowRight, Newspaper, Calendar, ArrowUpRight, ShieldCheck, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
 import newsImage1 from "@/assets/news/news1.jpg";
 import newsImage2 from "@/assets/news/news2.jpg";
@@ -103,6 +103,8 @@ const newsCarouselImages = [newsImage1, newsImage2, newsImage3];
 const HeroSection = () => {
   const [publishedHomeData, setPublishedHomeData] = useState<HomePublishPayload | null>(null);
   const [activeNewsIndex, setActiveNewsIndex] = useState(0);
+  const [heroScrollProgress, setHeroScrollProgress] = useState(0);
+  const heroSectionRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     setPublishedHomeData(getHomePublishPayload());
@@ -148,6 +150,32 @@ const HeroSection = () => {
     return () => window.clearInterval(rotationTimer);
   }, [carouselNewsItems.length]);
 
+  useEffect(() => {
+    const updateHeroScrollProgress = () => {
+      const heroElement = heroSectionRef.current;
+      if (!heroElement) {
+        return;
+      }
+
+      const { top, height } = heroElement.getBoundingClientRect();
+      if (height <= 0) {
+        setHeroScrollProgress(0);
+        return;
+      }
+
+      const progress = Math.min(Math.max((-top) / height, 0), 1);
+      setHeroScrollProgress(progress);
+    };
+
+    updateHeroScrollProgress();
+    window.addEventListener("scroll", updateHeroScrollProgress, { passive: true });
+    window.addEventListener("resize", updateHeroScrollProgress);
+    return () => {
+      window.removeEventListener("scroll", updateHeroScrollProgress);
+      window.removeEventListener("resize", updateHeroScrollProgress);
+    };
+  }, []);
+
   const showPreviousNews = () => {
     setActiveNewsIndex((currentIndex) => (currentIndex - 1 + carouselNewsItems.length) % carouselNewsItems.length);
   };
@@ -156,13 +184,38 @@ const HeroSection = () => {
     setActiveNewsIndex((currentIndex) => (currentIndex + 1) % carouselNewsItems.length);
   };
 
+  const heroScrollEased = Math.min(1, heroScrollProgress * 1.15);
+  const heroParallaxOffset = heroScrollEased * 56;
+  const heroScale = 1.05 + heroScrollEased * 0.06;
+  const heroBlurPx = 2 + heroScrollEased * 3.5;
+  const heroOverlayOpacity = 0.72 - heroScrollEased * 0.42;
+  const heroBottomBlendOpacity = Math.max(0.9 - heroScrollEased * 1.2, 0);
+
   return (
     <>
       {/* ─── HERO ─────────────────────────────────────────────── */}
-      <section className="relative flex items-center justify-center -mt-16 pb-14 pt-[calc(4rem+3.5rem)] md:-mt-[72px] md:pb-36 md:pt-[calc(4.5rem+9rem)] lg:-mt-[5.75rem] lg:pt-[calc(5.75rem+9rem)]">
+      <section
+        ref={heroSectionRef}
+        className="relative flex items-center justify-center -mt-16 pb-14 pt-[calc(4rem+3.5rem)] md:-mt-[72px] md:pb-36 md:pt-[calc(4.5rem+9rem)] lg:-mt-[5.75rem] lg:pt-[calc(5.75rem+9rem)]"
+      >
         <div className="absolute inset-x-0 -top-1 bottom-0 overflow-hidden">
-          <img src={heroBg} alt="" className="h-[calc(100%+4px)] min-h-full w-full -translate-y-px object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/80 to-bocra-navy/70" />
+          <img
+            src={heroBg}
+            alt=""
+            className="h-[calc(100%+4px)] min-h-full w-full object-cover"
+            style={{
+              transform: `translateY(${heroParallaxOffset}px) scale(${heroScale})`,
+              filter: `blur(${heroBlurPx}px)`,
+            }}
+          />
+          <div
+            className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/40 to-transparent"
+            style={{ opacity: heroOverlayOpacity }}
+          />
+          <div
+            className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-b from-transparent via-background/55 to-background"
+            style={{ opacity: heroBottomBlendOpacity }}
+          />
 
           {/* Wave source 1 — left */}
           <div className="absolute top-[45%] left-[25%] -translate-x-1/2 -translate-y-1/2">
@@ -192,7 +245,7 @@ const HeroSection = () => {
           </p>
 
           <div
-            className="mt-6 sm:mt-10 flex w-full flex-col items-center justify-center gap-4 animate-fade-in-up sm:flex-row"
+            className="mt-6 flex w-full flex-col items-center justify-center gap-4 animate-fade-in-up sm:mt-8 sm:flex-row"
             style={{ animationDelay: "0.2s" }}
           >
             {heroQuickActions.map((action) => (
@@ -207,10 +260,19 @@ const HeroSection = () => {
             ))}
           </div>
         </div>
+
+        <a
+          href="#file-a-complaint"
+          aria-label="Scroll to next section"
+          className="absolute bottom-4 left-1/2 z-20 inline-flex -translate-x-1/2 flex-col items-center text-white/80 transition-colors hover:text-white"
+        >
+          <ChevronDown className="h-5 w-5 animate-[hero-scroll-float_900ms_ease-in-out_2_forwards]" />
+          <ChevronDown className="h-5 w-5 -mt-2 animate-[hero-scroll-float_900ms_ease-in-out_2_forwards] opacity-70 [animation-delay:150ms]" />
+        </a>
       </section>
 
       {/* ─── FILE A COMPLAINT ──────────────────────────────────── */}
-      <section className="pt-14 pb-20 bg-muted/30">
+      <section id="file-a-complaint" className="pt-14 pb-20 bg-muted/30">
         <div className="container max-w-5xl mx-auto px-4">
           <div className="flex flex-col md:flex-row gap-12 items-start">
             <div className="flex-1">

@@ -2,10 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import Header from "@/components/Header";
 import BottomBar from "@/components/BottomBar";
-import ComplaintModal from "@/components/ComplaintModal";
-import TrackComplaintModal from "@/components/TrackComplaintModal";
 import TypeApprovalModal from "@/components/TypeApprovalModal";
-import VerifyLicenceModal from "@/components/VerifyLicenceModal";
 
 const ConsumerEducation = () => {
   const navigate = useNavigate();
@@ -306,10 +303,7 @@ const ConsumerEducation = () => {
         </section>
       </main>
       <BottomBar />
-      <ComplaintModal />
-      <TrackComplaintModal />
       <TypeApprovalModal />
-      <VerifyLicenceModal />
     </div>
   );
 };

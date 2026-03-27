@@ -98,6 +98,18 @@
 }
 
 @layer utilities {
+  @keyframes hero-scroll-float {
+    0%,
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    50% {
+      transform: translateY(8px);
+      opacity: 0.82;
+    }
+  }
+
   .text-balance {
     text-wrap: balance;
   }

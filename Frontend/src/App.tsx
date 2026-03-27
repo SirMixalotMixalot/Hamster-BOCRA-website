@@ -54,6 +54,9 @@ import JobDetail from "./pages/careers/JobDetail.tsx";
 import JobApplication from "./pages/careers/JobApplication.tsx";
 import AdminCareers from "./pages/admin/AdminCareers.tsx";
 import SignInModal from "./components/SignInModal.tsx";
+import ComplaintModal from "./components/ComplaintModal.tsx";
+import TrackComplaintModal from "./components/TrackComplaintModal.tsx";
+import VerifyLicenceModal from "./components/VerifyLicenceModal.tsx";
 
 const queryClient = new QueryClient();
 
@@ -158,6 +161,9 @@ const App = () => (
       <BrowserRouter>
         <AuthBootstrapper />
         <SignInModal />
+        <ComplaintModal />
+        <TrackComplaintModal />
+        <VerifyLicenceModal />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/careers" element={<Careers />} />
