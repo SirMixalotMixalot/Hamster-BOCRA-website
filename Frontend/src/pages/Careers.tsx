@@ -1,7 +1,8 @@
 import Header from "@/components/Header";
 import BottomBar from "@/components/BottomBar";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Briefcase, MapPin, Clock, ChevronRight } from "lucide-react";
+import { Briefcase, MapPin, Clock, ChevronRight } from "lucide-react";
+import careersBg from "@/assets/styling/careers.avif";
 
 export interface JobPosting {
   id: string;
@@ -102,18 +103,23 @@ const Careers = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
+
+      {/* Hero Banner */}
+      <section className="relative flex items-center justify-center -mt-16 py-20 pt-[calc(4rem+5rem)] md:-mt-[72px] md:py-28 md:pt-[calc(4.5rem+7rem)] lg:-mt-[5.75rem] lg:pt-[calc(5.75rem+7rem)]">
+        <div className="absolute inset-x-0 -top-1 bottom-0 overflow-hidden">
+          <img src={careersBg} alt="" className="h-[calc(100%+4px)] min-h-full w-full -translate-y-px object-cover object-[center_70%]" />
+          <div className="absolute inset-0 bg-black/50" />
+        </div>
+        <div className="relative z-10 container max-w-6xl mx-auto px-4 text-center">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4">Careers</h1>
+          <p className="text-lg text-white/80 max-w-3xl mx-auto">
+            Join BOCRA and be part of Botswana's fast-moving communications sector.
+          </p>
+        </div>
+      </section>
+
       <main className="min-w-0 flex-1 py-12 md:py-16">
         <section className="container max-w-5xl mx-auto px-4">
-          <div className="mb-8 md:mb-10">
-            <button
-              onClick={() => navigate("/")}
-              className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors mb-4"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Home
-            </button>
-            <h1 className="text-3xl md:text-4xl font-extrabold text-foreground">Careers</h1>
-          </div>
 
           <div className="space-y-8">
             <p className="text-sm md:text-base leading-relaxed text-muted-foreground">
