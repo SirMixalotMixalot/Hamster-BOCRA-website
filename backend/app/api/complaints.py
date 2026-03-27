@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 
 from app.db.client import get_supabase_admin
 from app.core.email import send_email
+from app.core.config import get_settings
 from app.dependencies.auth import get_current_profile, require_admin
 from app.models.complaints import (
     COMPLAINT_STATUSES,
@@ -283,6 +284,7 @@ def _build_verification_key(email: str) -> str:
 async def send_complaint_verification_code(
     payload: ComplaintVerificationSendRequest,
 ) -> ComplaintVerificationResponse:
+    settings = get_settings()
     verification_key = _build_verification_key(payload.email)
     code, retry_after = create_or_refresh_code(verification_key)
     if retry_after > 0:
@@ -298,6 +300,13 @@ async def send_complaint_verification_code(
         "The code expires in 10 minutes.\n"
         "If you did not request this code, you can ignore this email."
     )
+
+    if settings.debug:
+        logger.info(
+            "complaint_verification_debug_code email=%s code=%s",
+            payload.email,
+            code,
+        )
 
     sent = send_email(to_email=payload.email, subject=subject, body=body)
     if not sent:

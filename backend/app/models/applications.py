@@ -56,9 +56,15 @@ class ApplicationPatchRequest(BaseModel):
     form_data_c: dict[str, Any] | None = None
     form_data_d: dict[str, Any] | None = None
     # Admin-only fields (will be validated in endpoint)
-    status: Literal["draft", "submitted", "under_review", "approved", "rejected", "requires_action"] | None = None
+    status: Literal["draft", "submitted", "under_review", "waiting_for_payment", "approved", "rejected", "requires_action"] | None = None
     admin_notes: str | None = None
     decision_reason: str | None = None
+
+
+class ApplicationRequestInfoRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    note: StrictStr = Field(min_length=1, max_length=2000)
 
 
 class ApplicationDecideRequest(BaseModel):
@@ -100,8 +106,18 @@ class ApplicationDetail(BaseModel):
     decided_by: UUID | None = None
     decided_at: datetime | None = None
     submitted_at: datetime | None = None
+    documents: list["ApplicationDocumentSummary"] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
+
+
+class ApplicationDocumentSummary(BaseModel):
+    id: UUID
+    file_name: str
+    file_type: str | None = None
+    file_size: int | None = None
+    category: str | None = None
+    created_at: datetime
 
 
 class ApplicationStatusLog(BaseModel):
@@ -111,3 +127,33 @@ class ApplicationStatusLog(BaseModel):
     changed_by: UUID | None = None
     reason: str | None = None
     created_at: datetime
+
+
+class LicenceVerificationItem(BaseModel):
+    licence_number: str
+    customer_name: str
+    licence_type: str
+    issue_date: datetime
+    expiration_date: datetime
+    status: Literal["Active", "Expired", "Suspended"]
+
+
+class LicenceVerificationResponse(BaseModel):
+    items: list[LicenceVerificationItem]
+    count: int
+
+
+class ApplicationHistoryBatchRequest(BaseModel):
+    """Request to fetch histories for multiple applications in a single call."""
+    application_ids: list[UUID]
+
+
+class ApplicationHistoryBatchItem(BaseModel):
+    """Single application with its history."""
+    id: UUID
+    history: list[ApplicationStatusLog]
+
+
+class ApplicationHistoryBatchResponse(BaseModel):
+    """Batch response containing histories for multiple applications."""
+    items: list[ApplicationHistoryBatchItem]

@@ -40,3 +40,15 @@ class DocumentListItem(BaseModel):
     category: str
     file_size: int
     created_at: datetime
+
+
+class PublicDocumentListItem(BaseModel):
+    """Public-facing document listing item."""
+    id: UUID
+    file_name: str
+    section: str
+    category: Literal["public"]
+    file_type: str
+    file_size: int
+    created_at: datetime
+    download_url: str | None = None

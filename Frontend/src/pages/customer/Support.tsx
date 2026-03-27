@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { LifeBuoy, Send, Loader2, Plus, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { createSupportTicket, listSupportTickets, type SupportCategory, type SupportTicketItem } from "@/lib/support";
+import { LoadingDots } from "@/components/ui/loading-dots";
 
 const CATEGORIES: { label: string; value: SupportCategory }[] = [
   { label: "Technical", value: "technical" },
@@ -188,8 +189,7 @@ const Support = () => {
       {/* Tickets List */}
       {loading ? (
         <div className="glass rounded-2xl p-8 text-center">
-          <Loader2 className="h-10 w-10 text-primary/70 mx-auto animate-spin" />
-          <p className="text-sm text-muted-foreground mt-3">Loading support tickets...</p>
+          <LoadingDots label="Loading support tickets..." />
         </div>
       ) : tickets.length > 0 ? (
         <div className="glass rounded-2xl overflow-hidden">

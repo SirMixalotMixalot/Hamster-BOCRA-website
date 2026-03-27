@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { LifeBuoy, Search } from "lucide-react";
 import { getApiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth";
+import { LoadingDots } from "@/components/ui/loading-dots";
 
 type TicketStatus = "open" | "in_progress" | "replied" | "resolved" | string;
 
@@ -119,7 +120,7 @@ const Tickets = () => {
 
       {loading ? (
         <div className="bg-card rounded-xl border border-border p-8 text-center">
-          <p className="text-sm text-muted-foreground">Loading tickets...</p>
+          <LoadingDots label="Loading tickets..." />
         </div>
       ) : filtered.length === 0 ? (
         <div className="bg-card rounded-xl border border-border p-8 text-center">

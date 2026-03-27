@@ -7,7 +7,9 @@ import {
   MessageSquareWarning,
   LifeBuoy,
   BarChart3,
-  Settings,
+  Briefcase,
+  User,
+  Home,
   LogOut,
   Menu,
   X,
@@ -24,8 +26,8 @@ const sidebarLinks = [
   { to: "/admin/applications", icon: FileText, label: "Applications" },
   { to: "/admin/complaints", icon: MessageSquareWarning, label: "Complaints" },
   { to: "/admin/tickets", icon: LifeBuoy, label: "Tickets" },
+  { to: "/admin/careers", icon: Briefcase, label: "Careers" },
   { to: "/admin/reports", icon: BarChart3, label: "Documents Management" },
-  { to: "/admin/settings", icon: Settings, label: "Settings" },
 ];
 
 const AdminLayout = () => {
@@ -48,7 +50,17 @@ const AdminLayout = () => {
       >
         {/* Logo – solid navy */}
         <div className="flex items-center gap-2.5 px-5 h-16 shrink-0 bg-bocra-navy border-b border-white/10">
-          <img src={bocraLogo} alt="BOCRA" className="h-16 w-auto object-contain brightness-200 shrink-0" />
+          <button
+            type="button"
+            onClick={() => {
+              setSidebarOpen(false);
+              navigate("/");
+            }}
+            className="shrink-0"
+            aria-label="Go to home"
+          >
+            <img src={bocraLogo} alt="BOCRA" className="h-16 w-auto object-contain brightness-200" />
+          </button>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden ml-auto p-1 text-white/50 hover:text-white">
             <X className="h-5 w-5" />
           </button>
@@ -78,8 +90,32 @@ const AdminLayout = () => {
             ))}
           </nav>
 
-          {/* Logout */}
+          {/* Profile/Home/Logout */}
           <div className="px-2 pb-3 border-t border-gray-400/30 pt-3">
+            <NavLink
+              to="/admin/settings"
+              onClick={() => setSidebarOpen(false)}
+              title={collapsed ? "Profile" : undefined}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${collapsed ? "justify-center" : ""} ${
+                  isActive
+                    ? "bg-white/40 text-bocra-navy shadow-sm"
+                    : "text-bocra-navy/60 hover:bg-white/30 hover:text-bocra-navy"
+                }`
+              }
+            >
+              <User className="h-4 w-4 shrink-0" />
+              {!collapsed && "Profile"}
+            </NavLink>
+            <NavLink
+              to="/"
+              onClick={() => setSidebarOpen(false)}
+              title={collapsed ? "Home" : undefined}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-bocra-navy/60 hover:bg-white/30 hover:text-bocra-navy ${collapsed ? "justify-center" : ""}`}
+            >
+              <Home className="h-4 w-4 shrink-0" />
+              {!collapsed && "Home Page"}
+            </NavLink>
             <button
               onClick={handleLogout}
               title={collapsed ? "Sign Out" : undefined}

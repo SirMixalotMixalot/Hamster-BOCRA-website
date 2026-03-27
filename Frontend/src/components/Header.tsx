@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Search, Menu, X, ChevronDown, FileText, Shield, BookOpen, HelpCircle, Users, Briefcase, Scale, Wifi, Tv, Package, Globe2, BarChart3, ExternalLink, Award, ClipboardList, FileCheck, Newspaper, LogIn } from "lucide-react";
+import { Search, Menu, X, ChevronDown, FileText, Shield, BookOpen, HelpCircle, Users, Briefcase, Scale, Wifi, Tv, Package, Globe2, BarChart3, ExternalLink, Award, ClipboardList, FileCheck, Newspaper, LogIn, Building2, ClipboardCheck, DollarSign, ShieldCheck, ScrollText, GraduationCap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import bocraLogo from "@/assets/bocra-logo.png";
 import MegaMenuDrawer from "./MegaMenuDrawer";
@@ -12,11 +12,22 @@ const navItems = [
     id: "about",
     sections: [
       {
-        title: "Organization",
+        title: "About",
         items: [
-          { icon: Scale, label: "Our Mandate", description: "Learn about our regulatory responsibilities" },
-          { icon: Users, label: "Leadership", description: "Meet our Board and Executive team" },
-          { icon: Award, label: "Strategic Plan", description: "Our vision for Botswana's digital future" },
+          { icon: Globe2, label: "Overview", description: "Our history, mission, vision and values", action: "navigate:/about/who-we-are" },
+          { icon: Scale, label: "Our Mandate", description: "Learn about our regulatory responsibilities", action: "navigate:/about/mandate" },
+          { icon: Award, label: "Strategic Plan", description: "Our vision for Botswana's digital future", action: "navigate:/about/strategic-plan" },
+        ],
+      },
+      {
+        title: "People",
+        items: [
+          { icon: Building2, label: "Organisational Structure", description: "Board, executive team and departments", action: "navigate:/about/structure" },
+        ],
+      },
+      {
+        title: "Join Us",
+        items: [
           { icon: Briefcase, label: "Careers", description: "Join our team of professionals", action: "navigate:/careers" },
         ],
       },
@@ -27,19 +38,27 @@ const navItems = [
     id: "licensing",
     sections: [
       {
-        title: "License Types",
+        title: "Licensing Process",
         items: [
-          { icon: Wifi, label: "Telecommunications", description: "Fixed and mobile network licenses" },
-          { icon: Tv, label: "Broadcasting", description: "Radio and television broadcasting" },
-          { icon: Globe2, label: "Internet Services", description: "ISP and data services" },
-          { icon: Package, label: "Postal Services", description: "Courier and postal licenses" },
+          { icon: ClipboardCheck, label: "How Licensing Works", description: "Application, renewal and timelines", action: "navigate:/licensing/how-it-works" },
+          { icon: DollarSign, label: "Licence Fees", description: "Fee schedule for all licence types", action: "navigate:/licensing/fees" },
+          { icon: ShieldCheck, label: "Licence Verification", description: "Verify operator and equipment licences", action: "navigate:/licensing/verification" },
         ],
       },
       {
-        title: "Regulatory Functions",
+        title: "License Types",
         items: [
-          { icon: Wifi, label: "Spectrum Management", description: "Frequency allocation and management" },
-          { icon: ExternalLink, label: "Interconnection", description: "Network interconnection guidelines" },
+          { icon: Wifi, label: "Telecommunications", description: "Fixed and mobile network licenses", action: "navigate:/licensing/telecommunications" },
+          { icon: Tv, label: "Broadcasting", description: "Radio and television broadcasting", action: "navigate:/licensing/broadcasting" },
+          { icon: Globe2, label: "Internet Services", description: "ISP and data services", action: "navigate:/licensing/internet-services" },
+          { icon: Package, label: "Postal Services", description: "Courier and postal licenses", action: "navigate:/licensing/postal-services" },
+        ],
+      },
+      {
+        title: "Spectrum & Interconnection",
+        items: [
+          { icon: Wifi, label: "Spectrum Management", description: "Frequency allocation and management", action: "navigate:/licensing/spectrum-management" },
+          { icon: ExternalLink, label: "Interconnection", description: "Network interconnection guidelines", action: "navigate:/licensing/interconnection" },
         ],
       },
     ],
@@ -49,19 +68,25 @@ const navItems = [
     id: "resources",
     sections: [
       {
-        title: "Documents",
+        title: "Legal & Consumer",
         items: [
-          { icon: BookOpen, label: "Legislation & Regulations", description: "Acts, policies, and guidelines" },
-          { icon: FileText, label: "Publications", description: "Reports, studies, and papers" },
-          { icon: FileCheck, label: "Forms & Downloads", description: "Application forms and templates" },
-          { icon: BarChart3, label: "Statistics", description: "Market data and sector indicators", action: "toggle-telecom-stats-modal" },
+          { icon: BookOpen, label: "Legislation & Regulations", description: "Acts, policies, and guidelines", action: "navigate:/resources/legislation" },
+          { icon: ScrollText, label: "Policies & Frameworks", description: "Regulatory frameworks and guidelines", action: "navigate:/resources/policies" },
+          { icon: GraduationCap, label: "Consumer Education", description: "Know your rights and responsibilities", action: "navigate:/resources/consumer-education" },
+        ],
+      },
+      {
+        title: "Publications & Forms",
+        items: [
+          { icon: FileCheck, label: "Forms & Documents", description: "Application forms, templates, and downloadable documents", action: "navigate:/resources/forms-documents" },
+          { icon: FileText, label: "Publications", description: "Reports, studies, and papers", action: "navigate:/resources/publications" },
+          { icon: FileText, label: "Annual Reports", description: "Yearly performance and sector reports", action: "navigate:/about/annual-reports" },
         ],
       },
       {
         title: "Support",
         items: [
           { icon: HelpCircle, label: "FAQs", description: "Frequently asked questions", action: "navigate:/faqs" },
-          { icon: BookOpen, label: "Glossary", description: "Telecommunications terms explained" },
         ],
       },
     ],
@@ -71,28 +96,26 @@ const navItems = [
     id: "quicklinks",
     sections: [
       {
-        title: "column-1",
+        title: "For Customers",
         items: [
           { icon: FileCheck, label: "Apply for License", description: "Start a new license application", action: "toggle-signin-modal" },
           { icon: ClipboardList, label: "Renew License", description: "Renew an existing license", action: "toggle-signin-modal" },
-          { icon: ClipboardList, label: "Type Approval", description: "Get equipment approved for use", action: "toggle-signin-modal" },
+          { icon: Shield, label: "Verify License", description: "Check license status and validity", action: "toggle-verify-licence-modal" },
         ],
       },
       {
-        title: "column-2",
+        title: "For General Public",
         items: [
-          { icon: Shield, label: "Verify License", description: "Check license status and validity", action: "toggle-signin-modal" },
-          { icon: Scale, label: "Fee Schedule", description: "View licensing fees", action: "toggle-signin-modal" },
-          { icon: BarChart3, label: "Track Application", description: "Check your application status", action: "toggle-signin-modal" },
+          { icon: ClipboardList, label: "Type Approval", description: "Get equipment approved for use", action: "toggle-signin-modal" },
           { icon: Search, label: "Track Complaint", description: "Check your complaint status", action: "toggle-track-complaint-modal" },
         ],
       },
       {
-        title: "column-3",
+        title: "Information",
         items: [
-          { icon: Newspaper, label: "News", description: "Latest announcements and media updates" },
-          { icon: BarChart3, label: "QOS Monitoring", description: "Quality of service metrics and performance" },
-          { icon: Briefcase, label: "Tenders", description: "View current procurement opportunities" },
+          { icon: Newspaper, label: "News", description: "Latest announcements and media updates", action: "navigate:/resources/news" },
+          { icon: BarChart3, label: "Statistics", description: "Market data and sector indicators", action: "navigate:/resources/statistics" },
+          { icon: Briefcase, label: "Tenders", description: "View current procurement opportunities", action: "navigate:/resources/tenders" },
         ],
       },
     ],
@@ -123,6 +146,7 @@ const Header = () => {
       decision: [],
       document: [],
       service: [],
+      page: [],
     };
 
     for (const result of searchResults) {
@@ -136,6 +160,7 @@ const Header = () => {
     { key: "news" as const, label: "News" },
     { key: "decision" as const, label: "Decisions" },
     { key: "document" as const, label: "Documents" },
+    { key: "page" as const, label: "Pages" },
     { key: "service" as const, label: "Services" },
   ];
 
@@ -272,14 +297,27 @@ const Header = () => {
     navigate(result.url);
   };
 
+  const handleMenuAction = (action?: string) => {
+    if (!action) {
+      return;
+    }
+
+    if (action.startsWith("navigate:")) {
+      navigate(action.replace("navigate:", ""));
+      return;
+    }
+
+    window.dispatchEvent(new CustomEvent(action));
+  };
+
   return (
     <>
       <header className="sticky top-0 z-50 bg-bocra-navy shadow-sm">
         <div className="container flex items-center justify-between h-16 md:h-[72px]">
           {/* Logo */}
-          <a href="#" className="shrink-0">
+          <button type="button" onClick={() => navigate("/")} className="shrink-0">
             <img src={bocraLogo} alt="BOCRA" className="h-16 w-auto object-contain brightness-200 md:h-[72px]" />
-          </a>
+          </button>
 
           {/* Desktop Nav */}
           <nav className="hidden lg:flex items-center gap-1">
@@ -451,11 +489,7 @@ const Header = () => {
                               if ("action" in subItem && subItem.action) {
                                 setMobileOpen(false);
                                 setActiveMenu(null);
-                                if (subItem.action.startsWith("navigate:")) {
-                                  window.location.href = subItem.action.replace("navigate:", "");
-                                } else {
-                                  window.dispatchEvent(new CustomEvent(subItem.action));
-                                }
+                                handleMenuAction(subItem.action);
                               }
                             }}
                             className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-white/60 hover:text-white hover:bg-white/10"

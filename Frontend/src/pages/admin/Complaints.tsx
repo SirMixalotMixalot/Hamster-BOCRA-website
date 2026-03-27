@@ -2,6 +2,7 @@ import { Loader2, MessageSquareWarning, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { getComplaint, listComplaints, updateComplaint, type ComplaintDetailResponse, type ComplaintListItem } from "@/lib/complaints";
 import { useToast } from "@/hooks/use-toast";
+import { LoadingDots } from "@/components/ui/loading-dots";
 
 type ComplaintWithCompany = ComplaintListItem & { company: string };
 
@@ -235,19 +236,7 @@ const Complaints = () => {
 
       {loading ? (
         <div className="bg-card rounded-xl border border-border p-8">
-          <div className="flex flex-col items-center justify-center gap-4">
-            <div className="relative h-10 w-10">
-              <span className="absolute inset-0 rounded-full border-2 border-muted animate-ping" />
-              <span className="absolute inset-0 rounded-full border-2 border-primary/50" />
-              <span className="absolute inset-2 rounded-full bg-primary/20" />
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-primary/70 animate-bounce [animation-delay:-0.2s]" />
-              <span className="h-2 w-2 rounded-full bg-primary/70 animate-bounce [animation-delay:-0.1s]" />
-              <span className="h-2 w-2 rounded-full bg-primary/70 animate-bounce" />
-            </div>
-            <p className="text-sm text-muted-foreground">Loading complaints...</p>
-          </div>
+          <LoadingDots label="Loading complaints..." />
         </div>
       ) : filtered.length === 0 ? (
         <div className="bg-card rounded-xl border border-border p-8 text-center">

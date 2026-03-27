@@ -14,6 +14,17 @@ export interface DocumentUploadResponse {
   created_at: string;
 }
 
+export interface PublicDocumentListItem {
+  id: string;
+  file_name: string;
+  section: string;
+  category: "public";
+  file_type: string;
+  file_size: number;
+  created_at: string;
+  download_url: string | null;
+}
+
 export async function uploadDocument(params: {
   file: File;
   category: DocumentCategory;
@@ -51,4 +62,23 @@ export async function uploadDocument(params: {
   }
 
   return (await response.json()) as DocumentUploadResponse;
+}
+
+export async function listPublicDocuments(): Promise<PublicDocumentListItem[]> {
+  const response = await fetch(`${getApiBaseUrl()}/api/documents/public`, {
+    method: "GET",
+  });
+
+  if (!response.ok) {
+    let message = "Failed to load public documents";
+    try {
+      const body = (await response.json()) as { detail?: string; message?: string };
+      message = body.detail || body.message || message;
+    } catch {
+      // keep fallback message
+    }
+    throw new Error(message);
+  }
+
+  return (await response.json()) as PublicDocumentListItem[];
 }

@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
-import { FileText, Gavel, Megaphone, Newspaper, ScrollText, TrendingUp, Upload } from "lucide-react";
+import { BarChart3, FileText, Gavel, Megaphone, Newspaper, ScrollText, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { mergeHomePublishPayload, type HomeResourceItem, type HomeStatItem } from "@/lib/homePublishing";
 import { getApiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth";
 import { uploadDocument } from "@/lib/documents";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import FileUploadZone from "@/components/applications/shared/FileUploadZone";
 
 const MOCK_STATS = [
   { value: "4+", label: "Licensed Mobile Operators" },
@@ -51,7 +52,7 @@ const MOCK_LEGISLATION = [
   { title: "Spectrum Regulations 2026", description: "Updated licensing obligations" },
 ];
 
-type SectionKey = "stats" | "news" | "tenders" | "forms" | "publications" | "legislation";
+type SectionKey = "stats" | "news" | "tenders" | "forms" | "publications" | "legislation" | "annual-reports" | "statistics";
 
 const SECTION_UPLOAD_TITLES: Record<Exclude<SectionKey, "stats">, string> = {
   news: "news content",
@@ -59,6 +60,22 @@ const SECTION_UPLOAD_TITLES: Record<Exclude<SectionKey, "stats">, string> = {
   forms: "forms and templates",
   publications: "publication files",
   legislation: "legislation and regulation files",
+  "annual-reports": "annual report files",
+  statistics: "statistical report files",
+};
+
+const formatFileSize = (bytes: number) => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const buildPublicUploadFile = (section: Exclude<SectionKey, "stats">, file: File) => {
+  const taggedName = file.name.includes("::") ? file.name : `${section}::${file.name}`;
+  return new File([file], taggedName, {
+    type: file.type,
+    lastModified: file.lastModified,
+  });
 };
 
 const Reports = () => {
@@ -70,13 +87,15 @@ const Reports = () => {
     forms: [],
     publications: [],
     legislation: [],
+    "annual-reports": [],
+    statistics: [],
   });
   const [statsPreview, setStatsPreview] = useState<HomeStatItem[]>(MOCK_STATS);
   const [statsLoading, setStatsLoading] = useState(false);
   const [uploadingSection, setUploadingSection] = useState<Exclude<SectionKey, "stats"> | null>(null);
 
   const publish = (
-    section: "stats" | "news" | "tenders" | "forms" | "publications" | "legislation",
+    section: "stats" | "news" | "tenders" | "forms" | "publications" | "legislation" | "annual-reports" | "statistics",
   ) => {
     switch (section) {
       case "stats":
@@ -151,30 +170,6 @@ const Reports = () => {
     setActiveModal(section);
   };
 
-  const onFilesSelected = (section: Exclude<SectionKey, "stats">, files: FileList | null) => {
-    if (!files) return;
-    setUploadFiles((current) => ({
-      ...current,
-      [section]: [...Array.from(files)],
-    }));
-  };
-
-  const renderUploadedFileNames = (section: Exclude<SectionKey, "stats">) => {
-    const files = uploadFiles[section];
-    if (!files.length) {
-      return <p className="text-xs text-muted-foreground">No files selected yet.</p>;
-    }
-    return (
-      <ul className="space-y-1">
-        {files.map((file) => (
-          <li key={`${file.name}-${file.size}`} className="text-xs text-foreground">
-            {file.name}
-          </li>
-        ))}
-      </ul>
-    );
-  };
-
   const publishFromModal = async (section: SectionKey) => {
     if (section !== "stats") {
       const files = uploadFiles[section];
@@ -189,7 +184,7 @@ const Reports = () => {
       try {
         setUploadingSection(section);
         for (const file of files) {
-          await uploadDocument({ file, category: "public" });
+          await uploadDocument({ file: buildPublicUploadFile(section, file), category: "public" });
         }
       } catch (error) {
         toast({
@@ -293,6 +288,32 @@ const Reports = () => {
             Open
           </button>
         </div>
+
+        <div className="bg-card rounded-xl border border-border p-4 space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-bocra-blue/15 text-bocra-blue">
+              <FileText className="h-5 w-5" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground">Annual Reports</h3>
+          </div>
+          <p className="text-xs text-muted-foreground">Upload annual reports for public download.</p>
+          <button onClick={() => openUploadModal("annual-reports")} className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold">
+            Open
+          </button>
+        </div>
+
+        <div className="bg-card rounded-xl border border-border p-4 space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-bocra-teal/15 text-bocra-teal">
+              <BarChart3 className="h-5 w-5" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground">Statistics</h3>
+          </div>
+          <p className="text-xs text-muted-foreground">Upload statistical reports for public download.</p>
+          <button onClick={() => openUploadModal("statistics")} className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold">
+            Open
+          </button>
+        </div>
       </div>
 
       <Dialog open={activeModal === "stats"} onOpenChange={(open) => !open && setActiveModal(null)}>
@@ -324,7 +345,7 @@ const Reports = () => {
         </DialogContent>
       </Dialog>
 
-      {(["news", "tenders", "forms", "publications", "legislation"] as const).map((section) => (
+      {(["news", "tenders", "forms", "publications", "legislation", "annual-reports", "statistics"] as const).map((section) => (
         <Dialog key={section} open={activeModal === section} onOpenChange={(open) => !open && setActiveModal(null)}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
@@ -334,21 +355,36 @@ const Reports = () => {
               </DialogDescription>
             </DialogHeader>
 
-            <label className="block rounded-lg border border-dashed border-border p-4 cursor-pointer hover:bg-muted/40 transition-colors">
-              <div className="inline-flex items-center gap-2 text-sm text-foreground">
-                <Upload className="h-4 w-4" />
-                Choose files
+            <div className="rounded-md border border-border p-3 space-y-3">
+              <div>
+                <p className="text-xs font-semibold text-foreground">Upload Metadata</p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  These files are uploaded as <span className="font-medium text-foreground">public</span> documents for the <span className="font-medium text-foreground capitalize">{section}</span> section. The backend only accepts PDF files in this document management flow.
+                </p>
               </div>
-              <input
-                type="file"
-                multiple
-                className="hidden"
-                onChange={(event) => onFilesSelected(section, event.target.files)}
+              <FileUploadZone
+                files={uploadFiles[section]}
+                onChange={(files) => setUploadFiles((current) => ({ ...current, [section]: files }))}
+                accept=".pdf"
+                maxSizeMB={20}
               />
-            </label>
-
-            <div className="rounded-md border border-border p-3 max-h-36 overflow-y-auto">
-              {renderUploadedFileNames(section)}
+              <div className="rounded-md border border-border p-3 max-h-48 overflow-y-auto">
+                {uploadFiles[section].length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No files selected yet.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {uploadFiles[section].map((file) => (
+                      <div key={`${file.name}-${file.size}`} className="text-xs text-muted-foreground">
+                        <p className="font-medium text-foreground">{file.name}</p>
+                        <p>Size: {formatFileSize(file.size)}</p>
+                        <p>Type: {file.type || "application/pdf"}</p>
+                        <p>Category: public</p>
+                        <p>Publish target: {section}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex justify-end pt-2">

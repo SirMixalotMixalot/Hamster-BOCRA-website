@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { User as UserIcon, Camera, Loader2, Lock, Bell, Mail, MessageSquare, Pencil } from "lucide-react";
 import { getCachedMe, getMe } from "@/lib/auth";
+import { LoadingDots } from "@/components/ui/loading-dots";
 
 const inputBase =
   "w-full px-5 py-2.5 rounded-full border text-sm focus:outline-none transition-all duration-200";
@@ -112,7 +113,7 @@ const Profile = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <LoadingDots label="Loading your profile..." />
       </div>
     );
   }

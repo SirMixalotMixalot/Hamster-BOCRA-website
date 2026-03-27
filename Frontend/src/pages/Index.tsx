@@ -2,7 +2,6 @@ import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import AIChatbot from "@/components/AIChatbot";
 import BottomBar from "@/components/BottomBar";
-import SignInModal from "@/components/SignInModal";
 import ContactModal from "@/components/ContactModal";
 import ComplaintModal from "@/components/ComplaintModal";
 import VerifyLicenceModal from "@/components/VerifyLicenceModal";
@@ -19,7 +18,6 @@ const Index = () => {
       </main>
       <BottomBar />
       <AIChatbot />
-      <SignInModal />
       <ContactModal />
       <ComplaintModal />
       <VerifyLicenceModal />

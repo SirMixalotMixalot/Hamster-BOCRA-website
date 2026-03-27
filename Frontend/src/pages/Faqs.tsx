@@ -1,5 +1,8 @@
 import BottomBar from "@/components/BottomBar";
 import Header from "@/components/Header";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Plus, Minus } from "lucide-react";
+import { useState } from "react";
 
 const faqs = [
   {
@@ -133,23 +136,53 @@ const faqs = [
 ];
 
 const Faqs = () => {
+  const navigate = useNavigate();
+  const [openSet, setOpenSet] = useState<Set<number>>(new Set());
+
+  const toggle = (index: number) => {
+    setOpenSet((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index); else next.add(index);
+      return next;
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="min-w-0 flex-1 py-12 md:py-16">
         <section className="container max-w-5xl mx-auto px-4">
           <div className="mb-8 md:mb-10">
+            <button
+              onClick={() => navigate("/")}
+              className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors mb-4"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Home
+            </button>
             <h1 className="text-3xl md:text-4xl font-extrabold text-foreground">Frequently Asked Questions</h1>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-2">
             {faqs.map((faq, index) => (
-              <article key={`${index + 1}-${faq.question}`} className="rounded-2xl border border-border bg-card p-5 md:p-6">
-                <h2 className="text-base md:text-lg font-semibold text-foreground">
-                  {index + 1}. {faq.question}
-                </h2>
-                <p className="mt-2 text-sm md:text-base leading-relaxed text-muted-foreground">{faq.answer}</p>
-              </article>
+              <div key={index}>
+                <button
+                  onClick={() => toggle(index)}
+                  className="w-full flex items-start gap-3 py-3 text-left"
+                >
+                  {openSet.has(index) ? (
+                    <Minus className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                  ) : (
+                    <Plus className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                  )}
+                  <span className="text-sm md:text-base font-semibold text-foreground">{faq.question}</span>
+                </button>
+                {openSet.has(index) && (
+                  <div className="pl-8 pb-4">
+                    <p className="text-sm md:text-base leading-relaxed text-muted-foreground">{faq.answer}</p>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </section>

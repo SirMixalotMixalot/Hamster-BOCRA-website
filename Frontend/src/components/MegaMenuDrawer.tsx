@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { LucideIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 type NavSection = {
   title: string;
@@ -19,6 +20,7 @@ interface MegaMenuDrawerProps {
 }
 
 const MegaMenuDrawer = ({ isOpen, onClose, activeItem }: MegaMenuDrawerProps) => {
+  const navigate = useNavigate();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -54,7 +56,9 @@ const MegaMenuDrawer = ({ isOpen, onClose, activeItem }: MegaMenuDrawerProps) =>
                         onClose();
                         if (item.action) {
                           if (item.action.startsWith("navigate:")) {
-                            window.location.href = item.action.replace("navigate:", "");
+                            navigate(item.action.replace("navigate:", ""));
+                          } else if (item.action.startsWith("open-url:")) {
+                            window.open(item.action.replace("open-url:", ""), "_blank", "noopener,noreferrer");
                           } else {
                             window.dispatchEvent(new CustomEvent(item.action));
                           }

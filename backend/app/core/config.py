@@ -25,6 +25,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=str(ENV_FILE_PATH), extra="ignore")
 
+    debug: bool = False
     supabase_url: str
     supabase_secret_key: str | None = None
     supabase_service_role_key: str | None = None  # Legacy fallback

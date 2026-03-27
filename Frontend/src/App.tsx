@@ -26,24 +26,83 @@ import Reports from "./pages/admin/Reports.tsx";
 import AdminSettings from "./pages/admin/Settings.tsx";
 import Careers from "./pages/Careers.tsx";
 import NewApplication from "./pages/customer/applications/NewApplication.tsx";
-import { bootstrapAuth, getAccessToken, subscribeToSupabaseAuthChanges } from "@/lib/auth";
+import { bootstrapAuth, getCachedMe, subscribeToSupabaseAuthChanges, type MeResponse } from "@/lib/auth";
 import Faqs from "./pages/Faqs.tsx";
+import WhoWeAre from "./pages/about/WhoWeAre.tsx";
+import OurMandate from "./pages/about/OurMandate.tsx";
+import StrategicPlan from "./pages/about/StrategicPlan.tsx";
+import OrgStructure from "./pages/about/OrgStructure.tsx";
+import AnnualReports from "./pages/about/AnnualReports.tsx";
+import HowLicensingWorks from "./pages/licensing/HowLicensingWorks.tsx";
+import LicenceFees from "./pages/licensing/LicenceFees.tsx";
+import LicenceVerification from "./pages/licensing/LicenceVerification.tsx";
+import Telecommunications from "./pages/licensing/Telecommunications";
+import Broadcasting from "./pages/licensing/Broadcasting";
+import InternetServices from "./pages/licensing/InternetServices";
+import PostalServices from "./pages/licensing/PostalServices";
+import SpectrumManagement from "./pages/licensing/SpectrumManagement";
+import Interconnection from "./pages/licensing/Interconnection";
+import PoliciesFrameworks from "./pages/resources/PoliciesFrameworks.tsx";
+import LegislationRegulations from "./pages/resources/LegislationRegulations.tsx";
+import ConsumerEducation from "./pages/resources/ConsumerEducation.tsx";
+import Publications from "./pages/resources/Publications.tsx";
+import Tenders from "./pages/resources/Tenders.tsx";
+import Statistics from "./pages/resources/Statistics.tsx";
+import FormsDocuments from "./pages/resources/FormsDocuments.tsx";
+import News from "./pages/resources/News.tsx";
+import JobDetail from "./pages/careers/JobDetail.tsx";
+import JobApplication from "./pages/careers/JobApplication.tsx";
+import AdminCareers from "./pages/admin/AdminCareers.tsx";
+import SignInModal from "./components/SignInModal.tsx";
 
 const queryClient = new QueryClient();
 
 const AuthBootstrapper = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isBootstrapping, setIsBootstrapping] = useState(false);
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [shouldShowOverlay, setShouldShowOverlay] = useState(false);
+
+  const enforceRouteAccess = (path: string, me: MeResponse | null) => {
+    const isProtected = path.startsWith("/admin") || path.startsWith("/customer");
+
+    if (!me) {
+      if (isProtected) {
+        navigate("/", { replace: true });
+      }
+      return;
+    }
+
+    const isAdmin = me.profile.role === "admin";
+
+    if (path.startsWith("/admin") && !isAdmin) {
+      navigate("/customer/dashboard", { replace: true });
+      return;
+    }
+
+    if (path.startsWith("/customer") && isAdmin) {
+      navigate("/admin/dashboard", { replace: true });
+    }
+  };
 
   useEffect(() => {
     let active = true;
 
-    const run = async () => {
-      const token = getAccessToken();
-      const onLandingPage = location.pathname === "/";
-      if (token && onLandingPage) {
-        setIsBootstrapping(true);
+    const bootstrap = async () => {
+      const isProtected = location.pathname.startsWith("/admin") || location.pathname.startsWith("/customer");
+      const cachedMe = getCachedMe();
+      
+      // Only bootstrap if going to protected route or has cached session for protected route
+      if (!isProtected && !cachedMe) {
+        // Public page with no cached login - no need to wait for auth
+        setIsBootstrapping(false);
+        return;
+      }
+
+      // Protected route requires overlay while verifying
+      // Cached login on public page: verify silently in background without overlay
+      if (isProtected) {
+        setShouldShowOverlay(true);
       }
 
       const me = await bootstrapAuth();
@@ -52,42 +111,32 @@ const AuthBootstrapper = () => {
       }
 
       setIsBootstrapping(false);
-
-      const path = location.pathname;
-      const isProtected = path.startsWith("/admin") || path.startsWith("/customer");
-
-      if (!me) {
-        if (isProtected) {
-          navigate("/", { replace: true });
-        }
-        return;
-      }
-
-      const isAdmin = me.profile.role === "admin";
-
-      if (path === "/") {
-        navigate(isAdmin ? "/admin/dashboard" : "/customer/dashboard", { replace: true });
-        return;
-      }
-
-      if (path.startsWith("/admin") && !isAdmin) {
-        navigate("/customer/dashboard", { replace: true });
-      }
+      enforceRouteAccess(location.pathname, me);
     };
 
-    run();
+    void bootstrap();
 
     const unsubscribe = subscribeToSupabaseAuthChanges(() => {
-      void run();
+      void bootstrapAuth().then((me) => {
+        if (!active) return;
+        enforceRouteAccess(window.location.pathname, me);
+      });
     });
 
     return () => {
       active = false;
       unsubscribe();
     };
-  }, [location.pathname, navigate]);
+  }, [navigate, location.pathname]);
 
-  if (!isBootstrapping) {
+  useEffect(() => {
+    if (isBootstrapping) {
+      return;
+    }
+    enforceRouteAccess(location.pathname, getCachedMe());
+  }, [isBootstrapping, location.pathname]);
+
+  if (!isBootstrapping || !shouldShowOverlay) {
     return null;
   }
 
@@ -108,10 +157,35 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthBootstrapper />
+        <SignInModal />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/careers" element={<Careers />} />
+          <Route path="/careers/:jobId" element={<JobDetail />} />
+          <Route path="/careers/:jobId/apply" element={<JobApplication />} />
           <Route path="/faqs" element={<Faqs />} />
+          <Route path="/about/who-we-are" element={<WhoWeAre />} />
+          <Route path="/about/mandate" element={<OurMandate />} />
+          <Route path="/about/strategic-plan" element={<StrategicPlan />} />
+          <Route path="/about/structure" element={<OrgStructure />} />
+          <Route path="/about/annual-reports" element={<AnnualReports />} />
+          <Route path="/licensing/how-it-works" element={<HowLicensingWorks />} />
+          <Route path="/licensing/fees" element={<LicenceFees />} />
+          <Route path="/licensing/verification" element={<LicenceVerification />} />
+          <Route path="/licensing/telecommunications" element={<Telecommunications />} />
+          <Route path="/licensing/broadcasting" element={<Broadcasting />} />
+          <Route path="/licensing/internet-services" element={<InternetServices />} />
+          <Route path="/licensing/postal-services" element={<PostalServices />} />
+          <Route path="/licensing/spectrum-management" element={<SpectrumManagement />} />
+          <Route path="/licensing/interconnection" element={<Interconnection />} />
+          <Route path="/resources/policies" element={<PoliciesFrameworks />} />
+          <Route path="/resources/legislation" element={<LegislationRegulations />} />
+          <Route path="/resources/forms-documents" element={<FormsDocuments />} />
+          <Route path="/resources/publications" element={<Publications />} />
+          <Route path="/resources/tenders" element={<Tenders />} />
+          <Route path="/resources/statistics" element={<Statistics />} />
+          <Route path="/resources/consumer-education" element={<ConsumerEducation />} />
+          <Route path="/resources/news" element={<News />} />
 
           {/* Customer Portal */}
           <Route path="/customer" element={<CustomerLayout />}>
@@ -136,6 +210,7 @@ const App = () => (
             <Route path="complaints" element={<Complaints />} />
             <Route path="tickets" element={<Tickets />} />
             <Route path="reports" element={<Reports />} />
+            <Route path="careers" element={<AdminCareers />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
 

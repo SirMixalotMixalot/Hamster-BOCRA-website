@@ -23,6 +23,16 @@ def send_email(*, to_email: str, subject: str, body: str) -> bool:
     smtp_from = str(settings.smtp_from or os.getenv("SMTP_FROM") or "").strip()
     smtp_use_tls = bool(settings.smtp_use_tls)
 
+    if settings.debug:
+        preview = body.strip().replace("\n", " ")[:220]
+        logger.info(
+            "email_debug_mode_no_send to=%s subject=%s body_preview=%s",
+            to_email,
+            subject,
+            preview,
+        )
+        return True
+
     if not smtp_host or not smtp_from:
         logger.info(
             "email_not_sent_missing_smtp_config to=%s subject=%s",
