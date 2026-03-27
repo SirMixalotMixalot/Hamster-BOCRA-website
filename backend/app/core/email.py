@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 import logging
 import os
 import smtplib
+import urllib.error
+import urllib.request
 from email.message import EmailMessage
 
 from app.core.config import get_settings
@@ -26,6 +29,118 @@ def _pick_env(*names: str) -> str:
     return ""
 
 
+def _send_via_brevo_api(
+    *,
+    api_key: str,
+    sender_email: str,
+    sender_name: str,
+    to_email: str,
+    subject: str,
+    body: str,
+) -> EmailSendResult:
+    endpoint = _pick_env("BREVO_API_URL") or "https://api.brevo.com/v3/smtp/email"
+    timeout_seconds = int(str(_pick_env("BREVO_API_TIMEOUT_SECONDS") or "30").strip() or "30")
+
+    payload = {
+        "sender": {"name": sender_name, "email": sender_email},
+        "to": [{"email": to_email}],
+        "subject": subject,
+        "textContent": body,
+    }
+
+    request_body = json.dumps(payload).encode("utf-8")
+    request = urllib.request.Request(
+        endpoint,
+        data=request_body,
+        headers={
+            "accept": "application/json",
+            "content-type": "application/json",
+            "api-key": api_key,
+        },
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
+            status = getattr(response, "status", 200)
+            response_text = response.read().decode("utf-8", errors="replace")
+            if 200 <= status < 300:
+                logger.info(
+                    "email_sent_successfully_via_brevo_api to=%s subject=%s status=%s",
+                    to_email,
+                    subject,
+                    status,
+                )
+                return EmailSendResult(ok=True)
+
+            logger.error(
+                "email_send_failed_brevo_non_2xx to=%s subject=%s status=%s response=%s",
+                to_email,
+                subject,
+                status,
+                response_text[:1000],
+            )
+            return EmailSendResult(
+                ok=False,
+                code="brevo_http",
+                message=f"Brevo API returned HTTP {status}: {response_text[:500]}",
+            )
+    except urllib.error.HTTPError as exc:
+        response_text = exc.read().decode("utf-8", errors="replace") if hasattr(exc, "read") else str(exc)
+        logger.error(
+            "email_send_failed_brevo_http_error to=%s subject=%s status=%s error=%s response=%s",
+            to_email,
+            subject,
+            exc.code,
+            str(exc),
+            response_text[:1000],
+        )
+        return EmailSendResult(
+            ok=False,
+            code="brevo_http_error",
+            message=f"Brevo API HTTP error {exc.code}: {response_text[:500]}",
+        )
+    except urllib.error.URLError as exc:
+        logger.error(
+            "email_send_failed_brevo_url_error to=%s subject=%s error=%s reason=%s",
+            to_email,
+            subject,
+            str(exc),
+            getattr(exc, "reason", None),
+        )
+        return EmailSendResult(
+            ok=False,
+            code="brevo_network",
+            message=f"Brevo API network error: {getattr(exc, 'reason', str(exc))}",
+        )
+    except TimeoutError as exc:
+        logger.error(
+            "email_send_failed_brevo_timeout to=%s subject=%s timeout_seconds=%s error=%s",
+            to_email,
+            subject,
+            timeout_seconds,
+            str(exc),
+        )
+        return EmailSendResult(
+            ok=False,
+            code="brevo_timeout",
+            message=f"Brevo API timeout after {timeout_seconds}s",
+        )
+    except Exception as exc:
+        logger.error(
+            "email_send_failed_brevo_unexpected to=%s subject=%s exc_type=%s error=%s",
+            to_email,
+            subject,
+            type(exc).__name__,
+            str(exc),
+        )
+        return EmailSendResult(
+            ok=False,
+            code="brevo_unexpected",
+            message=f"Brevo API unexpected error: {type(exc).__name__}: {str(exc)}",
+        )
+
+
 def send_email_detailed(*, to_email: str, subject: str, body: str) -> EmailSendResult:
     """
     Send a plaintext email. Returns True on send success, False otherwise.
@@ -46,6 +161,8 @@ def send_email_detailed(*, to_email: str, subject: str, body: str) -> EmailSendR
         settings.smtp_from or _pick_env("SMTP_FROM", "MAIL_FROM", "EMAIL_FROM")
     ).strip()
     smtp_use_tls = bool(settings.smtp_use_tls)
+    brevo_api_key = _pick_env("BREVO_API_KEY")
+    brevo_sender_name = _pick_env("BREVO_SENDER_NAME") or "BOCRA"
 
     if settings.debug:
         preview = body.strip().replace("\n", " ")[:220]
@@ -56,6 +173,34 @@ def send_email_detailed(*, to_email: str, subject: str, body: str) -> EmailSendR
             preview,
         )
         return EmailSendResult(ok=True)
+
+    if brevo_api_key:
+        if not smtp_from:
+            logger.error(
+                "email_not_sent_missing_sender_for_brevo to=%s subject=%s missing_variable=SMTP_FROM",
+                to_email,
+                subject,
+            )
+            return EmailSendResult(
+                ok=False,
+                code="missing_config",
+                message="Missing required email config for Brevo API: SMTP_FROM",
+            )
+
+        logger.debug(
+            "email_sending_via_brevo_api to=%s subject=%s endpoint=%s",
+            to_email,
+            subject,
+            _pick_env("BREVO_API_URL") or "https://api.brevo.com/v3/smtp/email",
+        )
+        return _send_via_brevo_api(
+            api_key=brevo_api_key,
+            sender_email=smtp_from,
+            sender_name=brevo_sender_name,
+            to_email=to_email,
+            subject=subject,
+            body=body,
+        )
 
     if not smtp_host or not smtp_from:
         missing_vars = []
