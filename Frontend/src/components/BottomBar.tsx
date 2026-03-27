@@ -1,6 +1,8 @@
 import { Phone, Mail, MapPin, Facebook, Linkedin, Youtube } from "lucide-react";
+import { useLanguage } from "@/i18n";
 
 const BottomBar = () => {
+  const { t } = useLanguage();
   return (
     <div className="bg-bocra-navy text-white/80 shrink-0">
       <div className="container flex flex-col md:flex-row items-center justify-between py-4 md:py-5 text-sm font-body gap-3 md:gap-5">
@@ -42,7 +44,7 @@ const BottomBar = () => {
 
         {/* Copyright */}
         <span className="text-xs text-white/50 whitespace-nowrap">
-          &copy; 2026 BOCRA. All rights reserved. Designed by HAMSTER
+          {t("footer.copyright")}
         </span>
       </div>
     </div>

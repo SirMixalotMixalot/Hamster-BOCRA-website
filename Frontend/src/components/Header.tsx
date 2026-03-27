@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Search, Menu, X, ChevronDown, FileText, Shield, BookOpen, HelpCircle, Users, Briefcase, Scale, Wifi, Tv, Package, Globe2, BarChart3, ExternalLink, Award, ClipboardList, FileCheck, Newspaper, LogIn, Building2, ClipboardCheck, DollarSign, ShieldCheck, ScrollText, GraduationCap } from "lucide-react";
+import { Search, Menu, X, ChevronDown, FileText, Shield, BookOpen, HelpCircle, Users, Briefcase, Scale, Wifi, Tv, Package, Globe2, BarChart3, ExternalLink, Award, ClipboardList, FileCheck, Newspaper, LogIn, Building2, ClipboardCheck, DollarSign, ShieldCheck, ScrollText, GraduationCap, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import bocraLogo from "@/assets/bocra-logo.png";
 import MegaMenuDrawer from "./MegaMenuDrawer";
 import { SearchResultAction, SearchResultItem, searchContent } from "@/lib/search";
 import { getAccessToken, getStoredRole } from "@/lib/auth";
+import { useLanguage } from "@/i18n";
 
 type PublicDocumentSection =
   | "news"
@@ -140,6 +141,7 @@ const navItems = [
 
 const Header = () => {
   const navigate = useNavigate();
+  const { locale, setLocale, t } = useLanguage();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -150,7 +152,10 @@ const Header = () => {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
   const [authRole, setAuthRole] = useState<string | null>(null);
+  const [langOpen, setLangOpen] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement | null>(null);
+  const langDesktopRef = useRef<HTMLDivElement | null>(null);
+  const langMobileRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const syncAuthRole = () => {
@@ -166,9 +171,23 @@ const Header = () => {
     return () => window.removeEventListener("storage", syncAuthRole);
   }, []);
 
+  useEffect(() => {
+    if (!langOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        langDesktopRef.current?.contains(target) ||
+        langMobileRef.current?.contains(target)
+      ) return;
+      setLangOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [langOpen]);
+
   const isAuthenticated = !!authRole;
   const portalPath = authRole === "admin" ? "/admin/dashboard" : "/customer/dashboard";
-  const portalLabel = authRole === "admin" ? "Admin Portal" : "Customer Portal";
+  const portalLabel = authRole === "admin" ? t("header.adminPortal") : t("header.customerPortal");
 
   const groupedResults = useMemo(() => {
     const grouped: Record<SearchResultItem["type"], SearchResultItem[]> = {
@@ -361,7 +380,7 @@ const Header = () => {
     <>
       <header className="sticky top-0 z-50 bg-bocra-navy shadow-sm lg:bg-transparent lg:shadow-none">
         <div className="hidden lg:block container pt-4 pb-2">
-          <div className="group relative overflow-hidden rounded-full border border-slate-200/70 bg-white/80 px-6 py-3 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.55)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-[0_28px_65px_-28px_rgba(15,23,42,0.65)]">
+          <div className="group relative rounded-full border border-slate-200/70 bg-white/80 px-6 py-3 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.55)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-[0_28px_65px_-28px_rgba(15,23,42,0.65)]">
             <div className="pointer-events-none absolute inset-y-1 left-1/2 w-48 -translate-x-1/2 rounded-full bg-white/70 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
             <div className="relative z-10 flex items-center justify-between gap-6">
               <button type="button" onClick={() => navigate("/")} className="shrink-0">
@@ -395,6 +414,32 @@ const Header = () => {
                 >
                   <Search className="h-5 w-5" />
                 </button>
+                <div className="relative" ref={langDesktopRef}>
+                  <button
+                    onClick={() => setLangOpen(!langOpen)}
+                    className="flex items-center gap-1 rounded-full p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                    aria-label="Select language"
+                  >
+                    <Globe className="h-5 w-5" />
+                    <ChevronDown className={`h-3 w-3 transition-transform ${langOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {langOpen && (
+                    <div className="absolute right-0 top-full mt-1 w-40 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg animate-fade-in z-50">
+                      <button
+                        onMouseDown={(e) => { e.stopPropagation(); setLocale("en"); setLangOpen(false); }}
+                        className={`flex w-full items-center gap-2 px-4 py-2.5 text-sm transition-colors ${locale === "en" ? "bg-slate-100 font-semibold text-slate-900" : "text-slate-600 hover:bg-slate-50"}`}
+                      >
+                        English
+                      </button>
+                      <button
+                        onMouseDown={(e) => { e.stopPropagation(); setLocale("tn"); setLangOpen(false); }}
+                        className={`flex w-full items-center gap-2 px-4 py-2.5 text-sm transition-colors ${locale === "tn" ? "bg-slate-100 font-semibold text-slate-900" : "text-slate-600 hover:bg-slate-50"}`}
+                      >
+                        Setswana
+                      </button>
+                    </div>
+                  )}
+                </div>
                 {isAuthenticated ? (
                   <button
                     onClick={() => navigate(portalPath)}
@@ -407,7 +452,7 @@ const Header = () => {
                     onClick={() => window.dispatchEvent(new CustomEvent("toggle-signin-modal"))}
                     className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
                   >
-                    Sign In
+                    {t("header.signIn")}
                   </button>
                 )}
                 <button
@@ -417,7 +462,7 @@ const Header = () => {
                   }}
                   className="inline-flex items-center gap-2 rounded-full bg-bocra-gold px-3.5 py-2 text-sm font-semibold text-bocra-navy shadow-sm transition-all duration-300 hover:opacity-95 hover:shadow-md"
                 >
-                  AI Assistant
+                  {t("header.aiAssistant")}
                 </button>
               </div>
             </div>
@@ -439,6 +484,32 @@ const Header = () => {
             >
               <Search className="h-5 w-5 text-white/70" />
             </button>
+            <div className="relative" ref={langMobileRef}>
+              <button
+                onClick={() => setLangOpen(!langOpen)}
+                className="flex items-center gap-1 rounded-md p-2 transition-colors hover:bg-white/10"
+                aria-label="Select language"
+              >
+                <Globe className="h-5 w-5 text-white/70" />
+                <ChevronDown className={`h-3 w-3 text-white/70 transition-transform ${langOpen ? "rotate-180" : ""}`} />
+              </button>
+              {langOpen && (
+                <div className="absolute right-0 top-full mt-1 w-40 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg animate-fade-in z-50">
+                  <button
+                    onMouseDown={(e) => { e.stopPropagation(); setLocale("en"); setLangOpen(false); }}
+                    className={`flex w-full items-center gap-2 px-4 py-2.5 text-sm transition-colors ${locale === "en" ? "bg-slate-100 font-semibold text-slate-900" : "text-slate-600 hover:bg-slate-50"}`}
+                  >
+                    English
+                  </button>
+                  <button
+                    onMouseDown={(e) => { e.stopPropagation(); setLocale("tn"); setLangOpen(false); }}
+                    className={`flex w-full items-center gap-2 px-4 py-2.5 text-sm transition-colors ${locale === "tn" ? "bg-slate-100 font-semibold text-slate-900" : "text-slate-600 hover:bg-slate-50"}`}
+                  >
+                    Setswana
+                  </button>
+                </div>
+              )}
+            </div>
             {isAuthenticated ? (
               <button
                 onClick={() => navigate(portalPath)}
@@ -451,7 +522,7 @@ const Header = () => {
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent("toggle-signin-modal"))}
                 className="rounded-md p-2 transition-colors hover:bg-white/10"
-                aria-label="Sign In"
+                aria-label={t("header.signIn")}
               >
                 <LogIn className="h-5 w-5 text-white/70" />
               </button>
