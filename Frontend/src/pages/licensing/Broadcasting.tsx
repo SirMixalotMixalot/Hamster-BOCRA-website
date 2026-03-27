@@ -1,12 +1,8 @@
 import Header from "@/components/Header";
 import BottomBar from "@/components/BottomBar";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 import broadcastBg from "@/assets/branding/broadcast.jpg";
 
 const Broadcasting = () => {
-  const navigate = useNavigate();
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
@@ -17,13 +13,6 @@ const Broadcasting = () => {
           <img src={broadcastBg} alt="" className="h-[calc(100%+4px)] min-h-full w-full -translate-y-px object-cover" />
           <div className="absolute inset-0 bg-black/55" />
         </div>
-        <button
-          onClick={() => navigate("/")}
-          className="absolute left-4 top-[calc(4rem+1rem)] z-10 inline-flex items-center gap-1.5 text-sm text-white/75 transition-colors hover:text-white md:top-[calc(4.5rem+1rem)] lg:top-[calc(5.75rem+1rem)]"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Home
-        </button>
         <div className="relative z-10 container max-w-6xl mx-auto px-4 text-center">
           <h1 className="mb-4 text-4xl font-extrabold text-white md:text-5xl">Broadcasting Licences</h1>
           <p className="mx-auto max-w-3xl text-lg text-white/85">

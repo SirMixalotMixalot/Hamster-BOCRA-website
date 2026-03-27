@@ -1,0 +1,67 @@
+export type Locale = "en" | "tn";
+
+export type TranslationKeys =
+  // Hero
+  | "hero.title"
+  | "hero.subtitle"
+  | "hero.telecommunications"
+  | "hero.broadcasting"
+  | "hero.postal"
+  | "hero.internet"
+  // Complaint
+  | "complaint.badge"
+  | "complaint.heading"
+  | "complaint.description"
+  | "complaint.cta"
+  | "complaint.step1.title"
+  | "complaint.step1.description"
+  | "complaint.step2.title"
+  | "complaint.step2.description"
+  | "complaint.step3.title"
+  | "complaint.step3.description"
+  | "complaint.trackCta"
+  // Licence Verification
+  | "licence.badge"
+  | "licence.heading"
+  | "licence.description"
+  | "licence.cta"
+  | "licence.learnMore"
+  | "licence.step1.title"
+  | "licence.step1.description"
+  | "licence.step2.title"
+  | "licence.step2.description"
+  | "licence.step3.title"
+  | "licence.step3.description"
+  // Type Approval
+  | "typeApproval.badge"
+  | "typeApproval.heading"
+  | "typeApproval.description"
+  | "typeApproval.cta"
+  | "typeApproval.step1.title"
+  | "typeApproval.step1.description"
+  | "typeApproval.step2.title"
+  | "typeApproval.step2.description"
+  | "typeApproval.step3.title"
+  | "typeApproval.step3.description"
+  // Statistics
+  | "stats.badge"
+  | "stats.heading"
+  | "stats.description"
+  | "stats.cta"
+  | "stats.licensedMobileOperators"
+  | "stats.mobilePenetration"
+  | "stats.internetPenetration"
+  | "stats.licensedProviders"
+  // News
+  | "news.badge"
+  | "news.heading"
+  | "news.viewAll"
+  // Header
+  | "header.signIn"
+  | "header.aiAssistant"
+  | "header.adminPortal"
+  | "header.customerPortal"
+  // Footer
+  | "footer.copyright";
+
+export type Translations = Record<TranslationKeys, string>;

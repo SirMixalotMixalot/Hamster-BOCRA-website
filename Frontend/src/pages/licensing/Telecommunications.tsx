@@ -1,12 +1,8 @@
 import Header from "@/components/Header";
 import BottomBar from "@/components/BottomBar";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 import t2Bg from "@/assets/styling/t2.jpg";
 
 const Telecommunications = () => {
-  const navigate = useNavigate();
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
@@ -17,13 +13,6 @@ const Telecommunications = () => {
           <img src={t2Bg} alt="" className="h-[calc(100%+4px)] min-h-full w-full -translate-y-px object-cover" />
           <div className="absolute inset-0 bg-black/50" />
         </div>
-        <button
-          onClick={() => navigate("/")}
-          className="absolute top-4 left-4 z-10 inline-flex items-center gap-1.5 text-sm text-white/70 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Home
-        </button>
         <div className="relative z-10 container max-w-6xl mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4">Telecommunications</h1>
           <p className="text-lg text-white/80 max-w-3xl mx-auto">
