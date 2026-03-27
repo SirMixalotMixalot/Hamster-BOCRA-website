@@ -371,6 +371,8 @@ const Header = () => {
             {navItems.map((item) => (
               <button
                 key={item.id}
+                data-mega-menu-trigger="true"
+                data-menu-id={item.id}
                 onClick={() => setActiveMenu(activeMenu === item.id ? null : item.id)}
                 className={`flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   activeMenu === item.id ? "bg-white/20 text-white" : "text-white/80 hover:bg-white/10 hover:text-white"
