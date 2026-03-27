@@ -187,11 +187,6 @@ const Complaints = () => {
 
   return (
     <div className="space-y-6 max-w-6xl">
-      <div>
-        <h2 className="text-2xl font-heading font-bold text-foreground">Complaints</h2>
-        <p className="text-sm text-muted-foreground mt-1">Track and resolve customer complaints</p>
-      </div>
-
       <div className="bg-card rounded-xl border border-border p-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="relative">
@@ -255,7 +250,6 @@ const Complaints = () => {
                   <th className="px-2 py-2 font-semibold text-foreground whitespace-nowrap">Subject</th>
                   <th className="px-2 py-2 font-semibold text-foreground whitespace-nowrap">Status</th>
                   <th className="px-2 py-2 font-semibold text-foreground whitespace-nowrap">Open / Review</th>
-                  <th className="px-2 py-2 font-semibold text-foreground whitespace-nowrap">Update Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -283,30 +277,6 @@ const Complaints = () => {
                       >
                         {openingId === item.id ? "Opening..." : "Open"}
                       </button>
-                    </td>
-                    <td className="px-2 py-2">
-                      <div className="flex flex-nowrap gap-1 items-center">
-                        {STATUS_OPTIONS.map((option) => {
-                          const isActive = item.status === option.key;
-                          const isUpdatingRow = updatingId === item.id;
-                          return (
-                            <button
-                              key={option.key}
-                              type="button"
-                              disabled={isUpdatingRow || isActive}
-                              onClick={() => void setStatus(item.id, option.key)}
-                              className={`px-2 py-1 rounded-md text-[11px] transition-colors whitespace-nowrap ${
-                                isActive
-                                  ? "font-semibold bg-bocra-teal text-white"
-                                  : "font-medium border border-border bg-background hover:bg-muted"
-                              } ${isUpdatingRow ? "opacity-70" : ""}`}
-                            >
-                              {option.label}
-                            </button>
-                          );
-                        })}
-                        {updatingId === item.id && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
-                      </div>
                     </td>
                   </tr>
                 ))}
@@ -348,6 +318,32 @@ const Complaints = () => {
               <p className="text-xs text-muted-foreground">Status</p>
               <p className="mt-1 font-medium text-foreground">{statusLabel(selectedComplaint.status)}</p>
             </div>
+          </div>
+          <div className="rounded-lg border border-border p-3 space-y-2">
+            <p className="text-xs text-muted-foreground">Update Status</p>
+            <div className="flex flex-wrap gap-1.5 items-center">
+              {STATUS_OPTIONS.map((option) => {
+                const isActive = selectedComplaint.status === option.key;
+                const isUpdatingSelected = updatingId === selectedComplaint.id;
+                return (
+                  <button
+                    key={option.key}
+                    type="button"
+                    disabled={isUpdatingSelected || isActive}
+                    onClick={() => void setStatus(selectedComplaint.id, option.key)}
+                    className={`px-2.5 py-1 rounded-md text-[11px] transition-colors whitespace-nowrap ${
+                      isActive
+                        ? "font-semibold bg-bocra-teal text-white"
+                        : "font-medium border border-border bg-background hover:bg-muted"
+                    } ${isUpdatingSelected ? "opacity-70" : ""}`}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+              {updatingId === selectedComplaint.id && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+            </div>
+            <p className="text-[11px] text-muted-foreground">Status can be updated only while reviewing an opened complaint.</p>
           </div>
           <div className="rounded-lg border border-border p-3">
             <p className="text-xs text-muted-foreground mb-1">Description</p>

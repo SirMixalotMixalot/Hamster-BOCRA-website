@@ -359,83 +359,104 @@ const Header = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-bocra-navy shadow-sm">
-        <div className="container flex items-center justify-between h-16 md:h-[72px]">
+      <header className="sticky top-0 z-50 bg-bocra-navy shadow-sm lg:bg-transparent lg:shadow-none">
+        <div className="hidden lg:block container pt-4 pb-2">
+          <div className="group relative overflow-hidden rounded-full border border-slate-200/70 bg-white/80 px-6 py-3 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.55)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-[0_28px_65px_-28px_rgba(15,23,42,0.65)]">
+            <div className="pointer-events-none absolute inset-y-1 left-1/2 w-48 -translate-x-1/2 rounded-full bg-white/70 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
+            <div className="relative z-10 flex items-center justify-between gap-6">
+              <button type="button" onClick={() => navigate("/")} className="shrink-0">
+                <img src={bocraLogo} alt="BOCRA" className="h-11 w-auto object-contain" />
+              </button>
+
+              <nav className="flex items-center gap-1">
+                {navItems.map((item) => (
+                  <button
+                    key={item.id}
+                    data-mega-menu-trigger="true"
+                    data-menu-id={item.id}
+                    onClick={() => setActiveMenu(activeMenu === item.id ? null : item.id)}
+                    className={`flex items-center gap-1 rounded-full px-3.5 py-2 text-sm font-medium transition-colors ${
+                      activeMenu === item.id
+                        ? "bg-slate-900 text-white"
+                        : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                    }`}
+                  >
+                    {item.label}
+                    <ChevronDown className={`h-3.5 w-3.5 transition-transform ${activeMenu === item.id ? "rotate-180" : ""}`} />
+                  </button>
+                ))}
+              </nav>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSearchOpen(!searchOpen)}
+                  className="rounded-full p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                  aria-label="Toggle search"
+                >
+                  <Search className="h-5 w-5" />
+                </button>
+                {isAuthenticated ? (
+                  <button
+                    onClick={() => navigate(portalPath)}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                  >
+                    {portalLabel}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => window.dispatchEvent(new CustomEvent("toggle-signin-modal"))}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                  >
+                    Sign In
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    const event = new CustomEvent("toggle-ai-chatbot");
+                    window.dispatchEvent(event);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-full bg-bocra-gold px-3.5 py-2 text-sm font-semibold text-bocra-navy shadow-sm transition-all duration-300 hover:opacity-95 hover:shadow-md"
+                >
+                  AI Assistant
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="container flex h-16 items-center justify-between lg:hidden md:h-[72px]">
           {/* Logo */}
           <button type="button" onClick={() => navigate("/")} className="shrink-0">
             <img src={bocraLogo} alt="BOCRA" className="h-16 w-auto object-contain brightness-200 md:h-[72px]" />
           </button>
 
-          {/* Desktop Nav */}
-          <nav className="hidden lg:flex items-center gap-1">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                data-mega-menu-trigger="true"
-                data-menu-id={item.id}
-                onClick={() => setActiveMenu(activeMenu === item.id ? null : item.id)}
-                className={`flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activeMenu === item.id ? "bg-white/20 text-white" : "text-white/80 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                {item.label}
-                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${activeMenu === item.id ? "rotate-180" : ""}`} />
-              </button>
-            ))}
-          </nav>
-
           {/* Actions */}
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSearchOpen(!searchOpen)}
-              className="p-2 rounded-md hover:bg-white/10 transition-colors"
+              className="rounded-md p-2 transition-colors hover:bg-white/10"
               aria-label="Toggle search"
             >
               <Search className="h-5 w-5 text-white/70" />
             </button>
             {isAuthenticated ? (
-              <>
-                <button
-                  onClick={() => navigate(portalPath)}
-                  className="md:hidden p-2 rounded-md hover:bg-white/10 transition-colors"
-                  aria-label={portalLabel}
-                >
-                  <LogIn className="h-5 w-5 text-white/70" />
-                </button>
-                <button
-                  onClick={() => navigate(portalPath)}
-                  className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 border border-white/30 rounded-md text-sm font-medium text-white hover:bg-white/10 transition-colors"
-                >
-                  {portalLabel}
-                </button>
-              </>
+              <button
+                onClick={() => navigate(portalPath)}
+                className="rounded-md p-2 transition-colors hover:bg-white/10"
+                aria-label={portalLabel}
+              >
+                <LogIn className="h-5 w-5 text-white/70" />
+              </button>
             ) : (
-              <>
-                <button
-                  onClick={() => window.dispatchEvent(new CustomEvent("toggle-signin-modal"))}
-                  className="md:hidden p-2 rounded-md hover:bg-white/10 transition-colors"
-                  aria-label="Sign In"
-                >
-                  <LogIn className="h-5 w-5 text-white/70" />
-                </button>
-                <button
-                  onClick={() => window.dispatchEvent(new CustomEvent("toggle-signin-modal"))}
-                  className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 border border-white/30 rounded-md text-sm font-medium text-white hover:bg-white/10 transition-colors"
-                >
-                  Sign In
-                </button>
-              </>
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent("toggle-signin-modal"))}
+                className="rounded-md p-2 transition-colors hover:bg-white/10"
+                aria-label="Sign In"
+              >
+                <LogIn className="h-5 w-5 text-white/70" />
+              </button>
             )}
-            <button
-              onClick={() => {
-                const event = new CustomEvent("toggle-ai-chatbot");
-                window.dispatchEvent(event);
-              }}
-              className="hidden md:inline-flex items-center gap-2 px-3 py-2 bg-bocra-gold text-bocra-navy rounded-md text-sm font-semibold hover:opacity-90 transition-opacity shadow-sm"
-            >
-              AI Assistant
-            </button>
-            <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden p-2 rounded-md hover:bg-white/10 transition-colors">
+            <button onClick={() => setMobileOpen(!mobileOpen)} className="rounded-md p-2 transition-colors hover:bg-white/10">
               {mobileOpen ? <X className="h-5 w-5 text-white" /> : <Menu className="h-5 w-5 text-white" />}
             </button>
           </div>
@@ -443,15 +464,15 @@ const Header = () => {
 
         {/* Search Bar */}
         {searchOpen && (
-          <div className="border-t border-white/10 animate-fade-in">
+          <div className="animate-fade-in border-t border-white/10 lg:border-slate-200/70">
             <div className="container py-4">
               <div className="relative max-w-2xl mx-auto" ref={searchContainerRef}>
                 <form onSubmit={submitSearch}>
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/50" />
+                  <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/50 lg:text-slate-500" />
                   <input
                     type="text"
                     placeholder="Search BOCRA services, documents, regulations..."
-                    className="w-full pl-12 pr-4 py-3 rounded-lg border border-white/20 bg-white/10 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-bocra-gold/30 focus:border-bocra-gold text-sm"
+                    className="w-full rounded-lg border border-white/20 bg-white/10 py-3 pl-12 pr-4 text-sm text-white placeholder:text-white/50 focus:border-bocra-gold focus:outline-none focus:ring-2 focus:ring-bocra-gold/30 lg:border-slate-300 lg:bg-white lg:text-slate-900 lg:placeholder:text-slate-500"
                     autoFocus
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
@@ -464,17 +485,17 @@ const Header = () => {
                 </form>
 
                 {showSearchResults && (
-                  <div className="absolute mt-2 w-full rounded-lg border border-white/15 bg-bocra-navy/95 backdrop-blur p-3 shadow-xl z-50">
+                  <div className="absolute z-50 mt-2 w-full rounded-lg border border-white/15 bg-bocra-navy/95 p-3 shadow-xl backdrop-blur lg:border-slate-200 lg:bg-white/95">
                     {isSearching && (
-                      <p className="text-sm text-white/80 px-2 py-1">Searching...</p>
+                      <p className="px-2 py-1 text-sm text-white/80 lg:text-slate-700">Searching...</p>
                     )}
 
                     {!isSearching && searchError && (
-                      <p className="text-sm text-red-200 px-2 py-1">{searchError}</p>
+                      <p className="px-2 py-1 text-sm text-red-200 lg:text-red-600">{searchError}</p>
                     )}
 
                     {!isSearching && !searchError && hasSubmittedSearch && searchResults.length === 0 && (
-                      <p className="text-sm text-white/70 px-2 py-1">No results found.</p>
+                      <p className="px-2 py-1 text-sm text-white/70 lg:text-slate-600">No results found.</p>
                     )}
 
                     {!isSearching && !searchError && searchResults.length > 0 && (
@@ -487,7 +508,7 @@ const Header = () => {
 
                           return (
                             <section key={group.key} className="space-y-1">
-                              <h4 className="px-2 text-xs font-semibold uppercase tracking-wide text-bocra-gold/90">
+                              <h4 className="px-2 text-xs font-semibold uppercase tracking-wide text-bocra-gold/90 lg:text-bocra-navy">
                                 {group.label}
                               </h4>
                               {items.map((result, index) => (
@@ -495,10 +516,10 @@ const Header = () => {
                                   key={`${result.type}-${result.url}-${index}`}
                                   type="button"
                                   onClick={() => handleResultClick(result)}
-                                  className="w-full text-left px-2 py-2 rounded-md hover:bg-white/10 transition-colors"
+                                  className="w-full rounded-md px-2 py-2 text-left transition-colors hover:bg-white/10 lg:hover:bg-slate-100"
                                 >
-                                  <p className="text-sm font-medium text-white">{result.title}</p>
-                                  <p className="text-xs text-white/70 line-clamp-2">{result.snippet}</p>
+                                  <p className="text-sm font-medium text-white lg:text-slate-900">{result.title}</p>
+                                  <p className="line-clamp-2 text-xs text-white/70 lg:text-slate-600">{result.snippet}</p>
                                 </button>
                               ))}
                             </section>

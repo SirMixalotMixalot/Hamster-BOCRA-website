@@ -3,10 +3,6 @@ import { Settings as SettingsIcon } from "lucide-react";
 const AdminSettings = () => {
   return (
     <div className="space-y-6 max-w-3xl">
-      <div>
-        <h2 className="text-2xl font-heading font-bold text-foreground">Settings</h2>
-        <p className="text-sm text-muted-foreground mt-1">System configuration and preferences</p>
-      </div>
       <div className="bg-card rounded-xl border border-border p-8 text-center">
         <SettingsIcon className="h-10 w-10 text-muted-foreground/30 mx-auto" />
         <p className="text-sm text-muted-foreground mt-3">Settings coming soon</p>

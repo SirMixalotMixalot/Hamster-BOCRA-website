@@ -100,11 +100,6 @@ const Tickets = () => {
 
   return (
     <div className="space-y-6 max-w-6xl">
-      <div>
-        <h2 className="text-2xl font-heading font-bold text-foreground">Tickets</h2>
-        <p className="text-sm text-muted-foreground mt-1">Track and respond to support tickets</p>
-      </div>
-
       <div className="bg-card rounded-xl border border-border p-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

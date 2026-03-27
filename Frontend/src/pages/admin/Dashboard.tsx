@@ -292,6 +292,18 @@ const mergeRegionalCoverage = (mockRows: RegionalCoverageItem[], liveRows: Regio
   return Array.from(regions.values());
 };
 
+const aggregateLicenceTypesFromRegions = (rows: RegionalCoverageItem[] = []): LicenceTypeDistributionItem[] => {
+  const counts = new Map<string, number>();
+  rows.forEach((row) => {
+    (row.by_licence_type ?? []).forEach((item) => {
+      counts.set(item.licence_type, (counts.get(item.licence_type) ?? 0) + item.count);
+    });
+  });
+  return Array.from(counts.entries())
+    .map(([licence_type, count]) => ({ licence_type, count }))
+    .sort((a, b) => b.count - a.count);
+};
+
 const mergeApplicationsAnalytics = (
   mockData: ApplicationsAnalyticsResponse,
   liveData: ApplicationsAnalyticsResponse | null
@@ -652,13 +664,13 @@ const Dashboard = () => {
     return (displayComplaintsAnalytics.company_breakdown_by_sector?.[selectedCompanySector] ?? []).slice(0, 8);
   }, [displayComplaintsAnalytics, selectedCompanySector]);
 
+  const awardedByType = useMemo(
+    () => aggregateLicenceTypesFromRegions(displayApplicationsAnalytics.regional_coverage),
+    [displayApplicationsAnalytics.regional_coverage]
+  );
+
   return (
     <div className="space-y-6 max-w-6xl">
-      <div>
-        <h2 className="text-2xl font-heading font-bold text-foreground">Admin Dashboard</h2>
-        <p className="text-sm text-muted-foreground mt-1">System overview and pending actions</p>
-      </div>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="bg-card rounded-xl border border-border p-4">
           <div className="flex items-center justify-between">
@@ -724,15 +736,8 @@ const Dashboard = () => {
       </div>
 
       <div>
-        <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="mb-3 flex items-center gap-3">
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Quick Actions</h3>
-          <button
-            type="button"
-            onClick={handleViewStats}
-            className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            Publish
-          </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {quickActions.map((action) => (
@@ -767,19 +772,25 @@ const Dashboard = () => {
       )}
 
       <div className="bg-card rounded-xl border border-border p-5 md:p-6">
-        <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="mb-4 flex items-center gap-3">
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
             Licence Distribution by Type
           </h3>
-          <button
-            type="button"
-            onClick={handleViewStats}
-            className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            Publish
-          </button>
         </div>
-        <PieChart data={displayApplicationsAnalytics.licence_type_distribution} />
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <div className="rounded-xl border border-border bg-background p-4">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Licences Awarded by Type
+            </p>
+            <PieChart data={awardedByType} />
+          </div>
+          <div className="rounded-xl border border-border bg-background p-4">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Licence Applications by Type
+            </p>
+            <PieChart data={displayApplicationsAnalytics.licence_type_distribution} />
+          </div>
+        </div>
       </div>
 
       <div className="bg-card rounded-xl border border-border p-5 md:p-6">

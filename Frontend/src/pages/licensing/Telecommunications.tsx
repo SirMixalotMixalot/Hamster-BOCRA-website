@@ -12,9 +12,9 @@ const Telecommunications = () => {
       <Header />
 
       {/* Hero Banner */}
-      <section className="relative flex items-center justify-center py-20 md:py-28">
-        <div className="absolute inset-0 overflow-hidden">
-          <img src={t2Bg} alt="" className="w-full h-full object-cover" />
+      <section className="relative flex items-center justify-center -mt-16 py-20 pt-[calc(4rem+5rem)] md:-mt-[72px] md:py-28 md:pt-[calc(4.5rem+7rem)] lg:-mt-[5.75rem] lg:pt-[calc(5.75rem+7rem)]">
+        <div className="absolute inset-x-0 -top-1 bottom-0 overflow-hidden">
+          <img src={t2Bg} alt="" className="h-[calc(100%+4px)] min-h-full w-full -translate-y-px object-cover" />
           <div className="absolute inset-0 bg-black/50" />
         </div>
         <button

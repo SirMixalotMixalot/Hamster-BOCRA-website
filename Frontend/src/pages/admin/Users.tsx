@@ -114,12 +114,6 @@ const AdminUsers = () => {
 
   return (
     <div className="space-y-6 max-w-6xl">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-heading font-bold text-foreground">Users</h2>
-          <p className="text-sm text-muted-foreground mt-1">Manage registered customers and operators</p>
-        </div>
-      </div>
       <div className="bg-card rounded-xl border border-border p-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

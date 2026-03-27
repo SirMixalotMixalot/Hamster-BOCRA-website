@@ -243,14 +243,6 @@ const AdminCareers = () => {
 
   return (
     <div className="space-y-6 max-w-6xl">
-      {/* Page header */}
-      <div>
-        <h2 className="text-2xl font-heading font-bold text-foreground">Careers</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Manage job postings and review submitted applications
-        </p>
-      </div>
-
       {/* Tabs */}
       <div className="flex gap-1 border-b border-border">
         {([

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
@@ -30,10 +30,26 @@ const sidebarLinks = [
   { to: "/admin/reports", icon: BarChart3, label: "Documents Management" },
 ];
 
+const sidebarSubtitles: Record<string, string> = {
+  "/admin/dashboard": "System overview and pending actions",
+  "/admin/users": "Manage registered customers and operators",
+  "/admin/applications": "Review and process submitted licences",
+  "/admin/complaints": "Track and resolve customer complaints",
+  "/admin/tickets": "Handle support tickets and escalations",
+  "/admin/careers": "Manage job posts and applications",
+  "/admin/reports": "Manage published documents and reports",
+  "/admin/settings": "Update profile and account preferences",
+};
+
 const AdminLayout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const activeSidebarLink = sidebarLinks.find((link) => location.pathname.startsWith(link.to));
+  const sidebarHeading = activeSidebarLink?.label ?? "Admin";
+  const sidebarSubtitle =
+    Object.entries(sidebarSubtitles).find(([route]) => location.pathname.startsWith(route))?.[1] ?? "Admin portal section";
 
   const handleLogout = () => {
     void logout();
@@ -48,28 +64,22 @@ const AdminLayout = () => {
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } ${collapsed ? "w-16" : "w-64"}`}
       >
-        {/* Logo – solid navy */}
-        <div className="flex items-center gap-2.5 px-5 h-16 shrink-0 bg-bocra-navy border-b border-white/10">
-          <button
-            type="button"
-            onClick={() => {
-              setSidebarOpen(false);
-              navigate("/");
-            }}
-            className="shrink-0"
-            aria-label="Go to home"
-          >
-            <img src={bocraLogo} alt="BOCRA" className="h-16 w-auto object-contain brightness-200" />
-          </button>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden ml-auto p-1 text-white/50 hover:text-white">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+        <div className="flex h-full flex-col bg-transparent">
+          <div className="px-3 pt-3 lg:hidden">
+            <button onClick={() => setSidebarOpen(false)} className="ml-auto flex rounded-full p-2 text-slate-600 hover:bg-slate-100">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
 
-        {/* Nav area */}
-        <div className="flex-1 flex flex-col bg-gray-300 border-r border-gray-400/30">
-          {/* Nav links */}
-          <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
+          <div className="hidden h-[5.75rem] flex-col justify-center px-5 lg:flex">
+            <h2 className="text-base font-heading font-bold leading-tight text-foreground">{sidebarHeading}</h2>
+            <p className="text-xs text-muted-foreground">{sidebarSubtitle}</p>
+          </div>
+
+          {/* Nav area */}
+          <div className="mx-3 mb-3 mt-3 overflow-hidden rounded-3xl border border-slate-200/80 bg-white/75 shadow-[0_18px_38px_-22px_rgba(15,23,42,0.55)] backdrop-blur-xl">
+            {/* Nav links */}
+            <nav className="space-y-1 px-2 py-3">
             {sidebarLinks.map((link) => (
               <NavLink
                 key={link.to}
@@ -77,61 +87,32 @@ const AdminLayout = () => {
                 onClick={() => setSidebarOpen(false)}
                 title={collapsed ? link.label : undefined}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${collapsed ? "justify-center" : ""} ${
+                  `flex items-center gap-3 rounded-full text-sm font-medium transition-all ${
+                    collapsed ? "justify-center px-2 py-3.5" : "px-3 py-2.5"
+                  } ${
                     isActive
-                      ? "bg-white/40 text-bocra-navy shadow-sm"
-                      : "text-bocra-navy/60 hover:bg-white/30 hover:text-bocra-navy"
+                      ? "bg-slate-900 text-white shadow-sm"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`
                 }
               >
-                <link.icon className="h-4 w-4 shrink-0" />
+                <link.icon className={`${collapsed ? "h-5 w-5" : "h-4 w-4"} shrink-0`} />
                 {!collapsed && link.label}
               </NavLink>
             ))}
-          </nav>
+            </nav>
 
-          {/* Profile/Home/Logout */}
-          <div className="px-2 pb-3 border-t border-gray-400/30 pt-3">
-            <NavLink
-              to="/admin/settings"
-              onClick={() => setSidebarOpen(false)}
-              title={collapsed ? "Profile" : undefined}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${collapsed ? "justify-center" : ""} ${
-                  isActive
-                    ? "bg-white/40 text-bocra-navy shadow-sm"
-                    : "text-bocra-navy/60 hover:bg-white/30 hover:text-bocra-navy"
-                }`
-              }
-            >
-              <User className="h-4 w-4 shrink-0" />
-              {!collapsed && "Profile"}
-            </NavLink>
-            <NavLink
-              to="/"
-              onClick={() => setSidebarOpen(false)}
-              title={collapsed ? "Home" : undefined}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-bocra-navy/60 hover:bg-white/30 hover:text-bocra-navy ${collapsed ? "justify-center" : ""}`}
-            >
-              <Home className="h-4 w-4 shrink-0" />
-              {!collapsed && "Home Page"}
-            </NavLink>
-            <button
-              onClick={handleLogout}
-              title={collapsed ? "Sign Out" : undefined}
-              className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-bocra-navy/40 hover:bg-white/30 hover:text-bocra-navy transition-all ${collapsed ? "justify-center" : ""}`}
-            >
-              <LogOut className="h-4 w-4" />
-              {!collapsed && "Sign Out"}
-            </button>
-            {/* Collapse toggle */}
-            <button
-              onClick={() => setCollapsed(!collapsed)}
-              className={`hidden lg:flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-bocra-navy/40 hover:bg-white/30 hover:text-bocra-navy transition-all mt-1 ${collapsed ? "justify-center" : ""}`}
-            >
-              {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-              {!collapsed && "Collapse"}
-            </button>
+            <div className="hidden border-t border-slate-200/80 p-2 lg:block">
+              <button
+                onClick={() => setCollapsed(!collapsed)}
+                className={`inline-flex w-full items-center gap-2 rounded-full text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 ${
+                  collapsed ? "justify-center px-2 py-3.5" : "px-3 py-2.5"
+                }`}
+              >
+                {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-4 w-4" />}
+                {!collapsed && "Collapse"}
+              </button>
+            </div>
           </div>
         </div>
       </aside>
@@ -147,24 +128,80 @@ const AdminLayout = () => {
       {/* Main area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <header className="h-16 shrink-0 bg-bocra-navy border-b border-white/10 flex items-center justify-between px-4 lg:px-6">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 rounded-md hover:bg-white/10">
-              <Menu className="h-5 w-5 text-white/60" />
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
+        <header className="shrink-0 px-4 pb-2 pt-3 lg:px-6">
+          <div className="mr-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-slate-200/70 bg-white/80 px-3 py-2 shadow-[0_16px_36px_-22px_rgba(15,23,42,0.5)] backdrop-blur-xl">
+            <div className="flex items-center gap-2">
+              <button onClick={() => setSidebarOpen(true)} className="rounded-full p-2 transition-colors hover:bg-slate-100 lg:hidden">
+                <Menu className="h-5 w-5 text-slate-700" />
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/")}
+                className="inline-flex items-center rounded-full px-2 py-1.5 transition-colors hover:bg-slate-100"
+                aria-label="Go to home"
+              >
+                <img src={bocraLogo} alt="BOCRA" className="h-9 w-auto object-contain" />
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <NavLink
+                to="/admin/settings"
+                className={({ isActive }) =>
+                  `hidden md:inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                    isActive ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100"
+                  }`
+                }
+              >
+                <User className="h-4 w-4" />
+                Profile
+              </NavLink>
+              <NavLink
+                to="/"
+                className="hidden md:inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
+              >
+                <Home className="h-4 w-4" />
+                Home
+              </NavLink>
+              <NavLink
+                to="/admin/settings"
+                className="inline-flex items-center justify-center rounded-full p-2 text-slate-700 transition-colors hover:bg-slate-100 md:hidden"
+                aria-label="Profile"
+              >
+                <User className="h-4 w-4" />
+              </NavLink>
+              <NavLink
+                to="/"
+                className="inline-flex items-center justify-center rounded-full p-2 text-slate-700 transition-colors hover:bg-slate-100 md:hidden"
+                aria-label="Home"
+              >
+                <Home className="h-4 w-4" />
+              </NavLink>
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center justify-center rounded-full p-2 text-slate-700 transition-colors hover:bg-slate-100 md:hidden"
+                aria-label="Sign Out"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+              <button
+                onClick={handleLogout}
+                className="hidden md:inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </button>
             <button
               onClick={() => window.dispatchEvent(new CustomEvent("toggle-ai-chatbot"))}
-              className="hidden md:inline-flex items-center gap-2 px-3 py-2 bg-bocra-gold text-bocra-navy rounded-md text-sm font-semibold hover:opacity-90 transition-opacity shadow-sm"
+                className="inline-flex items-center gap-2 rounded-full bg-bocra-gold px-3.5 py-2 text-sm font-semibold text-bocra-navy shadow-sm transition-all duration-300 hover:opacity-95 hover:shadow-md"
             >
               AI Assistant
             </button>
+            </div>
           </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 bg-gray-300">
+        <main className="flex-1 overflow-y-auto bg-background p-4 lg:p-6">
           <Outlet />
         </main>
       </div>

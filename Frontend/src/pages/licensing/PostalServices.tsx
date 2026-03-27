@@ -2,29 +2,41 @@ import Header from "@/components/Header";
 import BottomBar from "@/components/BottomBar";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import postalBg from "@/assets/branding/postal.jpeg";
 
 const PostalServices = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex flex-col bg-red-50">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header />
+
+      {/* Hero Banner */}
+      <section className="relative flex items-center justify-center -mt-16 py-20 pt-[calc(4rem+5rem)] md:-mt-[72px] md:py-28 md:pt-[calc(4.5rem+7rem)] lg:-mt-[5.75rem] lg:pt-[calc(5.75rem+7rem)]">
+        <div className="absolute inset-x-0 -top-1 bottom-0 overflow-hidden">
+          <img src={postalBg} alt="" className="h-[calc(100%+4px)] min-h-full w-full -translate-y-px object-cover" />
+          <div className="absolute inset-0 bg-black/55" />
+        </div>
+        <button
+          onClick={() => navigate("/")}
+          className="absolute left-4 top-[calc(4rem+1rem)] z-10 inline-flex items-center gap-1.5 text-sm text-white/75 transition-colors hover:text-white md:top-[calc(4.5rem+1rem)] lg:top-[calc(5.75rem+1rem)]"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Home
+        </button>
+        <div className="relative z-10 container max-w-6xl mx-auto px-4 text-center">
+          <h1 className="mb-4 text-4xl font-extrabold text-white md:text-5xl">Postal Services Licences</h1>
+          <p className="mx-auto max-w-3xl text-lg text-white/85">
+            Postal services licences regulate mail and courier services in Botswana.
+          </p>
+        </div>
+      </section>
+
       <main className="min-w-0 flex-1 py-12 md:py-16">
         <section className="container max-w-5xl mx-auto px-4">
-          <div className="mb-8 md:mb-10">
-            <button
-              onClick={() => navigate("/")}
-              className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors mb-4"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Home
-            </button>
-            <h1 className="text-3xl md:text-4xl font-extrabold text-foreground">Postal Services Licences</h1>
-          </div>
-
           <div className="space-y-8">
             <p className="text-sm md:text-base leading-relaxed text-muted-foreground">
-              Postal services licences regulate mail and courier services in Botswana. BOCRA oversees both the designated national postal operator and commercial courier companies operating within the country.
+              BOCRA oversees both the designated national postal operator and commercial courier companies operating within the country.
             </p>
 
             {/* DPO Licence */}

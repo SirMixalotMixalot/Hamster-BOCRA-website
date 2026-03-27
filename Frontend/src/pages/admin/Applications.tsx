@@ -295,11 +295,6 @@ const AdminApplications = () => {
 
   return (
     <div className="space-y-6 max-w-6xl">
-      <div>
-        <h2 className="text-2xl font-heading font-bold text-foreground">Applications</h2>
-        <p className="text-sm text-muted-foreground mt-1">Review, approve, or reject licence applications</p>
-      </div>
-
       <div className="bg-card rounded-xl border border-border p-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="relative">

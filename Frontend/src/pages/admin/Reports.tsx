@@ -205,11 +205,6 @@ const Reports = () => {
 
   return (
     <div className="space-y-6 max-w-6xl">
-      <div>
-        <h2 className="text-2xl font-heading font-bold text-foreground">Documents Management</h2>
-        <p className="text-sm text-muted-foreground mt-1">Publish regulatory content sections to the home page</p>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         <div className="bg-card rounded-xl border border-border p-4 space-y-3">
           <div className="flex items-center gap-3">

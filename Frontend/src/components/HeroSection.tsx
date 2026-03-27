@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
-import { MessageSquare, Shield, BarChart3, ArrowRight, Newspaper, Calendar, ArrowUpRight, ShieldCheck } from "lucide-react";
+import { MessageSquare, Shield, BarChart3, ArrowRight, Newspaper, Calendar, ArrowUpRight, ShieldCheck, ChevronLeft, ChevronRight } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
+import newsImage1 from "@/assets/news/news1.jpg";
+import newsImage2 from "@/assets/news/news2.jpg";
+import newsImage3 from "@/assets/news/news3.jpg";
 import { getHomePublishPayload, type HomeNewsItem, type HomePublishPayload, type HomeStatItem } from "@/lib/homePublishing";
 
 const defaultNewsItems: HomeNewsItem[] = [
@@ -95,8 +98,11 @@ const heroQuickActions = [
   { label: "Internet", dotClass: "bg-bocra-gold", href: "/licensing/internet-services" },
 ];
 
+const newsCarouselImages = [newsImage1, newsImage2, newsImage3];
+
 const HeroSection = () => {
   const [publishedHomeData, setPublishedHomeData] = useState<HomePublishPayload | null>(null);
+  const [activeNewsIndex, setActiveNewsIndex] = useState(0);
 
   useEffect(() => {
     setPublishedHomeData(getHomePublishPayload());
@@ -117,13 +123,45 @@ const HeroSection = () => {
   const displayedNews = publishedHomeData?.newsItems?.length
     ? publishedHomeData.newsItems
     : defaultNewsItems;
+  const carouselNewsItems = displayedNews.slice(0, 3);
+  const activeNewsItem = carouselNewsItems[activeNewsIndex] ?? null;
+
+  useEffect(() => {
+    if (carouselNewsItems.length === 0) {
+      return;
+    }
+    setActiveNewsIndex((currentIndex) => {
+      if (currentIndex < carouselNewsItems.length) {
+        return currentIndex;
+      }
+      return 0;
+    });
+  }, [carouselNewsItems.length]);
+
+  useEffect(() => {
+    if (carouselNewsItems.length <= 1) {
+      return;
+    }
+    const rotationTimer = window.setInterval(() => {
+      setActiveNewsIndex((currentIndex) => (currentIndex + 1) % carouselNewsItems.length);
+    }, 6000);
+    return () => window.clearInterval(rotationTimer);
+  }, [carouselNewsItems.length]);
+
+  const showPreviousNews = () => {
+    setActiveNewsIndex((currentIndex) => (currentIndex - 1 + carouselNewsItems.length) % carouselNewsItems.length);
+  };
+
+  const showNextNews = () => {
+    setActiveNewsIndex((currentIndex) => (currentIndex + 1) % carouselNewsItems.length);
+  };
 
   return (
     <>
       {/* ─── HERO ─────────────────────────────────────────────── */}
-      <section className="relative flex items-center justify-center py-14 md:py-36">
-        <div className="absolute inset-0 overflow-hidden">
-          <img src={heroBg} alt="" className="w-full h-full object-cover" />
+      <section className="relative flex items-center justify-center -mt-16 pb-14 pt-[calc(4rem+3.5rem)] md:-mt-[72px] md:pb-36 md:pt-[calc(4.5rem+9rem)] lg:-mt-[5.75rem] lg:pt-[calc(5.75rem+9rem)]">
+        <div className="absolute inset-x-0 -top-1 bottom-0 overflow-hidden">
+          <img src={heroBg} alt="" className="h-[calc(100%+4px)] min-h-full w-full -translate-y-px object-cover" />
           <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/80 to-bocra-navy/70" />
 
           {/* Wave source 1 — left */}
@@ -136,7 +174,7 @@ const HeroSection = () => {
           </div>
 
           {/* Wave source 2 — right */}
-          <div className="absolute top-[43%] right-[17%] -translate-x-1/2 -translate-y-1/2">
+          <div className="absolute top-0 right-[17%] -translate-x-1/2">
             <div className="relative">
               <div className="absolute inset-0 w-40 h-40 -ml-20 -mt-20 rounded-full border border-white/20 animate-[transmit_3.5s_ease-out_infinite]" />
               <div className="absolute inset-0 w-40 h-40 -ml-20 -mt-20 rounded-full border border-white/15 animate-[transmit_3.5s_ease-out_1.2s_infinite]" />
@@ -336,41 +374,86 @@ const HeroSection = () => {
               </button>
             </div>
 
-            <div className="bg-card rounded-3xl p-6 md:p-8 border border-border">
+            <div className="bg-card rounded-xl border border-border py-6 shadow-sm transition-shadow hover:shadow-lg overflow-hidden">
               <div className="flex items-end justify-between mb-8">
-                <div>
+                <div className="px-6 md:px-8">
                   <div className="inline-flex items-center gap-2 text-bocra-rose font-semibold text-sm mb-3">
                     <Newspaper className="h-4 w-4" />
                     Latest News
                   </div>
                   <h2 className="text-3xl md:text-4xl font-extrabold text-foreground">Latest news from BOCRA</h2>
                 </div>
-                <a href="/resources/news" className="hidden md:inline-flex items-center gap-1 text-sm text-primary font-medium hover:underline">
+                <a href="/resources/news" className="hidden md:inline-flex items-center gap-1 text-sm text-primary font-medium hover:underline pr-6 md:pr-8">
                   View all news <ArrowUpRight className="h-3.5 w-3.5" />
                 </a>
               </div>
-              <div className="space-y-4">
-                {displayedNews.map((item) => (
-                  <div
-                    key={item.title}
-                    className="rounded-2xl p-5 border border-border"
-                  >
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className={`text-[10px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full ${item.tagColor}`}>
-                        {item.tag}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {item.date}
-                      </span>
+
+              {activeNewsItem && (
+                <div className="px-6 md:px-8">
+                  <article className="overflow-hidden rounded-xl border border-border/80 bg-background/60">
+                    <div className="relative">
+                      <img
+                        src={newsCarouselImages[activeNewsIndex % newsCarouselImages.length]}
+                        alt={activeNewsItem.title}
+                        className="h-56 w-full object-cover"
+                      />
+                      {carouselNewsItems.length > 1 && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={showPreviousNews}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/40 bg-black/35 text-white transition-colors hover:bg-black/55"
+                            aria-label="Previous news item"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={showNextNews}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/40 bg-black/35 text-white transition-colors hover:bg-black/55"
+                            aria-label="Next news item"
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </button>
+                        </>
+                      )}
                     </div>
-                    <div className="font-semibold text-foreground mb-2 leading-snug">
-                      {item.title}
+
+                    <div className="p-5">
+                      <div className="mb-3 flex items-center gap-2">
+                        <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${activeNewsItem.tagColor}`}>
+                          {activeNewsItem.tag}
+                        </span>
+                        <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                          <Calendar className="h-3 w-3" />
+                          {activeNewsItem.date}
+                        </span>
+                      </div>
+                      <h3 className="mb-2 font-semibold leading-snug text-foreground">
+                        {activeNewsItem.title}
+                      </h3>
+                      <p className="text-sm leading-relaxed text-muted-foreground">{activeNewsItem.description}</p>
                     </div>
-                    <div className="text-sm text-muted-foreground leading-relaxed">{item.description}</div>
-                  </div>
-                ))}
-              </div>
+                  </article>
+
+                  {carouselNewsItems.length > 1 && (
+                    <div className="mt-4 flex items-center justify-center gap-2">
+                      {carouselNewsItems.map((item, index) => (
+                        <button
+                          key={`${item.title}-${index}`}
+                          type="button"
+                          onClick={() => setActiveNewsIndex(index)}
+                          className={`h-2.5 rounded-full transition-all ${
+                            index === activeNewsIndex ? "w-6 bg-primary" : "w-2.5 bg-border hover:bg-muted-foreground/50"
+                          }`}
+                          aria-label={`Show news item ${index + 1}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="mt-6 text-center md:hidden">
                 <a href="/resources/news" className="inline-flex items-center gap-1 text-sm text-primary font-medium hover:underline">
                   View all news <ArrowUpRight className="h-3.5 w-3.5" />
