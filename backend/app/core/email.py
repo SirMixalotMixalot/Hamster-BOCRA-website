@@ -55,7 +55,7 @@ def send_email(*, to_email: str, subject: str, body: str) -> bool:
             smtp_host,
             smtp_port,
         )
-        with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as client:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=120) as client:
             if smtp_use_tls:
                 logger.debug("email_starting_tls smtp_host=%s", smtp_host)
                 client.starttls()
