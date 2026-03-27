@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { MessageSquare, Shield, BarChart3, ArrowRight, Newspaper, Calendar, ArrowUpRight, ShieldCheck } from "lucide-react";
+import { MessageSquare, Shield, BarChart3, ArrowRight, Newspaper, Calendar, ArrowUpRight, ShieldCheck, ChevronDown } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
 import { getHomePublishPayload, type HomeNewsItem, type HomePublishPayload, type HomeStatItem } from "@/lib/homePublishing";
 
@@ -89,14 +89,39 @@ const defaultStatsHighlights: HomeStatItem[] = [
 ];
 
 const heroQuickActions = [
-  { label: "Telecommunications", dotClass: "bg-bocra-blue", href: "/licensing/telecommunications" },
-  { label: "Broadcasting", dotClass: "bg-bocra-teal", href: "/licensing/broadcasting" },
-  { label: "Postal", dotClass: "bg-bocra-rose", href: "/licensing/postal-services" },
-  { label: "Internet", dotClass: "bg-bocra-gold", href: "/licensing/internet-services" },
+  { 
+    label: "Telecommunications", 
+    dotClass: "bg-bocra-blue", 
+    href: "/licensing/telecommunications",
+    description: "Licences for electronic communications networks and services including NFP, SAP, and PTO licences."
+  },
+  { 
+    label: "Broadcasting", 
+    dotClass: "bg-bocra-teal", 
+    href: "/licensing/broadcasting",
+    description: "Content Services Provider licences for radio, television, and subscription services."
+  },
+  { 
+    label: "Postal", 
+    dotClass: "bg-bocra-rose", 
+    href: "/licensing/postal-services",
+    description: "Designated Postal Operator and Commercial Postal Operator licences for mail and courier services."
+  },
+  { 
+    label: "Internet", 
+    dotClass: "bg-bocra-gold", 
+    href: "/licensing/internet-services",
+    description: "Licences for ISPs, managed broadband, VoIP, and cloud service providers."
+  },
 ];
 
 const HeroSection = () => {
   const [publishedHomeData, setPublishedHomeData] = useState<HomePublishPayload | null>(null);
+  const [expandedSector, setExpandedSector] = useState<string | null>(null);
+
+  const toggleSector = (label: string) => {
+    setExpandedSector(prev => prev === label ? null : label);
+  };
 
   useEffect(() => {
     setPublishedHomeData(getHomePublishPayload());
@@ -154,19 +179,38 @@ const HeroSection = () => {
           </p>
 
           <div
-            className="mt-6 sm:mt-10 flex w-full flex-col items-center justify-center gap-4 animate-fade-in-up sm:flex-row"
+            className="mt-6 sm:mt-10 flex w-full flex-col items-center justify-center gap-3 animate-fade-in-up"
             style={{ animationDelay: "0.2s" }}
           >
-            {heroQuickActions.map((action) => (
-              <a
-                key={action.label}
-                href={action.href}
-                className="inline-flex w-full sm:w-auto min-w-[220px] items-center justify-center gap-3 rounded-2xl border border-white/25 bg-white/10 px-6 py-4 text-sm font-semibold uppercase tracking-[0.08em] text-white backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/15"
-              >
-                <span className={`h-3.5 w-3.5 shrink-0 rounded-full ${action.dotClass}`} />
-                <span>{action.label}</span>
-              </a>
-            ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full max-w-4xl">
+              {heroQuickActions.map((action) => (
+                <div key={action.label} className="flex flex-col">
+                  <button
+                    onClick={() => toggleSector(action.label)}
+                    className={`inline-flex w-full items-center justify-between gap-3 rounded-2xl border border-white/25 bg-white/10 px-5 py-4 text-sm font-semibold uppercase tracking-[0.08em] text-white backdrop-blur-sm transition-all duration-300 hover:bg-white/15 ${expandedSector === action.label ? 'bg-white/20 rounded-b-none border-b-0' : ''}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className={`h-3.5 w-3.5 shrink-0 rounded-full ${action.dotClass}`} />
+                      <span>{action.label}</span>
+                    </div>
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${expandedSector === action.label ? 'rotate-180' : ''}`} />
+                  </button>
+                  {expandedSector === action.label && (
+                    <div className="bg-white/15 backdrop-blur-sm border border-white/25 border-t-0 rounded-b-2xl px-5 py-4 animate-fade-in">
+                      <p className="text-sm text-white/80 leading-relaxed mb-4 normal-case tracking-normal font-normal">
+                        {action.description}
+                      </p>
+                      <a
+                        href={action.href}
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-white hover:text-white/80 transition-colors"
+                      >
+                        Learn More <ArrowRight className="h-4 w-4" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
