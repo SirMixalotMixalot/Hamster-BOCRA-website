@@ -469,7 +469,7 @@ const Header = () => {
           </div>
         </div>
 
-        <div className="container py-3 lg:hidden">
+        <div className="container flex h-16 items-center lg:hidden md:h-[72px]">
           <div className="group relative overflow-hidden rounded-full border border-slate-200/70 bg-white/80 px-3 py-2 shadow-[0_14px_34px_-24px_rgba(15,23,42,0.6)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-0.5 hover:scale-[1.01]">
             <div className="pointer-events-none absolute inset-y-1 left-1/2 w-40 -translate-x-1/2 rounded-full bg-white/70 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
             <div className="relative z-10 flex h-11 items-center justify-between md:h-12">
