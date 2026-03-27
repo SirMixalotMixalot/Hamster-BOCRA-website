@@ -2,7 +2,7 @@ import Header from "@/components/Header";
 import BottomBar from "@/components/BottomBar";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import t1Bg from "@/assets/styling/t1.webp";
+import t2Bg from "@/assets/styling/t2.jpg";
 
 const Telecommunications = () => {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ const Telecommunications = () => {
       {/* Hero Banner */}
       <section className="relative flex items-center justify-center py-20 md:py-28">
         <div className="absolute inset-0 overflow-hidden">
-          <img src={t1Bg} alt="" className="w-full h-full object-cover" />
+          <img src={t2Bg} alt="" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-black/50" />
         </div>
         <button
