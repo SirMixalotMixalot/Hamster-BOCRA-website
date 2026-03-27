@@ -14,7 +14,7 @@ const Telecommunications = () => {
           <div className="absolute inset-0 bg-black/50" />
         </div>
         <div className="relative z-10 container max-w-6xl mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4">Telecommunications</h1>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4">Telecommunications Licences</h1>
           <p className="text-lg text-white/80 max-w-3xl mx-auto">
             Telecommunications licences cover electronic communications networks and services.
           </p>

@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
 import BottomBar from "@/components/BottomBar";
-import broadcastBg from "@/assets/branding/broadcast.jpg";
+import broadcastBg from "@/assets/branding/broad.jpg";
 
 const Broadcasting = () => {
   return (
@@ -10,7 +10,7 @@ const Broadcasting = () => {
       {/* Hero Banner */}
       <section className="relative flex items-center justify-center -mt-16 py-20 pt-[calc(4rem+5rem)] md:-mt-[72px] md:py-28 md:pt-[calc(4.5rem+7rem)] lg:-mt-[5.75rem] lg:pt-[calc(5.75rem+7rem)]">
         <div className="absolute inset-x-0 -top-1 bottom-0 overflow-hidden">
-          <img src={broadcastBg} alt="" className="h-[calc(100%+4px)] min-h-full w-full -translate-y-px object-cover" />
+          <img src={broadcastBg} alt="" className="h-[calc(100%+4px)] min-h-full w-full -translate-y-px object-cover object-[center_25%]" />
           <div className="absolute inset-0 bg-black/55" />
         </div>
         <div className="relative z-10 container max-w-6xl mx-auto px-4 text-center">
