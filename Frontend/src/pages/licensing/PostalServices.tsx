@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
 import BottomBar from "@/components/BottomBar";
-import postalBg from "@/assets/branding/postal.jpeg";
+import postalBg from "@/assets/branding/postal.jpg";
 
 const PostalServices = () => {
   return (
