@@ -69,5 +69,20 @@ export const en: Translations = {
   "header.customerPortal": "Customer Portal",
 
   // Footer
-  "footer.copyright": "\u00A9 2026 BOCRA. All rights reserved. Designed by HAMSTER",
+  "footer.copyright": "\u00A9 2026 BOCRA. All rights reserved.",
+  "footer.description": "Botswana Communications Regulatory Authority regulates telecommunications, broadcasting, postal, and internet services in Botswana.",
+  "footer.quickLinks": "Quick Links",
+  "footer.home": "Home",
+  "footer.aboutUs": "About Us",
+  "footer.news": "News",
+  "footer.servicesTitle": "Services",
+  "footer.licensing": "Licensing",
+  "footer.publications": "Publications",
+  "footer.faqs": "FAQs",
+  "footer.careers": "Careers",
+  "footer.contact": "Contact",
+  "footer.address": "Plot 50671 Independence Avenue\nGaborone, Botswana",
+  "footer.phone": "+267 395 7755",
+  "footer.email": "info@bocra.org.bw",
+  "footer.tagline": "Public guidance, publications, and contact routes for BOCRA services.",
 };
